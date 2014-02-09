@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Flask-SocketIO Test</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="http:////cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function(){
+            var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+            socket.on('my response', function(msg) {
+                $('#log').append('<p>Received: ' + msg.data + '</p>');
+            });
+            $('form#emit').submit(function(event) {
+                socket.emit('my event', {data: $('#emit_data').val()});
+                return false;
+            });
+            $('form#broadcast').submit(function(event) {
+                socket.emit('my broadcast event', {data: $('#broadcast_data').val()});
+                return false;
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Flask-SocketIO Test</h1>
+    <h2>Send:</h2>
+    <table>
+        <tr>
+            <td>
+                <form id="emit" method='POST' action='#'>
+                    <textarea name="emit_data" id="emit_data"></textarea>
+                    <div><input type="submit" value="Emit"></div>
+                </form>
+            </td>
+            <td>
+                <form id="broadcast" method='POST' action='#'>
+                    <textarea name="broadcast_data" id="broadcast_data"></textarea>
+                    <div><input type="submit" value="Broadcast"></div>
+                </form>
+            </td>
+        </tr>
+    </table>
+    <h2>Receive:</h2>
+    <div id="log"></div>
+</body>
+</html>
