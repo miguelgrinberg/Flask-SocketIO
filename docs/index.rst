@@ -22,15 +22,15 @@ The following code example shows how to add Flask-SocketIO to a Flask applicatio
 
     from flask import Flask, render_template
     from flask.ext.socketio import SocketIO
-    
+
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'secret!'
     socketio = SocketIO(app)
-    
+
     if __name__ == '__main__':
         socketio.run(app)
 
-The ``init_app()`` style of initialization is also supported. Note the way the web server is started. The ``socketio.run()`` function encapsulates the start up of the gevent web server. When using this extension the Werkzeug server cannot be used.
+The ``init_app()`` style of initialization is also supported. Note the way the web server is started. The ``socketio.run()`` function encapsulates the start up of the gevent web server.
 
 Receiving Messages
 ------------------
