@@ -32,6 +32,8 @@ The following code example shows how to add Flask-SocketIO to a Flask applicatio
 
 The ``init_app()`` style of initialization is also supported. Note the way the web server is started. The ``socketio.run()`` function encapsulates the start up of the gevent web server.
 
+Note that the Werkzeug development web server cannot be used with this extension, but its debugger and reloader modules are activated when the application is in debug mode.
+
 Receiving Messages
 ------------------
 
