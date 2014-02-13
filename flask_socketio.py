@@ -5,6 +5,8 @@ from socketio.server import SocketIOServer
 from socketio.namespace import BaseNamespace
 from flask import request, session
 from flask.ctx import RequestContext
+from werkzeug.debug import DebuggedApplication
+from werkzeug.serving import run_with_reloader
 
 monkey.patch_all()
 
@@ -12,6 +14,8 @@ monkey.patch_all()
 class SocketIOMiddleware(object):
     def __init__(self, app, socket):
         self.app = app
+        if app.debug:
+            app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
         self.wsgi_app = app.wsgi_app
         self.socket = socket
 
@@ -142,7 +146,14 @@ class SocketIO(object):
                 port = int(server_name.rsplit(':', 1)[1])
             else:
                 port = 5000
-        SocketIOServer((host, port), app.wsgi_app, resource='socket.io').serve_forever()
+        if app.debug:
+            @run_with_reloader
+            def run_server():
+                server = SocketIOServer((host, port), app.wsgi_app, resource='socket.io')
+                server.serve_forever()
+            run_server()
+        else:
+            SocketIOServer((host, port), app.wsgi_app, resource='socket.io').serve_forever()
 
 
 def emit(event, *args, **kwargs):
