@@ -32,6 +32,7 @@ class SocketIO(object):
         if app:
             self.init_app(app)
         self.messages = {}
+        self.namespace = {}
 
     def init_app(self, app):
         app.wsgi_app = SocketIOMiddleware(app, self)
