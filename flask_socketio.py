@@ -123,7 +123,7 @@ class SocketIO(object):
                     session[k] = v
                 self.messages[namespace.ns_name][message](*args)
                 for k, v in session.items():
-                    self.namespace[k] = v
+                    namespace.session[k] = v
 
     def on_message(self, message, handler, **options):
         namespace = options.pop('namespace', '/')
