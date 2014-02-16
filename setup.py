@@ -16,7 +16,7 @@ setup(
     author_email='miguelgrinberg50@gmail.com',
     description='Socket.IO integration for Flask applications',
     long_description=__doc__,
-    py_modules=['flask_socketio'],
+    packages=['flask_socketio'],
     zip_safe=False,
     include_package_data=True,
     platforms='any',

@@ -5,6 +5,7 @@ from socketio.server import SocketIOServer
 from socketio.namespace import BaseNamespace
 from flask import request, session
 from flask.ctx import RequestContext
+from flask_socketio.test import SocketIOClient
 
 monkey.patch_all()
 
@@ -30,11 +31,15 @@ class SocketIO(object):
         self.messages = {}
 
     def init_app(self, app):
+        self.app = app
         app.wsgi_app = SocketIOMiddleware(app, self)
 
         # redirect socketio logging to Flask's app.logger
         logger = logging.getLogger('socketio.virtsocket')
         logger.addHandler(app.logger)
+
+    def test_client(self):
+        return SocketIOClient(self.app, self.get_namespaces())
 
     def get_namespaces(self):
         class GenericNamespace(BaseNamespace):
