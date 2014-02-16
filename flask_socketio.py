@@ -36,10 +36,6 @@ class SocketIO(object):
     def init_app(self, app):
         app.wsgi_app = SocketIOMiddleware(app, self)
 
-        # redirect socketio logging to Flask's app.logger
-        logger = logging.getLogger('socketio.virtsocket')
-        logger.addHandler(app.logger)
-
     def get_namespaces(self):
         class GenericNamespace(BaseNamespace):
             socketio = self
