@@ -24,6 +24,7 @@ class TestServer(object):
 class TestSocket(object):
     def __init__(self, server):
         self.server = server
+        self.sessid = str(random.random())[2:]
         self.namespace = {}
 
     def __getitem__(self, ns_name):
