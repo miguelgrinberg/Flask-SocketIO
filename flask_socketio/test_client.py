@@ -23,6 +23,7 @@ class TestServer(object):
 
 class TestSocket(object):
     def __init__(self, server):
+        import random
         self.server = server
         self.sessid = str(random.random())[2:]
         self.namespace = {}
