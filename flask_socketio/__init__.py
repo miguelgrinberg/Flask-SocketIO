@@ -1,12 +1,11 @@
-import logging
 from gevent import monkey
 from socketio import socketio_manage
 from socketio.server import SocketIOServer
 from socketio.namespace import BaseNamespace
 from flask import request, session
-from flask.ctx import RequestContext
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
+from test_client import SocketIOTestClient
 
 monkey.patch_all()
 
@@ -26,7 +25,6 @@ class SocketIOMiddleware(object):
         else:
             return self.wsgi_app(environ, start_response)
 
-
 class SocketIO(object):
     def __init__(self, app=None):
         if app:
@@ -36,11 +34,11 @@ class SocketIO(object):
     def init_app(self, app):
         app.wsgi_app = SocketIOMiddleware(app, self)
 
-    def get_namespaces(self):
-        class GenericNamespace(BaseNamespace):
+    def get_namespaces(self, base_namespace=BaseNamespace):
+        class GenericNamespace(base_namespace):
             socketio = self
-            base_emit = BaseNamespace.emit
-            base_send = BaseNamespace.send
+            base_emit = base_namespace.emit
+            base_send = base_namespace.send
 
             def process_event(self, packet):
                 message = packet['name']
@@ -68,43 +66,43 @@ class SocketIO(object):
                 self.socketio.dispatch_message(app, self, 'json', [data])
 
             def emit(self, event, *args, **kwargs):
-                namespace = kwargs.pop('namespace', None)
+                ns_name = kwargs.pop('namespace', None)
                 broadcast = kwargs.pop('broadcast', False)
                 if broadcast:
-                    if namespace is None:
-                        namespace = self.ns_name
+                    if ns_name is None:
+                        ns_name = self.ns_name
                     callback = kwargs.pop('callback', None)
                     ret = None
                     for sessid, socket in self.socket.server.sockets.items():
                         if socket == self.socket:
                             ret = self.base_emit(event, *args, callback=callback, **kwargs)
                         else:
-                            socket[namespace].base_emit(event, *args, **kwargs)
+                            socket[ns_name].base_emit(event, *args, **kwargs)
                     return ret
-                if namespace is None:
+                if ns_name is None:
                     return self.base_emit(event, *args, **kwargs)
-                return request.namespace.socket[namespace].base_emit(event, *args, **kwargs)
+                return request.namespace.socket[ns_name].base_emit(event, *args, **kwargs)
 
-            def send(message, json=False, namespace=None, callback=None, broadcast=False):
+            def send(self, message, json=False, ns_name=None, callback=None, broadcast=False):
                 if broadcast:
-                    if namespace is None:
-                        namespace = self.ns_name
+                    if ns_name is None:
+                        ns_name = self.ns_name
                     ret = None
                     for sessid, socket in self.socket.server.sockets.items():
                         if socket == request.namespace.socket:
                             ret = self.base_send(message, json, callback=callback)
                         else:
-                            socket[namespace].base_send(message, json)
+                            socket[ns_name].base_send(message, json)
                     return ret
-                if namespace is None:
+                if ns_name is None:
                     return request.namespace.base_send(message, json, callback)
-                return request.namespace.socket[namespace].base_send(message, json, callback)
+                return request.namespace.socket[ns_name].base_send(message, json, callback)
 
         namespaces = {}
-        for namespace in self.messages.keys():
-            if namespace == '/':
-                namespace = ''
-            namespaces[namespace] = GenericNamespace
+        for ns_name in self.messages.keys():
+            if ns_name == '/':
+                ns_name = ''
+            namespaces[ns_name] = GenericNamespace
         return namespaces
 
     def dispatch_message(self, app, namespace, message, args=[]):
@@ -112,20 +110,19 @@ class SocketIO(object):
             return
         if message not in self.messages[namespace.ns_name]:
             return
-        with app.app_context():
-            with RequestContext(app, namespace.environ):
-                request.namespace = namespace
-                for k, v in namespace.session.items():
-                    session[k] = v
-                self.messages[namespace.ns_name][message](*args)
-                for k, v in session.items():
-                    namespace.session[k] = v
+        with app.request_context(namespace.environ):
+            request.namespace = namespace
+            for k, v in namespace.session.items():
+                session[k] = v
+            self.messages[namespace.ns_name][message](*args)
+            for k, v in session.items():
+                namespace.session[k] = v
 
     def on_message(self, message, handler, **options):
-        namespace = options.pop('namespace', '/')
-        if namespace not in self.messages:
-            self.messages[namespace] = {}
-        self.messages[namespace][message] = handler
+        ns_name = options.pop('namespace', '')
+        if ns_name not in self.messages:
+            self.messages[ns_name] = {}
+        self.messages[ns_name][message] = handler
 
     def on(self, message, **options):
         def decorator(f):
@@ -150,6 +147,9 @@ class SocketIO(object):
             run_server()
         else:
             SocketIOServer((host, port), app.wsgi_app, resource='socket.io').serve_forever()
+
+    def test_client(self, app, namespace=None):
+        return SocketIOTestClient(app, self, namespace)
 
 
 def emit(event, *args, **kwargs):
