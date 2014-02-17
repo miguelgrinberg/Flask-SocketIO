@@ -44,7 +44,7 @@ class SocketIO(object):
                 message = packet['name']
                 args = packet['args']
                 app = self.request
-                self.socketio.dispatch_message(app, self, message, args)
+                return self.socketio.dispatch_message(app, self, message, args)
 
             def recv_connect(self):
                 ret = super(GenericNamespace, self).recv_connect()
@@ -59,11 +59,11 @@ class SocketIO(object):
 
             def recv_message(self, data):
                 app = self.request
-                self.socketio.dispatch_message(app, self, 'message', [data])
+                return self.socketio.dispatch_message(app, self, 'message', [data])
 
             def recv_json(self, data):
                 app = self.request
-                self.socketio.dispatch_message(app, self, 'json', [data])
+                return self.socketio.dispatch_message(app, self, 'json', [data])
 
             def emit(self, event, *args, **kwargs):
                 ns_name = kwargs.pop('namespace', None)
@@ -114,9 +114,10 @@ class SocketIO(object):
             request.namespace = namespace
             for k, v in namespace.session.items():
                 session[k] = v
-            self.messages[namespace.ns_name][message](*args)
+            ret = self.messages[namespace.ns_name][message](*args)
             for k, v in session.items():
                 namespace.session[k] = v
+            return ret
 
     def on_message(self, message, handler, **options):
         ns_name = options.pop('namespace', '')
