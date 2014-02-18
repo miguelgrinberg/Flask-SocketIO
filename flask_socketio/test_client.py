@@ -10,9 +10,11 @@ class TestServer(object):
     def __init__(self):
         self.sockets = {}
 
-    def add_socket(self, socket):
+    def new_socket(self):
+        socket = TestSocket(self, counter)
         self.sockets[self.counter] = socket
         self.counter += 1
+        return socket
 
     def remove_socket(self, socket):
         for id, s in self.sockets.items():
@@ -22,10 +24,9 @@ class TestServer(object):
 
 
 class TestSocket(object):
-    def __init__(self, server):
-        import random
+    def __init__(self, server, sessid):
         self.server = server
-        self.sessid = str(random.random())[2:]
+        self.sessid = sessid
         self.namespace = {}
 
     def __getitem__(self, ns_name):
@@ -68,8 +69,7 @@ class SocketIOTestClient(object):
 
     def __init__(self, app, socketio, ns_name=None):
         self.socketio = socketio
-        self.socket = TestSocket(self.server)
-        self.server.add_socket(self.socket)
+        self.socket = self.server.new_socket()
         self.connect(app, ns_name)
 
     def __del__(self):
