@@ -11,7 +11,7 @@ class TestServer(object):
         self.sockets = {}
 
     def new_socket(self):
-        socket = TestSocket(self, counter)
+        socket = TestSocket(self, self.counter)
         self.sockets[self.counter] = socket
         self.counter += 1
         return socket
