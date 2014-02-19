@@ -95,15 +95,15 @@ class SocketIOTestClient(object):
         ns_name = kwargs.pop('ns_name', None)
         if ns_name is None or ns_name == '/':
             ns_name = ''
-        self.socket[ns_name].process_event({'name': event, 'args': args})
+        return self.socket[ns_name].process_event({'name': event, 'args': args})
 
     def send(self, message, json=False, namespace=None):
         if namespace is None or namespace == '/':
             namespace = ''
         if not json:
-            self.socket[namespace].recv_message(message)
+            return self.socket[namespace].recv_message(message)
         else:
-            self.socket[namespace].recv_json(message)
+            return self.socket[namespace].recv_json(message)
 
     def get_received(self, namespace=None):
         if namespace is None or namespace == '/':
