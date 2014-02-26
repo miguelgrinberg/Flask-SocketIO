@@ -65,11 +65,14 @@ class TestBaseNamespace(object):
 
 
 class SocketIOTestClient(object):
-    server = TestServer()
+    servers = {}
 
-    def __init__(self, app, socketio, namespace=None):
+    def __init__(self, app, socketio, namespace=''):
+        if self.servers.get(namespace) is None:
+            self.servers[namespace] = TestServer()
+        self.server = self.servers[namespace]
         self.socketio = socketio
-        self.socket = self.server.new_socket()
+        self.socket = self.servers[namespace].new_socket()
         self.connect(app, namespace)
 
     def __del__(self):

@@ -100,8 +100,6 @@ class SocketIO(object):
 
         namespaces = {}
         for ns_name in self.messages.keys():
-            if ns_name == '/':
-                ns_name = ''
             namespaces[ns_name] = GenericNamespace
         return namespaces
 
