@@ -24,6 +24,9 @@ setup(
         'Flask>=0.9',
         'gevent-socketio>=0.3.6'
     ],
+    tests_require=[
+        'coverage'
+    ],
     test_suite='test_socketio',
     classifiers=[
         'Environment :: Web Environment',
