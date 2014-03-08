@@ -27,10 +27,10 @@ class TestSocket(object):
     def __init__(self, server, sessid):
         self.server = server
         self.sessid = sessid
-        self.namespace = {}
+        self.active_ns = {}
 
     def __getitem__(self, ns_name):
-        return self.namespace[ns_name]
+        return self.active_ns[ns_name]
 
 
 class TestBaseNamespace(object):
@@ -42,6 +42,10 @@ class TestBaseNamespace(object):
         self.request = request
         self.session = {}
         self.received = []
+        self.initialize()
+
+    def initialize(self):
+        pass
 
     def recv_connect(self):
         pass
@@ -65,25 +69,23 @@ class TestBaseNamespace(object):
 
 
 class SocketIOTestClient(object):
-    servers = {}
+    server = TestServer()
 
     def __init__(self, app, socketio, namespace=''):
-        if self.servers.get(namespace) is None:
-            self.servers[namespace] = TestServer()
-        self.server = self.servers[namespace]
         self.socketio = socketio
-        self.socket = self.servers[namespace].new_socket()
+        self.socketio.server = self.server
+        self.socket = self.server.new_socket()
         self.connect(app, namespace)
 
     def __del__(self):
         self.server.remove_socket(self.socket)
 
     def connect(self, app, namespace=None):
-        if self.socket.namespace.get(namespace):
+        if self.socket.active_ns.get(namespace):
             self.disconnect(namespace)
         if namespace is None or namespace == '/':
             namespace = ''
-        self.socket.namespace[namespace] = \
+        self.socket.active_ns[namespace] = \
             self.socketio.get_namespaces(
                 TestBaseNamespace)[namespace](namespace, self.socket, app)
         self.socket[namespace].recv_connect()
@@ -93,7 +95,7 @@ class SocketIOTestClient(object):
             namespace = ''
         if self.socket[namespace]:
             self.socket[namespace].recv_disconnect()
-            del self.socket.namespace[namespace]
+            del self.socket.active_ns[namespace]
 
     def emit(self, event, *args, **kwargs):
         namespace = kwargs.pop('namespace', None)

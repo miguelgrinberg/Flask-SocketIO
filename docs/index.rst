@@ -32,7 +32,7 @@ The following code example shows how to add Flask-SocketIO to a Flask applicatio
 
 The ``init_app()`` style of initialization is also supported. Note the way the web server is started. The ``socketio.run()`` function encapsulates the start up of the gevent web server.
 
-Note that the Werkzeug development web server cannot be used with this extension, but its debugger and reloader modules are activated when the application is in debug mode.
+The Werkzeug development web server cannot be used with this extension, but its debugger and reloader modules are activated when the application is in debug mode.
 
 Receiving Messages
 ------------------
@@ -109,7 +109,7 @@ SocketIO supports acknowledgement callbacks that confirm that a message was rece
     def handle_my_custom_event(json):
         emit('my response', json, callback=ack)
 
-When using callbacks the Javascript client receives a callback function to invoke upon receipt of the message. When client calls the callback function the server is notified and invokes the corresponding server-side callback. The client-side can pass arguments in the callback function, which are transferred to the server and given to the server-side callback..
+When using callbacks the Javascript client receives a callback function to invoke upon receipt of the message. When client calls the callback function the server is notified and invokes the corresponding server-side callback. The client-side can pass arguments in the callback function, which are transferred to the server and given to the server-side callback.
 
 Another very useful feature of SocketIO is the broadcasting of messages. Flask-SocketIO supports this feature with the ``broadcast=True`` optional argument to ``send()`` and ``emit()``::
 
@@ -117,7 +117,37 @@ Another very useful feature of SocketIO is the broadcasting of messages. Flask-S
     def handle_my_custom_event(data):
         emit('my response', data, broadcast=True)
 
-When a message is sent with the broadcast option enabled all clients connected to the namespace receive it, including the sender. When namespaces are not used the clients connected to the global namespace receive the message.
+When a message is sent with the broadcast option enabled all clients connected to the namespace receive it, including the sender. When namespaces are not used the clients connected to the global namespace receive the message. Callbacks are not invoked for broadcast messages.
+
+Sometimes the server needs to be the originator of a message. This can be useful to send a notification to clients of an event that originated in the server. The ``socketio.send()`` and ``socketio.emit()`` methods can be used to broadcast to all connected clients::
+
+    def some_function():
+        socketio.emit('some event', {'data': 42})
+
+Note that in this usage the ``broadcast=True`` argument does not need to be specified.
+
+Rooms
+-----
+
+For many applications it is necessary to group subsets of users to send messages. The best example is a chat application with multiple rooms. Users should receive messages from the room or rooms they are in, but not from other rooms where other users are. Flask-SocketIO supports this concept of rooms through the ``join_room()`` and ``leave_room()`` functions::
+
+    from flask.ext.socketio import join_room, leave_room
+
+    @socketio.on('join')
+    def on_join(data):
+        username = data['username']
+        room = data['room']
+        join_room(room)
+        send(username + ' has entered the room.', room=room)
+
+    @socketio.on('leave')
+    def on_leave(data):
+        username = data['username']
+        room = data['room']
+        leave_room(room)
+        send(username + ' has left the room.', room=room)
+
+The ``send()`` and ``emit()`` functions accept an optional ``room`` argument that cause the message to be sent to all the clients that are in the given room. A given client can join multiple rooms if desired. When a client disconnects it is removed from any room it was in.
 
 Connection Events
 -----------------

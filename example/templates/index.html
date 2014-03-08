@@ -8,7 +8,7 @@
         $(document).ready(function(){
             var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
             socket.on('my response', function(msg) {
-                $('#log').append('<p>Received #' + msg.count + ': ' + msg.data + '</p>');
+                $('#log').append('<br>Received #' + msg.count + ': ' + msg.data);
             });
             $('form#emit').submit(function(event) {
                 socket.emit('my event', {data: $('#emit_data').val()});
@@ -18,28 +18,45 @@
                 socket.emit('my broadcast event', {data: $('#broadcast_data').val()});
                 return false;
             });
+            $('form#join').submit(function(event) {
+                socket.emit('join', {room: $('#join_room').val()});
+                return false;
+            });
+            $('form#leave').submit(function(event) {
+                socket.emit('leave', {room: $('#leave_room').val()});
+                return false;
+            });
+            $('form#send_room').submit(function(event) {
+                socket.emit('my room event', {room: $('#room_name').val(), data: $('#room_data').val()});
+                return false;
+            });
         });
     </script>
 </head>
 <body>
     <h1>Flask-SocketIO Test</h1>
     <h2>Send:</h2>
-    <table>
-        <tr>
-            <td>
-                <form id="emit" method='POST' action='#'>
-                    <textarea name="emit_data" id="emit_data"></textarea>
-                    <div><input type="submit" value="Emit"></div>
-                </form>
-            </td>
-            <td>
-                <form id="broadcast" method='POST' action='#'>
-                    <textarea name="broadcast_data" id="broadcast_data"></textarea>
-                    <div><input type="submit" value="Broadcast"></div>
-                </form>
-            </td>
-        </tr>
-    </table>
+    <form id="emit" method='POST' action='#'>
+        <input type="text" name="emit_data" id="emit_data" placeholder="Message">
+        <input type="submit" value="Echo"></div>
+    </form>
+    <form id="broadcast" method='POST' action='#'>
+        <input type="text" name="broadcast_data" id="broadcast_data" placeholder="Message">
+        <input type="submit" value="Broadcast">
+    </form>
+    <form id="join" method='POST' action='#'>
+        <input type="text" name="join_room" id="join_room" placeholder="Room Name">
+        <input type="submit" value="Join Room">
+    </form>
+    <form id="leave" method='POST' action='#'>
+        <input type="text" name="leave_room" id="leave_room" placeholder="Room Name">
+        <input type="submit" value="Leave Room">
+    </form>
+    <form id="send_room" method='POST' action='#'>
+        <input type="text" name="room_name" id="room_name" placeholder="Room Name">
+        <input type="text" name="room_data" id="room_data" placeholder="Message">
+        <input type="submit" value="Send to Room">
+    </form>
     <h2>Receive:</h2>
     <div id="log"></div>
 </body>

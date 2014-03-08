@@ -5,7 +5,7 @@ cov = coverage.coverage()
 cov.start()
 
 from flask import Flask, session
-from flask.ext.socketio import SocketIO, send, emit
+from flask.ext.socketio import SocketIO, send, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
@@ -63,6 +63,32 @@ def on_custom_event_broadcast(data):
 def on_custom_event_broadcast_test(data):
     emit('my custom namespace response', data, namespace='/test',
          broadcast=True)
+
+@socketio.on('join room')
+def on_join_room(data):
+    join_room(data['room'])
+
+@socketio.on('leave room')
+def on_leave_room(data):
+    leave_room(data['room'])
+
+@socketio.on('join room', namespace='/test')
+def on_join_room(data):
+    join_room(data['room'])
+
+@socketio.on('leave room', namespace='/test')
+def on_leave_room(data):
+    leave_room(data['room'])
+
+@socketio.on('my room event')
+def on_room_event(data):
+    room = data.pop('room')
+    emit('my room response', data, room=room)
+
+@socketio.on('my room namespace event', namespace='/test')
+def on_room_namespace_event(data):
+    room = data.pop('room')
+    send('room message', room=room)
 
 
 class TestSocketIO(unittest.TestCase):
@@ -187,7 +213,7 @@ class TestSocketIO(unittest.TestCase):
         client2.get_received('/test')  # clean
         client3.get_received()  # clean
         client1.emit('my custom broadcast namespace event', {'a': 'b'},
-                     namespace='/test', broadcast=True)
+                     namespace='/test')
         received = client2.get_received('/test')
         self.assertTrue(len(received) == 1)
         self.assertTrue(len(received[0]['args']) == 1)
@@ -199,7 +225,51 @@ class TestSocketIO(unittest.TestCase):
         client = socketio.test_client(app)
         client.get_received()  # clean received
         client.send('echo this message back')
-        self.assertTrue(client.socket.namespace[''].session['a'] == 'b')
+        self.assertTrue(client.socket[''].session['a'] == 'b')
+
+    def test_room(self):
+        client1 = socketio.test_client(app)
+        client2 = socketio.test_client(app)
+        client3 = socketio.test_client(app, namespace='/test')
+        client1.get_received()  # clean
+        client2.get_received()  # clean
+        client3.get_received('/test')  # clean
+        client1.emit('join room', {'room': 'one'})
+        client2.emit('join room', {'room': 'one'})
+        client3.emit('join room', {'room': 'one'}, namespace='/test')
+        client1.emit('my room event', {'a': 'b', 'room': 'one'})
+        received = client1.get_received()
+        self.assertTrue(len(received) == 1)
+        self.assertTrue(len(received[0]['args']) == 1)
+        self.assertTrue(received[0]['name'] == 'my room response')
+        self.assertTrue(received[0]['args'][0]['a'] == 'b')
+        self.assertTrue(received == client2.get_received())
+        received = client3.get_received('/test')
+        self.assertTrue(len(received) == 0)
+        client1.emit('leave room', {'room': 'one'})
+        client1.emit('my room event', {'a': 'b', 'room': 'one'})
+        received = client1.get_received()
+        self.assertTrue(len(received) == 0)
+        received = client2.get_received()
+        self.assertTrue(len(received) == 1)
+        self.assertTrue(len(received[0]['args']) == 1)
+        self.assertTrue(received[0]['name'] == 'my room response')
+        self.assertTrue(received[0]['args'][0]['a'] == 'b')
+        client2.disconnect()
+        socketio.emit('my room event', {'a': 'b'}, room='one')
+        received = client1.get_received()
+        self.assertTrue(len(received) == 0)
+        received = client3.get_received('/test')
+        self.assertTrue(len(received) == 0)
+        client3.emit('my room namespace event', {'room': 'one'}, namespace='/test')
+        received = client3.get_received('/test')
+        self.assertTrue(len(received) == 1)
+        self.assertTrue(received[0]['name'] == 'message')
+        self.assertTrue(received[0]['args'] == 'room message')
+        self.assertTrue(len(socketio.rooms) == 1)
+        client3.disconnect('/test')
+        self.assertTrue(len(socketio.rooms) == 0)
+
 
 if __name__ == '__main__':
     unittest.main()
