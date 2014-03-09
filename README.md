@@ -1,6 +1,8 @@
 Flask-SocketIO
 ==============
 
+[![Build Status](https://travis-ci.org/miguelgrinberg/Flask-SocketIO.png?branch=master)](https://travis-ci.org/miguelgrinberg/Flask-SocketIO)
+
 Socket.IO integration for Flask applications.
 
 Example
