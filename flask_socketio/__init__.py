@@ -1,4 +1,6 @@
 from gevent import monkey
+monkey.patch_all()
+
 from socketio import socketio_manage
 from socketio.server import SocketIOServer
 from socketio.namespace import BaseNamespace
@@ -6,8 +8,6 @@ from flask import request, session
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 from test_client import SocketIOTestClient
-
-monkey.patch_all()
 
 
 class SocketIOMiddleware(object):
