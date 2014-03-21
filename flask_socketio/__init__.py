@@ -180,7 +180,7 @@ class SocketIO(object):
                 if socket.active_ns.get(ns_name):
                     socket[ns_name].base_send(message, json)
 
-    def run(self, app, host=None, port=None):
+    def run(self, app, host=None, port=None, **kwargs):
         if host is None:
             host = '127.0.0.1'
         if port is None:
@@ -189,7 +189,10 @@ class SocketIO(object):
                 port = int(server_name.rsplit(':', 1)[1])
             else:
                 port = 5000
-        self.server = SocketIOServer((host, port), app.wsgi_app, resource='socket.io')
+        #Don't allow override of resource, otherwise allow SocketIOServer kwargs to be passed through
+        if 'resource' in kwargs:
+            kwargs.pop['resource']
+        self.server = SocketIOServer((host, port), app.wsgi_app, resource='socket.io', **kwargs)
         if app.debug:
             @run_with_reloader
             def run_server():
