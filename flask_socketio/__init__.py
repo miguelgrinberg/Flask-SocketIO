@@ -191,7 +191,7 @@ class SocketIO(object):
                 port = 5000
         #Don't allow override of resource, otherwise allow SocketIOServer kwargs to be passed through
         if 'resource' in kwargs:
-            kwargs.pop['resource']
+            kwargs.pop('resource', None)
         self.server = SocketIOServer((host, port), app.wsgi_app, resource='socket.io', **kwargs)
         if app.debug:
             @run_with_reloader
