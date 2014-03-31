@@ -31,6 +31,7 @@ class SocketIO(object):
             self.init_app(app)
         self.messages = {}
         self.rooms = {}
+        self.server = None
 
     def init_app(self, app):
         app.wsgi_app = SocketIOMiddleware(app, self)
@@ -59,6 +60,8 @@ class SocketIO(object):
                     self.rooms.remove(room)
 
             def recv_connect(self):
+                if self.socketio.server is None:
+                    self.socketio.server = self.environ['socketio'].server
                 ret = super(GenericNamespace, self).recv_connect()
                 app = self.request
                 self.socketio._dispatch_message(app, self, 'connect')
@@ -164,9 +167,10 @@ class SocketIO(object):
             for client in self.rooms.get(ns_name, {}).get(room, set()):
                 client.base_emit(event, *args, **kwargs)
         else:
-            for sessid, socket in self.server.sockets.items():
-                if socket.active_ns.get(ns_name):
-                    socket[ns_name].base_emit(event, *args, **kwargs)
+            if self.server:
+                for sessid, socket in self.server.sockets.items():
+                    if socket.active_ns.get(ns_name):
+                        socket[ns_name].base_emit(event, *args, **kwargs)
 
     def send(self, message, json=False, namespace=None, room=None):
         ns_name = namespace
@@ -176,9 +180,10 @@ class SocketIO(object):
             for client in self.rooms.get(ns_name, {}).get(room, set()):
                 client.base_send(message, json)
         else:
-            for sessid, socket in self.server.sockets.items():
-                if socket.active_ns.get(ns_name):
-                    socket[ns_name].base_send(message, json)
+            if self.server:
+                for sessid, socket in self.server.sockets.items():
+                    if socket.active_ns.get(ns_name):
+                        socket[ns_name].base_send(message, json)
 
     def run(self, app, host=None, port=None, **kwargs):
         if host is None:
