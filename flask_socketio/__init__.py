@@ -4,7 +4,7 @@ monkey.patch_all()
 from socketio import socketio_manage
 from socketio.server import SocketIOServer
 from socketio.namespace import BaseNamespace
-from flask import request, session
+from flask import request, session, json
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 from test_client import SocketIOTestClient
@@ -21,7 +21,8 @@ class SocketIOMiddleware(object):
     def __call__(self, environ, start_response):
         path = environ['PATH_INFO'].strip('/')
         if path is not None and path.startswith('socket.io'):
-            socketio_manage(environ, self.socket.get_namespaces(), self.app)
+            socketio_manage(environ, self.socket.get_namespaces(), self.app,
+                            json_loads=json.loads, json_dumps=json.dumps)
         else:
             return self.wsgi_app(environ, start_response)
 
