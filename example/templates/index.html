@@ -3,13 +3,26 @@
 <head>
     <title>Flask-SocketIO Test</title>
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.2.min.js"></script>
-    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+    <script type="text/javascript" src="http:////cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
     <script type="text/javascript" charset="utf-8">
         $(document).ready(function(){
-            var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+            namespace = '/test'; // change to an empty string to use the global namespace
+
+            // the socket.io documentation recommends sending an explicit package upon connection
+            // this is specially important when using the global namespace
+            var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+            socket.on('connect', function() {
+                socket.emit('my event', {data: 'I\'m connected!'});
+            });
+
+            // event handler for server sent data
+            // the data is displayed in the "Received" section of the page
             socket.on('my response', function(msg) {
                 $('#log').append('<br>Received #' + msg.count + ': ' + msg.data);
             });
+
+            // handlers for the different forms in the page
+            // these send data to the server in a variety of ways
             $('form#emit').submit(function(event) {
                 socket.emit('my event', {data: $('#emit_data').val()});
                 return false;
