@@ -179,3 +179,19 @@ Flask-SocketIO attempts to make working with SocketIO event handlers easier by m
 - The ``request`` context global is enhanced with a ``namespace`` member. This is the gevent-socketio namespace object, which offers direct access to the socket.
 - The ``session`` context global behaves in a different way than in regular requests. The contents of the user session at the time a SocketIO connection is established are made available to the handlers invoked in the context of that connection. Any changes made to the session inside a SocketIO handler are preserved, but only in the SocketIO context, these changes will not be seen by regular HTTP handlers. The technical reason for this limitation is that to save the user session a new cookie needs to be sent to the client, and that requires new HTTP request and response, which do not exist in a socket connection. Handlers can implement their own custom session saving logic if desired.
 - In the current release before and after request hooks are not invoked for SocketIO connections. This may be improved in a future release.
+
+Deployment
+----------
+
+The simplest deployment strategy is to start the web server by calling ``socketio.run(app)`` as shown above, but with debug mode turned off in the configuration. This will run the application on the *gevent-socketio* web server, which is based on *gevent*.
+
+An alternative is to use *gunicorn* as web server, using the worker class provided by *gevent-socketio*. The command line that starts the server in this way is shown below::
+
+    gunicorn --worker-class socketio.sgunicorn.GeventSocketIOWorker module:app
+
+In this command ``module`` is the Python module or package that defines the application instance, and ``app`` is the application instance itself.
+
+Note regarding *uWSGI*: while this server has support for *gevent*, there is no event loop for *gevent-socketio*, so there is no directly available method for hosting Flask-SocketIO applications on it. If you figure out how to do this please let me know!
+
+Note regarding reverse proxies: If your application runs behind a reverse proxy such as *nginx*, then make sure the reverse proxy is configured to also proxy WebSocket connections.
+
