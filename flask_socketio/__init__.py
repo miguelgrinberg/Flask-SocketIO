@@ -21,6 +21,8 @@ class SocketIOMiddleware(object):
     def __call__(self, environ, start_response):
         path = environ['PATH_INFO'].strip('/')
         if path is not None and path.startswith('socket.io'):
+            if 'socketio' not in environ:
+                raise RuntimeError('You need to use a gevent-socketio server.')
             socketio_manage(environ, self.socket.get_namespaces(), self.app,
                             json_loads=json.loads, json_dumps=json.dumps)
         else:
