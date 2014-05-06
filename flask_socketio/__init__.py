@@ -201,10 +201,9 @@ class SocketIO(object):
         kwargs.pop('resource', None)
         self.server = SocketIOServer((host, port), app.wsgi_app, resource='socket.io', **kwargs)
         if app.debug:
-            @run_with_reloader
             def run_server():
                 self.server.serve_forever()
-            run_server()
+            run_with_reloader(run_server)
         else:
             self.server.serve_forever()
 
