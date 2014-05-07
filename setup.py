@@ -22,6 +22,7 @@ setup(
     platforms='any',
     install_requires=[
         'Flask>=0.9',
+        'gevent>=1.0',
         'gevent-socketio>=0.3.6'
     ],
     tests_require=[
