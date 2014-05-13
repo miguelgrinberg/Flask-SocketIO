@@ -1,10 +1,13 @@
+from gevent import monkey
+monkey.patch_all()
+
 import time
 from threading import Thread
 from flask import Flask, render_template, session, request
 from flask.ext.socketio import SocketIO, emit, join_room, leave_room
 
 app = Flask(__name__)
-app.debug = True
+app.debug = False
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 
@@ -62,8 +65,8 @@ def leave(message):
 def send_room_message(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response',
-        {'data': message['data'], 'count': session['receive_count']},
-        room=message['room'])
+         {'data': message['data'], 'count': session['receive_count']},
+         room=message['room'])
 
 
 @socketio.on('connect', namespace='/test')

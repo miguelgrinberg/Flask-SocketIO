@@ -28,6 +28,7 @@ class SocketIOMiddleware(object):
         else:
             return self.wsgi_app(environ, start_response)
 
+
 class SocketIO(object):
     def __init__(self, app=None):
         if app:
@@ -213,6 +214,7 @@ class SocketIO(object):
 
 def emit(event, *args, **kwargs):
     return request.namespace.emit(event, *args, **kwargs)
+
 
 def send(message, json=False, namespace=None, callback=None, broadcast=False, room=None):
     return request.namespace.send(message, json, namespace, callback, broadcast, room)
