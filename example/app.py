@@ -10,6 +10,7 @@ app = Flask(__name__)
 app.debug = True
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
+thread = None
 
 
 def background_thread():
@@ -25,6 +26,10 @@ def background_thread():
 
 @app.route('/')
 def index():
+    global thread
+    if thread is None:
+        thread = Thread(target=background_thread)
+        thread.start()
     return render_template('index.html')
 
 
@@ -80,5 +85,4 @@ def test_disconnect():
 
 
 if __name__ == '__main__':
-    Thread(target=background_thread).start()
     socketio.run(app)
