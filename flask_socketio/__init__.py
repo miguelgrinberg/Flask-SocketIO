@@ -1,12 +1,14 @@
 from gevent import monkey
 monkey.patch_all()
 
+import os
 from socketio import socketio_manage
 from socketio.server import SocketIOServer
 from socketio.namespace import BaseNamespace
 from flask import request, session, json
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
+from werkzeug._internal import _log
 from test_client import SocketIOTestClient
 
 
@@ -198,12 +200,16 @@ class SocketIO(object):
                 port = int(server_name.rsplit(':', 1)[1])
             else:
                 port = 5000
-        #Don't allow override of resource, otherwise allow SocketIOServer kwargs to be passed through
+        # don't allow override of resource, otherwise allow SocketIOServer 
+        # kwargs to be passed through
         kwargs.pop('resource', None)
-        self.server = SocketIOServer((host, port), app.wsgi_app, resource='socket.io', **kwargs)
+        self.server = SocketIOServer((host, port), app.wsgi_app, 
+                                     resource='socket.io', **kwargs)
         if app.debug:
             def run_server():
                 self.server.serve_forever()
+            if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+                _log('info', ' * Running on http://%s:%d/' % (host, port))
             run_with_reloader(run_server)
         else:
             self.server.serve_forever()
