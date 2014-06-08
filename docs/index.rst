@@ -195,22 +195,20 @@ Flask-SocketIO attempts to make working with SocketIO event handlers easier by m
 Deployment
 ----------
 
-The simplest deployment strategy is to start the web server by calling ``socketio.run(app)`` as shown above, but with debug mode turned off in the configuration. This will run the application on the *gevent-socketio* web server, which is based on *gevent*.
+The simplest deployment strategy is to start the web server by calling ``socketio.run(app)`` as shown above, but with debug mode turned off in the configuration. This will run the application on the gevent-socketio web server, which is based on gevent.
 
-An alternative is to use *gunicorn* as web server, using the worker class provided by *gevent-socketio*. The command line that starts the server in this way is shown below::
+An alternative is to use `gunicorn <http://gunicorn.org/>`_ as web server, using the worker class provided by gevent-socketio. The command line that starts the server in this way is shown below::
 
     gunicorn --worker-class socketio.sgunicorn.GeventSocketIOWorker module:app
 
 In this command ``module`` is the Python module or package that defines the application instance, and ``app`` is the application instance itself.
 
-Note regarding *uWSGI*: while this server has support for *gevent*, there is no event loop for *gevent-socketio*, so there is no directly available method for hosting Flask-SocketIO applications on it. If you figure out how to do this please let me know!
-
-Note regarding reverse proxies: If your application runs behind a reverse proxy such as *nginx*, then make sure the reverse proxy is configured to also proxy WebSocket connections.
+Note regarding `uWSGI <http://uwsgi-docs.readthedocs.org/en/latest/>`_: While this server has support for gevent and WebSocket, there is no way to use the custom event loop needed by gevent-socketio, so there is no directly available method for hosting Flask-SocketIO applications on it. If you figure out how to do this please let me know!
 
 Using nginx as a WebSocket Reverse Proxy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is also possible to use *nginx* as a reverse proxy that passes regular and socket requests to the application. However, it is important to note that only releases of nginx 1.4 and newer support proxying of the WebSocket protocol. Below is an example nginx configuration::
+It is possible to use nginx as a front-end reverse proxy that passes requests to the application. However, it is important to note that only releases of nginx 1.4 and newer support proxying of the WebSocket protocol. Below is an example nginx configuration that proxies regular and WebSocket requests::
 
     server {
         listen 80;
