@@ -187,10 +187,10 @@ Handlers for SocketIO events are different than handlers for routes and that int
 Flask-SocketIO attempts to make working with SocketIO event handlers easier by making the environment similar to that of a regular HTTP request. The following list describes what works and what doesn't:
 
 - An application context is pushed before invoking an event handler making ``current_app`` and ``g`` available to the handler.
-- A fake request context is also pushed before invoking a handler, also making ``request`` and ``session`` available.
-- The ``request`` context global is enhanced with a ``namespace`` member. This is the gevent-socketio namespace object, which offers direct access to the socket.
-- The ``session`` context global behaves in a different way than in regular requests. The contents of the user session at the time a SocketIO connection is established are made available to the handlers invoked in the context of that connection. Any changes made to the session inside a SocketIO handler are preserved, but only in the SocketIO context, these changes will not be seen by regular HTTP handlers. The technical reason for this limitation is that to save the user session a new cookie needs to be sent to the client, and that requires new HTTP request and response, which do not exist in a socket connection. Handlers can implement their own custom session saving logic if desired.
-- In the current release before and after request hooks are not invoked for SocketIO connections. This may be improved in a future release.
+- A request context is also pushed before invoking a handler, also making ``request`` and ``session`` available. Note that WebSocket events do not have individual requests associated with them, so the request context will be based on the request that started the WebSocket connection.
+- The ``request`` context global is enhanced with a ``namespace`` member. This is the gevent-socketio namespace object, which offers direct access to the low level socket.
+- The ``session`` context global behaves in a different way than in regular requests. A copy of the user session at the time the SocketIO connection is established is made available to handlers invoked in the context of that connection. Any changes made to the session inside a SocketIO handler are preserved, but only in the SocketIO context, these changes will not be seen by regular HTTP handlers. The technical reason for this limitation is that to save the user session a cookie needs to be sent to the client, and that requires HTTP request and response, which do not exist in a socket connection. When using server-side session storage SocketIO handlers can update user sessions even for HTTP routes (see the `Flask-KVsession <http://flask-kvsession.readthedocs.org/en/latest/>`_ extension).
+- Before and after request hooks are not invoked for SocketIO connections.
 
 Deployment
 ----------
