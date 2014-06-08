@@ -13,7 +13,11 @@ Requirements
 
 Flask-SocketIO is based on `gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ which in turn depends on `gevent <http://www.gevent.org/>`_ and `gevent-websocket <https://bitbucket.org/Jeffrey/gevent-websocket>`_.
 
-Unfortunately at this time gevent and gevent-socketio only support Python 2.x. There has been some activity in the gevent project towards Python 3 compliance, so support is likely to come in the near future.
+Current Limitations
+~~~~~~~~~~~~~~~~~~~
+
+- Projects gevent and gevent-socketio only support Python 2.x at this time. There has been some activity in the gevent project towards Python 3 compliance, so support for Python 3 is likely to come in the near future.
+- The 1.x releases of the Socket.IO client-side Javascript libraries are not compatible with project gevent-socketio. At this time the Socket.IO client release 0.9.16 has been found to be the most stable.
 
 Initialization
 --------------
