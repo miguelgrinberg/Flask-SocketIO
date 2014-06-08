@@ -34,9 +34,17 @@ The following code example shows how to add Flask-SocketIO to a Flask applicatio
     if __name__ == '__main__':
         socketio.run(app)
 
-The ``init_app()`` style of initialization is also supported. Note the way the web server is started. The ``socketio.run()`` function encapsulates the start up of the gevent web server.
+The ``init_app()`` style of initialization is also supported. Note the way the web server is started. The ``socketio.run()`` function encapsulates the start up of the gevent web server and replaces the standard Werkzeug development web server, which cannot be used with this extension. However, the Werkzeug debugger and reloader modules are still used when the application is in debug mode.
 
-The Werkzeug development web server cannot be used with this extension, but its debugger and reloader modules are activated when the application is in debug mode.
+The application must serve a page to the client that loads the Socket.IO library and establishes a connection::
+
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/0.9.16/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        socket.on('connect', function() {
+            socket.emit('my event', {data: 'I\'m connected!'});
+        });
+    </script>
 
 Receiving Messages
 ------------------
