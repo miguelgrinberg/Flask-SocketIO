@@ -195,3 +195,36 @@ Note regarding *uWSGI*: while this server has support for *gevent*, there is no 
 
 Note regarding reverse proxies: If your application runs behind a reverse proxy such as *nginx*, then make sure the reverse proxy is configured to also proxy WebSocket connections.
 
+Using nginx as a WebSocket Reverse Proxy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is also possible to use *nginx* as a reverse proxy that passes regular and socket requests to the application. However, it is important to note that only releases of nginx 1.4 and newer support proxying of the WebSocket protocol. Below is an example nginx configuration::
+
+    server {
+        listen 80;
+        server_name localhost;
+        access_log /var/log/nginx/example.log;
+
+        location / {
+            proxy_pass http://127.0.0.1:5000;
+            proxy_redirect off;
+
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        location /socket.io {
+            proxy_pass http://127.0.0.1:5000/socket.io;
+            proxy_redirect off;
+            proxy_buffering off;
+
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+        }
+    }
