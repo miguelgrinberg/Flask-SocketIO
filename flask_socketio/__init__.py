@@ -52,6 +52,8 @@ class SocketIO(object):
                 self.rooms = set()
 
             def process_event(self, packet):
+                if self.socketio.server is None:
+                    self.socketio.server = self.environ['socketio'].server
                 message = packet['name']
                 args = packet['args']
                 app = self.request
@@ -74,6 +76,8 @@ class SocketIO(object):
                 return ret
 
             def recv_disconnect(self):
+                if self.socketio.server is None:
+                    self.socketio.server = self.environ['socketio'].server
                 app = self.request
                 self.socketio._dispatch_message(app, self, 'disconnect')
                 for room in self.rooms.copy():
@@ -81,10 +85,14 @@ class SocketIO(object):
                 return super(GenericNamespace, self).recv_disconnect()
 
             def recv_message(self, data):
+                if self.socketio.server is None:
+                    self.socketio.server = self.environ['socketio'].server
                 app = self.request
                 return self.socketio._dispatch_message(app, self, 'message', [data])
 
             def recv_json(self, data):
+                if self.socketio.server is None:
+                    self.socketio.server = self.environ['socketio'].server
                 app = self.request
                 return self.socketio._dispatch_message(app, self, 'json', [data])
 
@@ -151,7 +159,7 @@ class SocketIO(object):
 
                     return True
         return False
-        
+
     def on_message(self, message, handler, **options):
         ns_name = options.pop('namespace', '')
         if ns_name not in self.messages:
