@@ -11,7 +11,7 @@ app.debug = True
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 thread = None
-
+namespace = '/test'
 
 def background_thread():
     """Example of how to send server generated events to clients."""
@@ -33,14 +33,14 @@ def index():
     return render_template('index.html')
 
 
-@socketio.on('my event', namespace='/test')
+@socketio.on('my event', namespace=namespace)
 def test_message(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response',
          {'data': message['data'], 'count': session['receive_count']})
 
 
-@socketio.on('my broadcast event', namespace='/test')
+@socketio.on('my broadcast event', namespace=namespace)
 def test_message(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response',
@@ -48,7 +48,7 @@ def test_message(message):
          broadcast=True)
 
 
-@socketio.on('join', namespace='/test')
+@socketio.on('join', namespace=namespace)
 def join(message):
     join_room(message['room'])
     session['receive_count'] = session.get('receive_count', 0) + 1
@@ -57,7 +57,7 @@ def join(message):
           'count': session['receive_count']})
 
 
-@socketio.on('leave', namespace='/test')
+@socketio.on('leave', namespace=namespace)
 def leave(message):
     leave_room(message['room'])
     session['receive_count'] = session.get('receive_count', 0) + 1
@@ -66,7 +66,7 @@ def leave(message):
           'count': session['receive_count']})
 
 
-@socketio.on('my room event', namespace='/test')
+@socketio.on('my room event', namespace=namespace)
 def send_room_message(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response',
