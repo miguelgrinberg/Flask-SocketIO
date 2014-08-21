@@ -1,6 +1,3 @@
-from gevent import monkey
-monkey.patch_all()
-
 import os
 from socketio import socketio_manage
 from socketio.server import SocketIOServer
