@@ -93,6 +93,42 @@ def on_room_namespace_event(data):
     room = data.pop('room')
     send('room message', room=room)
 
+@socketio.on_error()
+def error_handler(value):
+    if isinstance(value, AssertionError):
+        global error_testing
+        error_testing = True
+    else:
+        raise value
+
+@socketio.on('error testing')
+def raise_error(data):
+    raise AssertionError()
+
+@socketio.on_error('/test')
+def error_handler_namespace(value):
+    if isinstance(value, AssertionError):
+        global error_testing_namespace
+        error_testing_namespace = True
+    else:
+        raise value
+
+@socketio.on("error testing", namespace='/test')
+def raise_error_namespace(data):
+    raise AssertionError()
+
+@socketio.on_error_default
+def error_handler_default(value):
+    if isinstance(value, AssertionError):
+        global error_testing_default
+        error_testing_default = True
+    else:
+        raise exception, value, traceback
+
+@socketio.on("error testing", namespace='/unused_namespace')
+def raise_error_default(data):
+    raise AssertionError()
+
 
 class TestSocketIO(unittest.TestCase):
     @classmethod
@@ -272,6 +308,30 @@ class TestSocketIO(unittest.TestCase):
         self.assertTrue(len(socketio.rooms) == 1)
         client3.disconnect('/test')
         self.assertTrue(len(socketio.rooms) == 0)
+
+    def test_error_handling(self):
+        client = socketio.test_client(app)
+        client.get_received()       # clean client
+        global error_testing
+        error_testing = False
+        client.emit("error testing", "")
+        self.assertTrue(error_testing)
+
+    def test_error_handling_namespace(self):
+        client = socketio.test_client(app, namespace='/test')
+        client.get_received('/test')
+        global error_testing_namespace
+        error_testing_namespace = False
+        client.emit("error testing", "", namespace='/test')
+        self.assertTrue(error_testing_namespace)
+
+    def test_error_handling_default(self):
+        client = socketio.test_client(app, namespace='/unused_namespace')
+        client.get_received('/unused_namespace')
+        global error_testing_default
+        error_testing_default = False
+        client.emit("error testing", "", namespace='/unused_namespace')
+        self.assertTrue(error_testing_default)
 
 
 if __name__ == '__main__':

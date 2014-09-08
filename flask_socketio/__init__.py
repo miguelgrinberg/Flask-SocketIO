@@ -2,6 +2,8 @@ from gevent import monkey
 monkey.patch_all()
 
 import os
+import sys
+
 from socketio import socketio_manage
 from socketio.server import SocketIOServer
 from socketio.namespace import BaseNamespace
@@ -9,6 +11,7 @@ from flask import request, session, json
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 from werkzeug._internal import _log
+
 from test_client import SocketIOTestClient
 
 
@@ -39,6 +42,9 @@ class SocketIO(object):
         self.rooms = {}
         self.server = None
 
+        self.exception_handlers = {}
+        self.default_exception_handler = None
+
     def init_app(self, app):
         app.wsgi_app = SocketIOMiddleware(app, self)
 
@@ -47,6 +53,7 @@ class SocketIO(object):
             socketio = self
             base_emit = base_namespace.emit
             base_send = base_namespace.send
+
 
             def initialize(self):
                 self.rooms = set()
@@ -118,9 +125,7 @@ class SocketIO(object):
                     return request.namespace.base_send(message, json, callback)
                 return request.namespace.socket[ns_name].base_send(message, json, callback)
 
-        namespaces = {}
-        for ns_name in self.messages.keys():
-            namespaces[ns_name] = GenericNamespace
+        namespaces = dict( (ns_name, GenericNamespace) for ns_name in self.messages)
         return namespaces
 
     def _dispatch_message(self, app, namespace, message, args=[]):
@@ -160,31 +165,53 @@ class SocketIO(object):
                     return True
         return False
 
-    def on_message(self, message, handler, **options):
-        ns_name = options.pop('namespace', '')
-        if ns_name not in self.messages:
-            self.messages[ns_name] = {}
-        self.messages[ns_name][message] = handler
+    def on_message(self, message, handler, namespace=''):
+        if namespace not in self.messages:
+            self.messages[namespace] = {}
+        self.messages[namespace][message] = handler
 
-    def on(self, message, **options):
-        def decorator(f):
-            self.on_message(message, f, **options)
-            return f
+    def on(self, message, namespace=''):
+        if namespace in self.exception_handlers or self.default_exception_handler is not None:
+            def decorator(f):
+                def func(*args, **kwargs):
+                    try:
+                        f(*args, **kwargs)
+                    except:
+                        handler = self.exception_handlers.get(namespace,
+                                                              self.default_exception_handler)
+                        type, value, traceback = sys.exc_info()
+                        handler(value)
+                self.on_message(message, func, namespace)
+                return func
+        else:
+            def decorator(f):
+                self.on_message(message, f, namespace)
+                return f
         return decorator
 
+    def on_error(self, namespace=''):
+        def decorator(exception_handler):
+            if not callable(exception_handler):
+                raise ValueError('exception_handler must be callable')
+            self.exception_handlers[namespace] = exception_handler
+
+        return decorator
+
+    def on_error_default(self, exception_handler):
+        if not callable(exception_handler):
+            raise ValueError('exception_handler must be callable')
+        self.default_exception_handler = exception_handler
+
     def emit(self, event, *args, **kwargs):
-        ns_name = kwargs.pop('namespace', None)
-        if ns_name is None:
-            ns_name = ''
+        ns_name = kwargs.pop('namespace', '')
         room = kwargs.pop('room', None)
-        if room:
+        if room is not None:
             for client in self.rooms.get(ns_name, {}).get(room, set()):
                 client.base_emit(event, *args, **kwargs)
-        else:
-            if self.server:
-                for sessid, socket in self.server.sockets.items():
-                    if socket.active_ns.get(ns_name):
-                        socket[ns_name].base_emit(event, *args, **kwargs)
+        elif self.server:
+            for sessid, socket in self.server.sockets.items():
+                if socket.active_ns.get(ns_name):
+                    socket[ns_name].base_emit(event, *args, **kwargs)
 
     def send(self, message, json=False, namespace=None, room=None):
         ns_name = namespace

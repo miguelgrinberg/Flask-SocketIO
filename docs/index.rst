@@ -179,6 +179,27 @@ Flask-SocketIO also dispatches connection and disconnection events. The followin
 
 Note that these events are sent individually on each namespace used. When the global namespace is used only disconnection events are sent due to a limitation in gevent-socketio.
 
+Error Handling
+--------------
+Flask-SocketIO can also deal with exception handling::
+    @socketio.on_error()        # Handles the default namespace
+    def error_handler(value):
+        pass
+
+    @socketio.on_error('/chat') # handles the '/chat' namespace
+    def error_handler1(value):
+        pass
+
+    @socketio.on_error_default  # handles all namespaces w/o an explicit error handler
+    def default_error_handler(value):
+        pass
+
+error_handler functions take the exception object as an argument. To get more information about the exception, one can use sys.exc_info().
+
+
+
+
+
 Access to Flask's Context Globals
 ---------------------------------
 
