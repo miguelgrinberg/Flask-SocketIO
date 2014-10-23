@@ -1,6 +1,3 @@
-from gevent import monkey
-monkey.patch_all()
-
 import os
 import sys
 
@@ -235,10 +232,10 @@ class SocketIO(object):
                 port = int(server_name.rsplit(':', 1)[1])
             else:
                 port = 5000
-        # don't allow override of resource, otherwise allow SocketIOServer 
+        # don't allow override of resource, otherwise allow SocketIOServer
         # kwargs to be passed through
         kwargs.pop('resource', None)
-        self.server = SocketIOServer((host, port), app.wsgi_app, 
+        self.server = SocketIOServer((host, port), app.wsgi_app,
                                      resource='socket.io', **kwargs)
         if app.debug:
             def run_server():
