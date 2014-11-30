@@ -67,6 +67,15 @@ def on_custom_event_broadcast_test(data):
     emit('my custom namespace response', data, namespace='/test',
          broadcast=True)
 
+@socketio.on('my custom not to self event')
+def on_custom_event_broadcast_not_to_self(data):
+    emit('my custom response', data, broadcast=True, send_to_self=False)
+
+@socketio.on('my custom not to self namespace event', namespace='/test')
+def on_custom_event_broadcast_not_to_self_test(data):
+    emit('my custom namespace response', data, namespace='/test',
+         broadcast=True, send_to_self=False)
+
 @socketio.on('join room')
 def on_join_room(data):
     join_room(data['room'])
@@ -235,6 +244,7 @@ class TestSocketIO(unittest.TestCase):
         client1 = socketio.test_client(app)
         client2 = socketio.test_client(app)
         client3 = socketio.test_client(app, namespace='/test')
+        client1.get_received()  # clean
         client2.get_received()  # clean
         client3.get_received('/test')  # clean
         client1.emit('my custom broadcast event', {'a': 'b'}, broadcast=True)
@@ -244,11 +254,13 @@ class TestSocketIO(unittest.TestCase):
         self.assertTrue(received[0]['name'] == 'my custom response')
         self.assertTrue(received[0]['args'][0]['a'] == 'b')
         self.assertTrue(len(client3.get_received('/test')) == 0)
+        self.assertTrue(client1.get_received()[0]['name'] == received[0]['name'])
 
     def test_broadcast_namespace(self):
         client1 = socketio.test_client(app, namespace='/test')
         client2 = socketio.test_client(app, namespace='/test')
         client3 = socketio.test_client(app)
+        client1.get_received('/test')  # clean
         client2.get_received('/test')  # clean
         client3.get_received()  # clean
         client1.emit('my custom broadcast namespace event', {'a': 'b'},
@@ -259,6 +271,41 @@ class TestSocketIO(unittest.TestCase):
         self.assertTrue(received[0]['name'] == 'my custom namespace response')
         self.assertTrue(received[0]['args'][0]['a'] == 'b')
         self.assertTrue(len(client3.get_received()) == 0)
+        self.assertTrue(client1.get_received('/test')[0]['name'] == received[0]['name'])
+
+    def test_broadcast_not_to_self(self):
+        client1 = socketio.test_client(app)
+        client2 = socketio.test_client(app)
+        client3 = socketio.test_client(app, namespace='/test')
+        client1.get_received()  # clean
+        client2.get_received()  # clean
+        client3.get_received('/test')  # clean
+        client1.emit('my custom not to self event', {'a': 'b'}, broadcast=True,
+                     send_to_self=False)
+        received = client2.get_received()
+        self.assertTrue(len(received) == 1)
+        self.assertTrue(len(received[0]['args']) == 1)
+        self.assertTrue(received[0]['name'] == 'my custom response')
+        self.assertTrue(received[0]['args'][0]['a'] == 'b')
+        self.assertTrue(len(client3.get_received('/test')) == 0)
+        self.assertTrue(len(client1.get_received()) == 0)
+
+    def test_broadcast_not_to_self_namespace(self):
+        client1 = socketio.test_client(app, namespace='/test')
+        client2 = socketio.test_client(app, namespace='/test')
+        client3 = socketio.test_client(app)
+        client1.get_received('/test')  # clean
+        client2.get_received('/test')  # clean
+        client3.get_received()  # clean
+        client1.emit('my custom not to self namespace event', {'a': 'b'},
+                     namespace='/test', send_to_self=False)
+        received = client2.get_received('/test')
+        self.assertTrue(len(received) == 1)
+        self.assertTrue(len(received[0]['args']) == 1)
+        self.assertTrue(received[0]['name'] == 'my custom namespace response')
+        self.assertTrue(received[0]['args'][0]['a'] == 'b')
+        self.assertTrue(len(client3.get_received()) == 0)
+        self.assertTrue(len(client1.get_received('/test')) == 0)
 
     def test_session(self):
         client = socketio.test_client(app)
