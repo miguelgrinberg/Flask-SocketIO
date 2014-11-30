@@ -238,6 +238,10 @@ class SocketIO(object):
         self.server = SocketIOServer((host, port), app.wsgi_app,
                                      resource='socket.io', **kwargs)
         if app.debug:
+            # monkey patching is required by the reloader
+            from gevent import monkey
+            monkey.patch_all()
+
             def run_server():
                 self.server.serve_forever()
             if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
