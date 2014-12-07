@@ -82,7 +82,7 @@ When a namespace is not specified a default global namespace is used.
 Sending Messages
 ----------------
 
-SocketIO event handlers defined as shown in the previous section can send messages to the connected client using the ``send()`` and ``emit()`` functions.
+SocketIO event handlers defined as shown in the previous section can send reply messages to the connected client using the ``send()`` and ``emit()`` functions.
 
 The following examples bounce received events back to the client that sent them::
 
@@ -132,19 +132,19 @@ Another very useful feature of SocketIO is the broadcasting of messages. Flask-S
     def handle_my_custom_event(data):
         emit('my response', data, broadcast=True)
 
-When a message is sent with the broadcast option enabled all clients connected to the namespace receive it, including the sender. When namespaces are not used the clients connected to the global namespace receive the message. Note that callbacks are not invoked for broadcast messages.
+When a message is sent with the broadcast option enabled, all clients connected to the namespace receive it, including the sender. When namespaces are not used, the clients connected to the global namespace receive the message. Note that callbacks are not invoked for broadcast messages.
 
-Sometimes the server needs to be the originator of a message. This can be useful to send a notification to clients of an event that originated in the server. The ``socketio.send()`` and ``socketio.emit()`` methods can be used to broadcast to all connected clients::
+In all the examples shown until this point the server responds to an event sent by the client. But for some applications, the server needs to be the originator of a message. This can be useful to send notifications to clients of events that originated in the server, for example in a background thread. The ``socketio.send()`` and ``socketio.emit()`` methods can be used to broadcast to all connected clients::
 
     def some_function():
         socketio.emit('some event', {'data': 42})
 
-Note that in this usage the ``broadcast=True`` argument is assumed and does not need to be specified.
+Note that in this usage there is no client context, so ``broadcast=True`` is assumed and does not need to be specified.
 
 Rooms
 -----
 
-For many applications it is necessary to group users dynamically and send messages to them. The best example is a chat application with multiple rooms, where users receive messages from the room or rooms they are in, but not from other rooms where other users are. Flask-SocketIO supports this concept of rooms through the ``join_room()`` and ``leave_room()`` functions::
+For many applications it is necessary to group users into subsets that can be addressed together. The best example is a chat application with multiple rooms, where users receive messages from the room or rooms they are in, but not from other rooms where other users are. Flask-SocketIO supports this concept of rooms through the ``join_room()`` and ``leave_room()`` functions::
 
     from flask.ext.socketio import join_room, leave_room
 
@@ -162,7 +162,7 @@ For many applications it is necessary to group users dynamically and send messag
         leave_room(room)
         send(username + ' has left the room.', room=room)
 
-The ``send()`` and ``emit()`` functions accept an optional ``room`` argument that cause the message to be sent to all the clients that are in the given room. A given client can join multiple rooms if desired. When a client disconnects it is removed from any room it was in.
+The ``send()`` and ``emit()`` functions accept an optional ``room`` argument that cause the message to be sent to all the clients that are in the given room. A given client can join multiple rooms if desired. When a client disconnects it is removed from any room it was in. The context-free ``socketio.send()`` and ``socketio.emit()`` functions also accept a ``room`` argument.
 
 Connection Events
 -----------------
@@ -181,37 +181,78 @@ Note that these events are sent individually on each namespace used. When the gl
 
 Error Handling
 --------------
-Flask-SocketIO can also deal with exception handling::
+
+Flask-SocketIO can also deal with exceptions::
+
     @socketio.on_error()        # Handles the default namespace
-    def error_handler(value):
+    def error_handler(e):
         pass
 
     @socketio.on_error('/chat') # handles the '/chat' namespace
-    def error_handler1(value):
+    def error_handler_chat(e):
         pass
 
-    @socketio.on_error_default  # handles all namespaces w/o an explicit error handler
-    def default_error_handler(value):
+    @socketio.on_error_default  # handles all namespaces without an explicit error handler
+    def default_error_handler(e):
         pass
 
-error_handler functions take the exception object as an argument. To get more information about the exception, one can use sys.exc_info().
-
-
-
-
+Error handler functions take the exception object as an argument.
 
 Access to Flask's Context Globals
 ---------------------------------
 
-Handlers for SocketIO events are different than handlers for routes and that introduces a lot of confusion around what can and cannot be done in a SocketIO handler. The main difference between the two types of handlers is that all the SocketIO events for a client occur in the context of a single long running request.
+Handlers for SocketIO events are different than handlers for routes and that introduces a lot of confusion around what can and cannot be done in a SocketIO handler. The main difference is that all the SocketIO events generated for a client occur in the context of a single long running request.
 
-Flask-SocketIO attempts to make working with SocketIO event handlers easier by making the environment similar to that of a regular HTTP request. The following list describes what works and what doesn't:
+In spite of the differences, Flask-SocketIO attempts to make working with SocketIO event handlers easier by making the environment similar to that of a regular HTTP request. The following list describes what works and what doesn't:
 
 - An application context is pushed before invoking an event handler making ``current_app`` and ``g`` available to the handler.
-- A request context is also pushed before invoking a handler, also making ``request`` and ``session`` available. Note that WebSocket events do not have individual requests associated with them, so the request context will be based on the request that started the WebSocket connection.
+- A request context is also pushed before invoking a handler, also making ``request`` and ``session`` available. Note that WebSocket events do not have individual requests associated with them, so the request context that started the WebSocket connection is pushed for all the events that are dispatched.
 - The ``request`` context global is enhanced with a ``namespace`` member. This is the gevent-socketio namespace object, which offers direct access to the low level socket.
 - The ``session`` context global behaves in a different way than in regular requests. A copy of the user session at the time the SocketIO connection is established is made available to handlers invoked in the context of that connection. Any changes made to the session inside a SocketIO handler are preserved, but only in the SocketIO context, these changes will not be seen by regular HTTP handlers. The technical reason for this limitation is that to save the user session a cookie needs to be sent to the client, and that requires HTTP request and response, which do not exist in a socket connection. When using server-side session storage SocketIO handlers can update user sessions even for HTTP routes (see the `Flask-KVsession <http://pythonhosted.org/Flask-KVSession/>`_ extension).
-- Before and after request hooks are not invoked for SocketIO connections.
+- The ``before_request`` and ``after_request`` hooks are not invoked for SocketIO event handlers.
+- SocketIO handlers can take custom decorators, but most Flask decorators will not be appropriate to use for a SocketIO handler, given that there is no concept of a ``Response`` object during a SocketIO connection.
+
+Authentication
+--------------
+
+A common need of applications is to validate the identify of their users. The traditional mechanisms based on web forms and HTTP requests cannot be used in a SocketIO connection, since there is no place to send HTTP requests and responses. If necessary, an application can implement a customized login form that sends credentials to the server as a SocketIO message when the submit button is pressed by the user.
+
+However, in most cases it is more convenient to perform the traditional authentication process before the SocketIO connection is established. The user's identify can then be recorded in the user session or in a cookie, and later when the SocketIO connection is established that information will be accessible to SocketIO event handlers.
+
+Using Flask-Login with Flask-SocketIO
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Flask-SocketIO can access login information maintained by `Flask-Login <https://flask-login.readthedocs.org/en/latest/>`_. After a regular Flask-Login authentication is performed and the ``login_user()`` function is called to record the user in the user session, any SocketIO connections will have access to the ``current_user`` context variable::
+
+    @socketio.on('my event')
+    def handle_my_custom_event(data):
+        if current_user.is_authenticated():
+            emit('my response',
+                 {'message': '{0} has joined'.format(current_user.name)},
+                 broadcast=True)
+        else:
+            request.namespace.disconnect()  # not allowed here
+
+Note that the ``login_required`` decorator cannot be used with SocketIO event handlers, but a custom decorator that disconnects non-authenticated users can be created as follows::
+
+    import functools
+    from flask import request
+    from flask.ext.login import current_user
+
+    def authenticated_only(f):
+        @functools.wraps(f)
+        def wrapped(*args, **kwargs):
+            if not current_user.is_authenticated():
+                request.namespace.disconnect()
+            else:
+                return f(*args, **kwargs)
+        return wrapped
+
+    @socketio.on('my event')
+    @authenticated_only
+    def handle_my_custom_event(data):
+        emit('my response', {'message': '{0} has joined'.format(current_user.name)},
+             broadcast=True)
 
 Deployment
 ----------
