@@ -103,11 +103,13 @@ class SocketIO(object):
             def emit(self, event, *args, **kwargs):
                 ns_name = kwargs.pop('namespace', None)
                 broadcast = kwargs.pop('broadcast', False)
+                send_to_self = kwargs.pop('send_to_self', True)
                 room = kwargs.pop('room', None)
                 if broadcast or room:
                     if ns_name is None:
                         ns_name = self.ns_name
-                    return self.socketio.emit(event, *args, namespace=ns_name, room=room)
+                    return self.socketio.emit(event, *args, namespace=ns_name, room=room,
+                                                            send_to_self=send_to_self, sender=self)
                 if ns_name is None:
                     return self.base_emit(event, *args, **kwargs)
                 return request.namespace.socket[ns_name].base_emit(event, *args, **kwargs)
@@ -202,12 +204,15 @@ class SocketIO(object):
     def emit(self, event, *args, **kwargs):
         ns_name = kwargs.pop('namespace', '')
         room = kwargs.pop('room', None)
+        send_to_self = kwargs.pop('send_to_self', True)
+        sender = kwargs.pop('sender', None)
         if room is not None:
             for client in self.rooms.get(ns_name, {}).get(room, set()):
-                client.base_emit(event, *args, **kwargs)
+                if send_to_self or client.socket is not sender.socket:
+                    client.base_emit(event, *args, **kwargs)
         elif self.server:
             for sessid, socket in self.server.sockets.items():
-                if socket.active_ns.get(ns_name):
+                if socket.active_ns.get(ns_name) and (send_to_self or socket is not sender.socket):
                     socket[ns_name].base_emit(event, *args, **kwargs)
 
     def send(self, message, json=False, namespace=None, room=None):
