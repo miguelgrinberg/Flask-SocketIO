@@ -51,7 +51,6 @@ class SocketIO(object):
             base_emit = base_namespace.emit
             base_send = base_namespace.send
 
-
             def initialize(self):
                 self.rooms = set()
 
@@ -92,13 +91,15 @@ class SocketIO(object):
                 if self.socketio.server is None:
                     self.socketio.server = self.environ['socketio'].server
                 app = self.request
-                return self.socketio._dispatch_message(app, self, 'message', [data])
+                return self.socketio._dispatch_message(app, self, 'message',
+                                                       [data])
 
             def recv_json(self, data):
                 if self.socketio.server is None:
                     self.socketio.server = self.environ['socketio'].server
                 app = self.request
-                return self.socketio._dispatch_message(app, self, 'json', [data])
+                return self.socketio._dispatch_message(app, self, 'json',
+                                                       [data])
 
             def emit(self, event, *args, **kwargs):
                 ns_name = kwargs.pop('namespace', None)
@@ -107,10 +108,12 @@ class SocketIO(object):
                 if broadcast or room:
                     if ns_name is None:
                         ns_name = self.ns_name
-                    return self.socketio.emit(event, *args, namespace=ns_name, room=room)
+                    return self.socketio.emit(event, *args, namespace=ns_name,
+                                              room=room)
                 if ns_name is None:
                     return self.base_emit(event, *args, **kwargs)
-                return request.namespace.socket[ns_name].base_emit(event, *args, **kwargs)
+                return request.namespace.socket[ns_name].base_emit(event, *args,
+                                                                   **kwargs)
 
             def send(self, message, json=False, ns_name=None, callback=None,
                      broadcast=False, room=None):
@@ -120,9 +123,12 @@ class SocketIO(object):
                     return self.socketio.send(message, json, ns_name, room)
                 if ns_name is None:
                     return request.namespace.base_send(message, json, callback)
-                return request.namespace.socket[ns_name].base_send(message, json, callback)
+                return request.namespace.socket[ns_name].base_send(message,
+                                                                   json,
+                                                                   callback)
 
-        namespaces = dict( (ns_name, GenericNamespace) for ns_name in self.messages)
+        namespaces = dict((ns_name, GenericNamespace)
+                          for ns_name in self.messages)
         return namespaces
 
     def _dispatch_message(self, app, namespace, message, args=[]):
@@ -168,14 +174,15 @@ class SocketIO(object):
         self.messages[namespace][message] = handler
 
     def on(self, message, namespace=''):
-        if namespace in self.exception_handlers or self.default_exception_handler is not None:
+        if namespace in self.exception_handlers or \
+                self.default_exception_handler is not None:
             def decorator(f):
                 def func(*args, **kwargs):
                     try:
                         f(*args, **kwargs)
                     except:
-                        handler = self.exception_handlers.get(namespace,
-                                                              self.default_exception_handler)
+                        handler = self.exception_handlers.get(
+                            namespace, self.default_exception_handler)
                         type, value, traceback = sys.exc_info()
                         handler(value)
                 self.on_message(message, func, namespace)
@@ -232,11 +239,9 @@ class SocketIO(object):
                 port = int(server_name.rsplit(':', 1)[1])
             else:
                 port = 5000
-        # don't allow override of resource, otherwise allow SocketIOServer
-        # kwargs to be passed through
-        kwargs.pop('resource', None)
+        resource = kwargs.pop('resource', 'socket.io')
         self.server = SocketIOServer((host, port), app.wsgi_app,
-                                     resource='socket.io', **kwargs)
+                                     resource=resource, **kwargs)
         if app.debug:
             # monkey patching is required by the reloader
             from gevent import monkey
@@ -258,8 +263,10 @@ def emit(event, *args, **kwargs):
     return request.namespace.emit(event, *args, **kwargs)
 
 
-def send(message, json=False, namespace=None, callback=None, broadcast=False, room=None):
-    return request.namespace.send(message, json, namespace, callback, broadcast, room)
+def send(message, json=False, namespace=None, callback=None, broadcast=False,
+         room=None):
+    return request.namespace.send(message, json, namespace, callback, broadcast,
+                                  room)
 
 
 def join_room(room):
