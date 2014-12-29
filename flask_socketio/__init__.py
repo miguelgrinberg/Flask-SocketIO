@@ -70,6 +70,10 @@ class SocketIO(object):
                 if self.socketio._leave_room(self, room):
                     self.rooms.remove(room)
 
+            def leave_all_rooms(self):
+                for room in self.rooms.copy():
+                    self.leave_room(room)
+
             def recv_connect(self):
                 if self.socketio.server is None:
                     self.socketio.server = self.environ['socketio'].server
@@ -83,8 +87,7 @@ class SocketIO(object):
                     self.socketio.server = self.environ['socketio'].server
                 app = self.request
                 self.socketio._dispatch_message(app, self, 'disconnect')
-                for room in self.rooms.copy():
-                    self.leave_room(room)
+                self.leave_all_rooms()
                 return super(GenericNamespace, self).recv_disconnect()
 
             def recv_message(self, data):
@@ -126,6 +129,10 @@ class SocketIO(object):
                 return request.namespace.socket[ns_name].base_send(message,
                                                                    json,
                                                                    callback)
+
+            def disconnect(self, silent=False):
+                self.leave_all_rooms()
+                return super(GenericNamespace, self).disconnect(silent)
 
         namespaces = dict((ns_name, GenericNamespace)
                           for ns_name in self.messages)
