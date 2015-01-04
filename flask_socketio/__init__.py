@@ -240,9 +240,11 @@ class SocketIO(object):
             else:
                 port = 5000
         resource = kwargs.pop('resource', 'socket.io')
+        use_reloader = kwargs.pop('use_reloader', app.debug)
+
         self.server = SocketIOServer((host, port), app.wsgi_app,
                                      resource=resource, **kwargs)
-        if app.debug:
+        if use_reloader:
             # monkey patching is required by the reloader
             from gevent import monkey
             monkey.patch_all()
@@ -253,6 +255,7 @@ class SocketIO(object):
                 _log('info', ' * Running on http://%s:%d/' % (host, port))
             run_with_reloader(run_server)
         else:
+            _log('info', ' * Running on http://%s:%d/' % (host, port))
             self.server.serve_forever()
 
     def test_client(self, app, namespace=None):
