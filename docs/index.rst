@@ -300,3 +300,15 @@ It is possible to use nginx as a front-end reverse proxy that passes requests to
             proxy_set_header Connection "Upgrade";
         }
     }
+
+API Reference
+-------------
+
+.. module:: flask.ext.socketio
+.. autoclass:: SocketIO
+   :members:
+.. autofunction:: emit
+.. autofunction:: send
+.. autofunction:: join_room
+.. autofunction:: leave_room
+.. autofunction:: disconnect

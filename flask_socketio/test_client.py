@@ -86,7 +86,7 @@ class SocketIOTestClient(object):
         if namespace is None or namespace == '/':
             namespace = ''
         self.socket.active_ns[namespace] = \
-            self.socketio.get_namespaces(
+            self.socketio._get_namespaces(
                 TestBaseNamespace)[namespace](namespace, self.socket, app)
         self.socket[namespace].recv_connect()
 
