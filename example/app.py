@@ -9,7 +9,12 @@ from flask.ext.socketio import SocketIO, emit, join_room, leave_room, \
 
 app = Flask(__name__)
 app.debug = True
-app.config['SECRET_KEY'] = 'secret!'
+
+# configuration
+SECRET_KEY = 'secret!'
+
+app.config.from_object(__name__)
+app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 socketio = SocketIO(app)
 thread = None
 
