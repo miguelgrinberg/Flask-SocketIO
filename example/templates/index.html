@@ -43,32 +43,47 @@
                 socket.emit('my room event', {room: $('#room_name').val(), data: $('#room_data').val()});
                 return false;
             });
+            $('form#close').submit(function(event) {
+                socket.emit('close room', {room: $('#close_room').val()});
+                return false;
+            });
+            $('form#disconnect').submit(function(event) {
+                socket.emit('disconnect request');
+                return false;
+            });
         });
     </script>
 </head>
 <body>
     <h1>Flask-SocketIO Test</h1>
     <h2>Send:</h2>
-    <form id="emit" method='POST' action='#'>
+    <form id="emit" method="POST" action='#'>
         <input type="text" name="emit_data" id="emit_data" placeholder="Message">
         <input type="submit" value="Echo"></div>
     </form>
-    <form id="broadcast" method='POST' action='#'>
+    <form id="broadcast" method="POST" action='#'>
         <input type="text" name="broadcast_data" id="broadcast_data" placeholder="Message">
         <input type="submit" value="Broadcast">
     </form>
-    <form id="join" method='POST' action='#'>
+    <form id="join" method="POST" action='#'>
         <input type="text" name="join_room" id="join_room" placeholder="Room Name">
         <input type="submit" value="Join Room">
     </form>
-    <form id="leave" method='POST' action='#'>
+    <form id="leave" method="POST" action='#'>
         <input type="text" name="leave_room" id="leave_room" placeholder="Room Name">
         <input type="submit" value="Leave Room">
     </form>
-    <form id="send_room" method='POST' action='#'>
+    <form id="send_room" method="POST" action='#'>
         <input type="text" name="room_name" id="room_name" placeholder="Room Name">
         <input type="text" name="room_data" id="room_data" placeholder="Message">
         <input type="submit" value="Send to Room">
+    </form>
+    <form id="close" method="POST" action="#">
+        <input type="text" name="close_room" id="close_room" placeholder="Room Name">
+        <input type="submit" value="Close Room">
+    </form>
+    <form id="disconnect" method="POST" action="#">
+        <input type="submit" value="Disconnect">
     </form>
     <h2>Receive:</h2>
     <div id="log"></div>

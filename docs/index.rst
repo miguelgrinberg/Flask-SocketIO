@@ -311,4 +311,5 @@ API Reference
 .. autofunction:: send
 .. autofunction:: join_room
 .. autofunction:: leave_room
+.. autofunction:: close_room
 .. autofunction:: disconnect

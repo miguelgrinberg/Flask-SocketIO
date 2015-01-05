@@ -78,6 +78,9 @@ class SocketIO(object):
                 if self.socketio._leave_room(self, room):
                     self.rooms.remove(room)
 
+            def close_room(self, room):
+                self.socketio._close_room(self, room)
+
             def recv_connect(self):
                 if self.socketio.server is None:
                     self.socketio.server = self.environ['socketio'].server
@@ -91,8 +94,7 @@ class SocketIO(object):
                     self.socketio.server = self.environ['socketio'].server
                 app = self.request
                 self.socketio._dispatch_message(app, self, 'disconnect')
-                for room in self.rooms.copy():
-                    self.leave_room(room)
+                self.socketio._leave_all_rooms(self)
                 return super(GenericNamespace, self).recv_disconnect()
 
             def recv_message(self, data):
@@ -135,6 +137,10 @@ class SocketIO(object):
                                                                    json,
                                                                    callback)
 
+            def disconnect(self, silent=False):
+                self.socketio._leave_all_rooms(self)
+                return super(GenericNamespace, self).disconnect(silent)
+
         namespaces = dict((ns_name, GenericNamespace)
                           for ns_name in self.messages)
         return namespaces
@@ -175,6 +181,14 @@ class SocketIO(object):
 
                     return True
         return False
+
+    def _close_room(self, namespace, room):
+        self.close_room(room, namespace.ns_name)
+
+    def _leave_all_rooms(self, namespace):
+        if namespace.ns_name in self.rooms:
+            for room in self.rooms[namespace.ns_name].copy():
+                self._leave_room(namespace, room)
 
     def _on_message(self, message, handler, namespace=''):
         if namespace not in self.messages:
@@ -314,6 +328,22 @@ class SocketIO(object):
                 for sessid, socket in self.server.sockets.items():
                     if socket.active_ns.get(ns_name):
                         socket[ns_name].base_send(message, json)
+
+    def close_room(self, room, namespace=''):
+        """Close a room.
+
+        This function removes any users that are in the given room and then
+        deletes the room from the server. This function can be used outside
+        of a SocketIO event context.
+
+        :param room: The name of the room to close.
+        :param namespace: The namespace under which the room exists. Defaults
+                          to the global namespace.
+        """
+        if namespace in self.rooms:
+            if room in self.rooms[namespace]:
+                for ns in self.rooms[namespace][room].copy():
+                    self._leave_room(ns, room)
 
     def run(self, app, host=None, port=None, **kwargs):
         """Run the SocketIO web server.
@@ -472,6 +502,18 @@ def leave_room(room):
     :param room: The name of the room to leave.
     """
     return request.namespace.leave_room(room)
+
+
+def close_room(room):
+    """Close a room.
+
+    This function removes any users that are in the given room and then deletes
+    the room from the server. This is a function that can only be called from
+    a SocketIO event handler.
+
+    :param room: The name of the room to close.
+    """
+    return request.namespace.close_room(room)
 
 
 def disconnect(silent=False):

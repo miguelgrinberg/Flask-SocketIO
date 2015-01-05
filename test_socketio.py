@@ -15,83 +15,102 @@ app.config['SECRET_KEY'] = 'secret'
 socketio = SocketIO(app)
 disconnected = None
 
+
 @socketio.on('connect')
 def on_connect():
     send('connected')
     session['a'] = 'b'
 
+
 @socketio.on('disconnect')
-def on_connect():
+def on_disconnect():
     global disconnected
     disconnected = '/'
+
 
 @socketio.on('connect', namespace='/test')
 def on_connect_test():
     send('connected-test')
+
 
 @socketio.on('disconnect', namespace='/test')
 def on_disconnect_test():
     global disconnected
     disconnected = '/test'
 
+
 @socketio.on('message')
 def on_message(message):
     send(message)
+
 
 @socketio.on('json')
 def on_json(data):
     send(data, json=True, broadcast=True)
 
+
 @socketio.on('message', namespace='/test')
 def on_message_test(message):
     send(message)
+
 
 @socketio.on('json', namespace='/test')
 def on_json_test(data):
     send(data, json=True, namespace='/test')
 
+
 @socketio.on('my custom event')
 def on_custom_event(data):
     emit('my custom response', data)
+
 
 @socketio.on('my custom namespace event', namespace='/test')
 def on_custom_event_test(data):
     emit('my custom namespace response', data, namespace='/test')
 
+
 @socketio.on('my custom broadcast event')
 def on_custom_event_broadcast(data):
     emit('my custom response', data, broadcast=True)
+
 
 @socketio.on('my custom broadcast namespace event', namespace='/test')
 def on_custom_event_broadcast_test(data):
     emit('my custom namespace response', data, namespace='/test',
          broadcast=True)
 
+
 @socketio.on('join room')
 def on_join_room(data):
     join_room(data['room'])
+
 
 @socketio.on('leave room')
 def on_leave_room(data):
     leave_room(data['room'])
 
+
 @socketio.on('join room', namespace='/test')
-def on_join_room(data):
+def on_join_room_namespace(data):
     join_room(data['room'])
 
+
 @socketio.on('leave room', namespace='/test')
-def on_leave_room(data):
+def on_leave_room_namespace(data):
     leave_room(data['room'])
+
 
 @socketio.on('my room event')
 def on_room_event(data):
     room = data.pop('room')
     emit('my room response', data, room=room)
 
+
 @socketio.on('my room namespace event', namespace='/test')
 def on_room_namespace_event(data):
     room = data.pop('room')
     send('room message', room=room)
+
 
 @socketio.on_error()
 def error_handler(value):
@@ -101,9 +120,11 @@ def error_handler(value):
     else:
         raise value
 
+
 @socketio.on('error testing')
 def raise_error(data):
     raise AssertionError()
+
 
 @socketio.on_error('/test')
 def error_handler_namespace(value):
@@ -113,9 +134,11 @@ def error_handler_namespace(value):
     else:
         raise value
 
+
 @socketio.on("error testing", namespace='/test')
 def raise_error_namespace(data):
     raise AssertionError()
+
 
 @socketio.on_error_default
 def error_handler_default(value):
@@ -123,7 +146,8 @@ def error_handler_default(value):
         global error_testing_default
         error_testing_default = True
     else:
-        raise exception, value, traceback
+        raise value
+
 
 @socketio.on("error testing", namespace='/unused_namespace')
 def raise_error_default(data):
@@ -306,7 +330,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertTrue(received[0]['name'] == 'message')
         self.assertTrue(received[0]['args'] == 'room message')
         self.assertTrue(len(socketio.rooms) == 1)
-        client3.disconnect('/test')
+        socketio.close_room('one', namespace='/test')
         self.assertTrue(len(socketio.rooms) == 0)
 
     def test_error_handling(self):

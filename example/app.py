@@ -4,7 +4,8 @@ monkey.patch_all()
 import time
 from threading import Thread
 from flask import Flask, render_template, session, request
-from flask.ext.socketio import SocketIO, emit, join_room, leave_room
+from flask.ext.socketio import SocketIO, emit, join_room, leave_room, \
+    close_room, disconnect
 
 app = Flask(__name__)
 app.debug = True
@@ -66,12 +67,29 @@ def leave(message):
           'count': session['receive_count']})
 
 
+@socketio.on('close room', namespace='/test')
+def close(message):
+    session['receive_count'] = session.get('receive_count', 0) + 1
+    emit('my response', {'data': 'Room ' + message['room'] + ' is closing.',
+                         'count': session['receive_count']},
+         room=message['room'])
+    close_room(message['room'])
+
+
 @socketio.on('my room event', namespace='/test')
 def send_room_message(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response',
          {'data': message['data'], 'count': session['receive_count']},
          room=message['room'])
+
+
+@socketio.on('disconnect request', namespace='/test')
+def disconnect_request():
+    session['receive_count'] = session.get('receive_count', 0) + 1
+    emit('my response',
+         {'data': 'Disconnected!', 'count': session['receive_count']})
+    disconnect()
 
 
 @socketio.on('connect', namespace='/test')
