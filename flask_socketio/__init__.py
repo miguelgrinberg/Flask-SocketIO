@@ -18,6 +18,10 @@ class _SocketIOMiddleware(object):
         self.wsgi_app = app.wsgi_app
         self.socketio = socketio
 
+    def enable_debug_if_necessary(self):
+        if self.app.debug:
+            self.wsgi_app = DebuggedApplication(self.wsgi_app, evalex=True)
+
     def __call__(self, environ, start_response):
         path = environ['PATH_INFO'].strip('/')
         if path is not None and path.startswith('socket.io'):
@@ -391,10 +395,7 @@ class SocketIO(object):
                 port = 5000
         resource = kwargs.pop('resource', 'socket.io')
         use_reloader = kwargs.pop('use_reloader', app.debug)
-
-        if app.debug:
-            app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
-
+        app.wsgi_app.enable_debug_if_necessary()
         self.server = SocketIOServer((host, port), app.wsgi_app,
                                      resource=resource, **kwargs)
         if use_reloader:
