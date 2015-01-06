@@ -15,8 +15,6 @@ from test_client import SocketIOTestClient
 class _SocketIOMiddleware(object):
     def __init__(self, app, socketio):
         self.app = app
-        if app.debug:
-            app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
         self.wsgi_app = app.wsgi_app
         self.socketio = socketio
 
@@ -393,6 +391,9 @@ class SocketIO(object):
                 port = 5000
         resource = kwargs.pop('resource', 'socket.io')
         use_reloader = kwargs.pop('use_reloader', app.debug)
+
+        if app.debug:
+            app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
 
         self.server = SocketIOServer((host, port), app.wsgi_app,
                                      resource=resource, **kwargs)
