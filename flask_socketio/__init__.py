@@ -291,6 +291,7 @@ class SocketIO(object):
         """
         ns_name = kwargs.pop('namespace', '')
         room = kwargs.pop('room', None)
+        broadcast = kwargs.pop('broadcast', False)
         if room is not None:
             for client in self.rooms.get(ns_name, {}).get(room, set()):
                 client.base_emit(event, *args, **kwargs)
