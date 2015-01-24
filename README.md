@@ -5,6 +5,14 @@ Flask-SocketIO
 
 Socket.IO integration for Flask applications.
 
+
+Installation
+---------
+
+Using the command line:
+
+    pip install flask-socketio
+
 Example
 -------
 
