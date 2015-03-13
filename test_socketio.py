@@ -7,7 +7,7 @@ import coverage
 cov = coverage.coverage()
 cov.start()
 
-from flask import Flask, session
+from flask import Flask, session, request
 from flask.ext.socketio import SocketIO, send, emit, join_room, leave_room
 
 app = Flask(__name__)
@@ -61,6 +61,13 @@ def on_json_test(data):
 
 @socketio.on('my custom event')
 def on_custom_event(data):
+    emit('my custom response', data)
+
+
+@socketio.on('other custom event')
+def get_request_event(data):
+    global request_event_data
+    request_event_data = request.event
     emit('my custom response', data)
 
 
@@ -244,6 +251,15 @@ class TestSocketIO(unittest.TestCase):
         self.assertTrue(len(received[0]['args']) == 1)
         self.assertTrue(received[0]['name'] == 'my custom response')
         self.assertTrue(received[0]['args'][0]['a'] == 'b')
+
+    def test_request_event_data(self):
+        client = socketio.test_client(app)
+        client.get_received()  # clean received
+        global request_event_data
+        request_event_data = None
+        client.emit('other custom event', 'foo')
+        expected_data = {'message': 'other custom event', 'args' : ('foo',)}
+        self.assertTrue(request_event_data == expected_data)
 
     def test_emit_namespace(self):
         client = socketio.test_client(app, namespace='/test')

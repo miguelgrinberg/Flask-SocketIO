@@ -198,6 +198,19 @@ Flask-SocketIO can also deal with exceptions::
 
 Error handler functions take the exception object as an argument.
 
+The message and data arguments of the current request can also be inspected with the ``request.event`` variable, which is useful for error logging and debugging outside the event handler::
+
+    from flask import request
+
+    @socketio.on("my error event")
+    def on_my_event(data):
+        raise RuntimeError()
+
+    @socketio.on_error_default
+    def default_error_handler(e):
+        print request.event["message"] # "my error event"
+        print request.event["args"]    # (data,)
+
 Access to Flask's Context Globals
 ---------------------------------
 

@@ -152,6 +152,9 @@ class SocketIO(object):
             return
         with app.request_context(namespace.environ):
             request.namespace = namespace
+            request.event = {
+                "message": message,
+                "args": args}
             for k, v in namespace.session.items():
                 session[k] = v
             ret = self.messages[namespace.ns_name][message](*args)
