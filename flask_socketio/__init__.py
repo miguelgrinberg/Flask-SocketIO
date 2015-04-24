@@ -221,12 +221,12 @@ class SocketIO(object):
             def decorator(event_handler):
                 def func(*args, **kwargs):
                     try:
-                        event_handler(*args, **kwargs)
+                        return event_handler(*args, **kwargs)
                     except:
                         handler = self.exception_handlers.get(
                             namespace, self.default_exception_handler)
                         type, value, traceback = sys.exc_info()
-                        handler(value)
+                        return handler(value)
                 self._on_message(message, func, namespace)
                 return func
         else:
