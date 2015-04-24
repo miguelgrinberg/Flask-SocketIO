@@ -42,12 +42,14 @@ def on_disconnect_test():
 @socketio.on('message')
 def on_message(message):
     send(message)
-
+    if message not in "test noack":
+        return message
 
 @socketio.on('json')
 def on_json(data):
     send(data, json=True, broadcast=True)
-
+    if not data.get('noack'):
+        return data
 
 @socketio.on('message', namespace='/test')
 def on_message_test(message):
@@ -62,7 +64,8 @@ def on_json_test(data):
 @socketio.on('my custom event')
 def on_custom_event(data):
     emit('my custom response', data)
-
+    if not data.get('noack'):
+        return data
 
 @socketio.on('other custom event')
 def get_request_event(data):
@@ -126,6 +129,7 @@ def error_handler(value):
         error_testing = True
     else:
         raise value
+    return value
 
 
 @socketio.on('error testing')
@@ -140,6 +144,7 @@ def error_handler_namespace(value):
         error_testing_namespace = True
     else:
         raise value
+    return value
 
 
 @socketio.on("error testing", namespace='/test')
@@ -154,6 +159,7 @@ def error_handler_default(value):
         error_testing_default = True
     else:
         raise value
+    return value
 
 
 @socketio.on("error testing", namespace='/unused_namespace')
@@ -373,6 +379,42 @@ class TestSocketIO(unittest.TestCase):
         client.emit("error testing", "", namespace='/unused_namespace')
         self.assertTrue(error_testing_default)
 
+	def test_ack(self):
+		client1 = socketio.test_client(app)
+		ack = client1.send('echo this message back')
+		self.assertIsNot(ack, None)
+		self.assertIs(ack, 'echo this message back')
+		client2 = socketio.test_client(app)
+		ack2 = client2.send({'a': 'b'}, json=True)
+		self.assertIsNot(ack2, None)
+		self.assertEqual(ack2, {'a': 'b'})
+		client3 = socketio.test_client(app)
+		ack3 = client3.emit('my custom event', {'a': 'b'})
+		self.assertIsNot(ack3, None)
+		self.assertEqual(ack3, {'a': 'b'})
+
+	def test_noack(self):
+		client1 = socketio.test_client(app)
+		no_ack_dict = {'noack': True}
+		noack = client1.send("test noack")
+		self.assertIs(noack, None)
+		client2 = socketio.test_client(app)
+		noack2 = client2.send(no_ack_dict, json=True)
+		client3 = socketio.test_client(app)
+		self.assertIs(noack2, None)
+		noack3 = client3.emit('my custom event', no_ack_dict)
+		self.assertIs(noack3, None)
+
+	def test_error_handling_ack(self):
+		client1 = socketio.test_client(app)
+		errorack = client1.emit("error testing", "")
+		self.assertIsNotNone(errorack)
+		client2 = socketio.test_client(app, namespace='/test')
+		errorack_namespace = client2.emit("error testing", "", namespace='/test')
+		self.assertIsNotNone(errorack_namespace)
+		client3 = socketio.test_client(app, namespace='/unused_namespace')
+		errorack_default = client3.emit("error testing", "", namespace='/unused_namespace')
+		self.assertIsNotNone(errorack_default)
 
 if __name__ == '__main__':
     unittest.main()
