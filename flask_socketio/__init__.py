@@ -358,6 +358,8 @@ class SocketIO(object):
                      5000.
         :param use_reloader: ``True`` to enable the Flask reloader, ``False``
                              to disable it.
+        :param extra_files: A list of additional files that the Flask 
+                            reloader should observe. Defaults to ``None``
         :param resource: The SocketIO resource name. Defaults to
                          ``'socket.io'``. Leave this as is unless you know what
                          you are doing.
@@ -396,6 +398,7 @@ class SocketIO(object):
                 port = 5000
         resource = kwargs.pop('resource', 'socket.io')
         use_reloader = kwargs.pop('use_reloader', app.debug)
+        extra_files = kwargs.pop('extra_files', None)
 
         self.server = SocketIOServer((host, port), app.wsgi_app,
                                      resource=resource, **kwargs)
@@ -408,7 +411,7 @@ class SocketIO(object):
                 self.server.serve_forever()
             if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
                 _log('info', ' * Running on http://%s:%d/' % (host, port))
-            run_with_reloader(run_server)
+            run_with_reloader(run_server, extra_files=extra_files)
         else:
             _log('info', ' * Running on http://%s:%d/' % (host, port))
             self.server.serve_forever()
