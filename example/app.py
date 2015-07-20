@@ -1,16 +1,16 @@
-from gevent import monkey
-monkey.patch_all()
+import eventlet
+eventlet.monkey_patch()
 
 import time
 from threading import Thread
 from flask import Flask, render_template, session, request
-from flask.ext.socketio import SocketIO, emit, join_room, leave_room, \
-    close_room, disconnect
+from flask_socketio import SocketIO, emit, join_room, leave_room, \
+    close_room, rooms, disconnect
 
 app = Flask(__name__)
 app.debug = True
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
+socketio = SocketIO(app, logger=True)
 thread = None
 
 
@@ -54,7 +54,7 @@ def join(message):
     join_room(message['room'])
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response',
-         {'data': 'In rooms: ' + ', '.join(request.namespace.rooms),
+         {'data': 'In rooms: ' + ', '.join(rooms()),
           'count': session['receive_count']})
 
 
@@ -63,7 +63,7 @@ def leave(message):
     leave_room(message['room'])
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my response',
-         {'data': 'In rooms: ' + ', '.join(request.namespace.rooms),
+         {'data': 'In rooms: ' + ', '.join(rooms()),
           'count': session['receive_count']})
 
 
@@ -93,7 +93,7 @@ def disconnect_request():
 
 
 @socketio.on('connect', namespace='/test')
-def test_connect():
+def test_connect(env):
     emit('my response', {'data': 'Connected', 'count': 0})
 
 

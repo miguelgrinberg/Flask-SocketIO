@@ -1,34 +1,14 @@
 import os
 import sys
 
-from socketio import socketio_manage
-from socketio.server import SocketIOServer
-from socketio.namespace import BaseNamespace
-from flask import request, session, json
+import eventlet
+import socketio
+import flask
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 from werkzeug._internal import _log
 
-from test_client import SocketIOTestClient
-
-
-class _SocketIOMiddleware(object):
-    def __init__(self, app, socketio):
-        self.app = app
-        if app.debug:
-            app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
-        self.wsgi_app = app.wsgi_app
-        self.socketio = socketio
-
-    def __call__(self, environ, start_response):
-        path = environ['PATH_INFO'].strip('/')
-        if path is not None and path.startswith('socket.io'):
-            if 'socketio' not in environ:
-                raise RuntimeError('You need to use a gevent-socketio server.')
-            socketio_manage(environ, self.socketio._get_namespaces(), self.app,
-                            json_loads=json.loads, json_dumps=json.dumps)
-        else:
-            return self.wsgi_app(environ, start_response)
+#from test_client import SocketIOTestClient
 
 
 class SocketIO(object):
@@ -40,165 +20,28 @@ class SocketIO(object):
                 available.
     """
 
-    def __init__(self, app=None):
-        if app:
-            self.init_app(app)
-        self.messages = {}
-        self.rooms = {}
+    def __init__(self, app=None, **kwargs):
+        self.app = None
         self.server = None
-
         self.exception_handlers = {}
         self.default_exception_handler = None
+        if app is not None:
+            self.init_app(app, **kwargs)
 
-    def init_app(self, app):
-        app.wsgi_app = _SocketIOMiddleware(app, self)
+    def init_app(self, app, **kwargs):
+        if self.app is not None and self.app != app:
+            raise RuntimeError('Cannot associate a SocketIO instance with '
+                               'more than one application')
+        if not hasattr(app, 'extensions'):
+            app.extensions = {}
+        app.extensions['socketio'] = self
+        self.server = socketio.Server(**kwargs)
+        self.app = app
 
-    def _get_namespaces(self, base_namespace=BaseNamespace):
-        class GenericNamespace(base_namespace):
-            socketio = self
-            base_emit = base_namespace.emit
-            base_send = base_namespace.send
+    def _on_message(self, message, handler, namespace='/'):
+        self.server.on(message, handler, namespace=namespace)
 
-            def initialize(self):
-                self.rooms = set()
-
-            def process_event(self, packet):
-                if self.socketio.server is None:
-                    self.socketio.server = self.environ['socketio'].server
-                message = packet['name']
-                args = packet['args']
-                app = self.request
-                return self.socketio._dispatch_message(app, self, message, args)
-
-            def join_room(self, room):
-                if self.socketio._join_room(self, room):
-                    self.rooms.add(room)
-
-            def leave_room(self, room):
-                if self.socketio._leave_room(self, room):
-                    self.rooms.remove(room)
-
-            def close_room(self, room):
-                self.socketio._close_room(self, room)
-
-            def recv_connect(self):
-                if self.socketio.server is None:
-                    self.socketio.server = self.environ['socketio'].server
-                ret = super(GenericNamespace, self).recv_connect()
-                app = self.request
-                self.socketio._dispatch_message(app, self, 'connect')
-                return ret
-
-            def recv_disconnect(self):
-                if self.socketio.server is None:
-                    self.socketio.server = self.environ['socketio'].server
-                app = self.request
-                self.socketio._dispatch_message(app, self, 'disconnect')
-                self.socketio._leave_all_rooms(self)
-                return super(GenericNamespace, self).recv_disconnect()
-
-            def recv_message(self, data):
-                if self.socketio.server is None:
-                    self.socketio.server = self.environ['socketio'].server
-                app = self.request
-                return self.socketio._dispatch_message(app, self, 'message',
-                                                       [data])
-
-            def recv_json(self, data):
-                if self.socketio.server is None:
-                    self.socketio.server = self.environ['socketio'].server
-                app = self.request
-                return self.socketio._dispatch_message(app, self, 'json',
-                                                       [data])
-
-            def emit(self, event, *args, **kwargs):
-                ns_name = kwargs.pop('namespace', None)
-                broadcast = kwargs.pop('broadcast', False)
-                room = kwargs.pop('room', None)
-                if broadcast or room:
-                    if ns_name is None:
-                        ns_name = self.ns_name
-                    return self.socketio.emit(event, *args, namespace=ns_name,
-                                              room=room)
-                if ns_name is None:
-                    return self.base_emit(event, *args, **kwargs)
-                return request.namespace.socket[ns_name].base_emit(event, *args,
-                                                                   **kwargs)
-
-            def send(self, message, json=False, ns_name=None, callback=None,
-                     broadcast=False, room=None):
-                if broadcast or room:
-                    if ns_name is None:
-                        ns_name = self.ns_name
-                    return self.socketio.send(message, json, ns_name, room)
-                if ns_name is None:
-                    return request.namespace.base_send(message, json, callback)
-                return request.namespace.socket[ns_name].base_send(message,
-                                                                   json,
-                                                                   callback)
-
-            def disconnect(self, silent=False):
-                self.socketio._leave_all_rooms(self)
-                return super(GenericNamespace, self).disconnect(silent)
-
-        namespaces = dict((ns_name, GenericNamespace)
-                          for ns_name in self.messages)
-        return namespaces
-
-    def _dispatch_message(self, app, namespace, message, args=[]):
-        if namespace.ns_name not in self.messages:
-            return
-        if message not in self.messages[namespace.ns_name]:
-            return
-        with app.request_context(namespace.environ):
-            request.namespace = namespace
-            request.event = {
-                "message": message,
-                "args": args}
-            for k, v in namespace.session.items():
-                session[k] = v
-            ret = self.messages[namespace.ns_name][message](*args)
-            for k, v in session.items():
-                namespace.session[k] = v
-            return ret
-
-    def _join_room(self, namespace, room):
-        if namespace.ns_name not in self.rooms:
-            self.rooms[namespace.ns_name] = {}
-        if room not in self.rooms[namespace.ns_name]:
-            self.rooms[namespace.ns_name][room] = set()
-        if namespace not in self.rooms[namespace.ns_name][room]:
-            self.rooms[namespace.ns_name][room].add(namespace)
-            return True
-        return False
-
-    def _leave_room(self, namespace, room):
-        if namespace.ns_name in self.rooms:
-            if room in self.rooms[namespace.ns_name]:
-                if namespace in self.rooms[namespace.ns_name][room]:
-                    self.rooms[namespace.ns_name][room].remove(namespace)
-                    if len(self.rooms[namespace.ns_name][room]) == 0:
-                        del self.rooms[namespace.ns_name][room]
-                        if len(self.rooms[namespace.ns_name]) == 0:
-                            del self.rooms[namespace.ns_name]
-
-                    return True
-        return False
-
-    def _close_room(self, namespace, room):
-        self.close_room(room, namespace.ns_name)
-
-    def _leave_all_rooms(self, namespace):
-        if namespace.ns_name in self.rooms:
-            for room in self.rooms[namespace.ns_name].copy():
-                self._leave_room(namespace, room)
-
-    def _on_message(self, message, handler, namespace=''):
-        if namespace not in self.messages:
-            self.messages[namespace] = {}
-        self.messages[namespace][message] = handler
-
-    def on(self, message, namespace=''):
+    def on(self, message, namespace=None):
         """Decorator to register a SocketIO event handler.
 
         This decorator must be applied to SocketIO event handlers. Example::
@@ -216,24 +59,43 @@ class SocketIO(object):
         :param namespace: The namespace on which the handler is to be
                           registered. Defaults to the global namespace.
         """
+        namespace = namespace or '/'
+
         if namespace in self.exception_handlers or \
                 self.default_exception_handler is not None:
-            def decorator(event_handler):
-                def func(*args, **kwargs):
-                    try:
-                        return event_handler(*args, **kwargs)
-                    except:
-                        handler = self.exception_handlers.get(
-                            namespace, self.default_exception_handler)
-                        type, value, traceback = sys.exc_info()
-                        return handler(value)
-                self._on_message(message, func, namespace)
-                return func
+            def decorator(handler):
+                def _handler(sid, *args):
+                    with self.app.request_context(self.server.environ[sid]):
+                        if 'saved_session' in self.server.environ[sid]:
+                            self._copy_session(self.server.environ[sid]['saved_session'], flask.session)
+                        flask.request.sid = sid
+                        flask.request.namespace = namespace
+                        try:
+                            ret = handler(*args)
+                        except:
+                            err_handler = self.exception_handlers.get(
+                                namespace, self.default_exception_handler)
+                            type, value, traceback = sys.exc_info()
+                            return err_handler(value)
+                        self.server.environ[sid]['saved_session'] = {}
+                        self._copy_session(flask.session, self.server.environ[sid]['saved_session'])
+                        return ret
+                self.server.on(message, _handler, namespace=namespace)
+            return decorator
         else:
-            def decorator(event_handler):
-                self._on_message(message, event_handler, namespace)
-                return event_handler
-        return decorator
+            def decorator(handler):
+                def _handler(sid, *args):
+                    with self.app.request_context(self.server.environ[sid]):
+                        if 'saved_session' in self.server.environ[sid]:
+                            self._copy_session(self.server.environ[sid]['saved_session'], flask.session)
+                        flask.request.sid = sid
+                        flask.request.namespace = namespace
+                        ret = handler(*args)
+                        self.server.environ[sid]['saved_session'] = {}
+                        self._copy_session(flask.session, self.server.environ[sid]['saved_session'])
+                        return ret
+                self.server.on(message, _handler, namespace=namespace)
+            return decorator
 
     def on_error(self, namespace=''):
         """Decorator to define a custom error handler for SocketIO events.
@@ -292,17 +154,12 @@ class SocketIO(object):
                      this parameter is not included, the event is sent to
                      all connected users.
         """
-        ns_name = kwargs.pop('namespace', '')
-        room = kwargs.pop('room', None)
-        if room is not None:
-            for client in self.rooms.get(ns_name, {}).get(room, set()):
-                client.base_emit(event, *args, **kwargs)
-        elif self.server:
-            for sessid, socket in self.server.sockets.items():
-                if socket.active_ns.get(ns_name):
-                    socket[ns_name].base_emit(event, *args, **kwargs)
+        # TODO: handle skip_sid
+        self.server.emit(event, *args, namespace=kwargs.get('namespace', '/'),
+                         room=kwargs.get('room'),
+                         callback=kwargs.get('callback'))
 
-    def send(self, message, json=False, namespace=None, room=None):
+    def send(self, data, json=False, namespace=None, room=None):
         """Send a server-generated SocketIO message.
 
         This function sends a simple SocketIO message to one or more connected
@@ -320,19 +177,9 @@ class SocketIO(object):
                      this parameter is not included, the message is sent to
                      all connected users.
         """
-        ns_name = namespace
-        if ns_name is None:
-            ns_name = ''
-        if room:
-            for client in self.rooms.get(ns_name, {}).get(room, set()):
-                client.base_send(message, json)
-        else:
-            if self.server:
-                for sessid, socket in self.server.sockets.items():
-                    if socket.active_ns.get(ns_name):
-                        socket[ns_name].base_send(message, json)
+        self.server.send(data, namespace=namespace, room=room)
 
-    def close_room(self, room, namespace=''):
+    def close_room(self, room, namespace='/'):
         """Close a room.
 
         This function removes any users that are in the given room and then
@@ -343,10 +190,7 @@ class SocketIO(object):
         :param namespace: The namespace under which the room exists. Defaults
                           to the global namespace.
         """
-        if namespace in self.rooms:
-            if room in self.rooms[namespace]:
-                for ns in self.rooms[namespace][room].copy():
-                    self._leave_room(ns, room)
+        self.server.close_room(room, namespace)
 
     def run(self, app, host=None, port=None, **kwargs):
         """Run the SocketIO web server.
@@ -394,28 +238,32 @@ class SocketIO(object):
                 port = int(server_name.rsplit(':', 1)[1])
             else:
                 port = 5000
+
         resource = kwargs.pop('resource', 'socket.io')
-        use_reloader = kwargs.pop('use_reloader', app.debug)
-
-        self.server = SocketIOServer((host, port), app.wsgi_app,
-                                     resource=resource, **kwargs)
-        if use_reloader:
-            # monkey patching is required by the reloader
-            from gevent import monkey
-            monkey.patch_all()
-
-            def run_server():
-                self.server.serve_forever()
-            if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
-                _log('info', ' * Running on http://%s:%d/' % (host, port))
-            run_with_reloader(run_server)
-        else:
-            _log('info', ' * Running on http://%s:%d/' % (host, port))
-            self.server.serve_forever()
+        # use_reloader = kwargs.pop('use_reloader', app.debug)
+        # if use_reloader:
+        #     # monkey patching is required by the reloader
+        #     from gevent import monkey
+        #     monkey.patch_all()
+        #
+        #     def run_server():
+        #         self.server.serve_forever()
+        #     if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
+        #         _log('info', ' * Running on http://%s:%d/' % (host, port))
+        #     run_with_reloader(run_server)
+        # else:
+        #     _log('info', ' * Running on http://%s:%d/' % (host, port))
+        #     self.server.serve_forever()
+        app = socketio.Middleware(self.server, app, socketio_path=resource)
+        eventlet.wsgi.server(eventlet.listen((host, port)), app)
 
     def test_client(self, app, namespace=None):
         """Return a simple SocketIO client that can be used for unit tests."""
         return SocketIOTestClient(app, self, namespace)
+
+    def _copy_session(self, src, dest):
+        for k in src:
+            dest[k] = src[k]
 
 
 def emit(event, *args, **kwargs):
@@ -441,11 +289,19 @@ def emit(event, *args, **kwargs):
                       event.
     :param room: Send the message to all the users in the given room.
     """
-    return request.namespace.emit(event, *args, **kwargs)
+    broadcast = kwargs.get('broadcast')
+    room = kwargs.get('room')
+    namespace = kwargs.get('namespace', flask.request.namespace)
+    callback = kwargs.get('callback')
+    if room is None and not broadcast:
+        room = flask.request.sid
+
+    socketio = flask.current_app.extensions['socketio']
+    return socketio.emit(event, *args, namespace=namespace, room=room,
+                         callback=callback)
 
 
-def send(message, json=False, namespace=None, callback=None, broadcast=False,
-         room=None):
+def send(message, **kwargs):
     """Send a SocketIO message.
 
     This function sends a simple SocketIO message to one or more connected
@@ -454,7 +310,6 @@ def send(message, json=False, namespace=None, callback=None, broadcast=False,
     can only be called from a SocketIO event handler.
 
     :param message: The message to send, either a string or a JSON blob.
-    :param json: ``True`` if ``message`` is a JSON blob, ``False`` otherwise.
     :param namespace: The namespace under which the message is to be sent.
                       Defaults to the namespace used by the originating event.
                       An empty string can be used to use the global namespace.
@@ -465,8 +320,16 @@ def send(message, json=False, namespace=None, callback=None, broadcast=False,
                       event.
     :param room: Send the message to all the users in the given room.
     """
-    return request.namespace.send(message, json, namespace, callback, broadcast,
-                                  room)
+    namespace = kwargs.get('namespace', flask.request.namespace)
+    callback = kwargs.get('callback')
+    broadcast = kwargs.get('broadcast')
+    room = kwargs.get('room')
+    if room is None and not broadcast:
+        room = flask.request.sid
+
+    socketio = flask.current_app.extensions['socketio']
+    return socketio.send(message, namespace=namespace, room=room,
+                         callback=callback)
 
 
 def join_room(room):
@@ -485,7 +348,9 @@ def join_room(room):
 
     :param room: The name of the room to join.
     """
-    return request.namespace.join_room(room)
+    socketio = flask.current_app.extensions['socketio']
+    socketio.server.enter_room(flask.request.sid, room,
+                               namespace=flask.request.namespace)
 
 
 def leave_room(room):
@@ -504,7 +369,9 @@ def leave_room(room):
 
     :param room: The name of the room to leave.
     """
-    return request.namespace.leave_room(room)
+    socketio = flask.current_app.extensions['socketio']
+    socketio.server.leave_room(flask.request.sid, room,
+                               namespace=flask.request.namespace)
 
 
 def close_room(room):
@@ -516,7 +383,20 @@ def close_room(room):
 
     :param room: The name of the room to close.
     """
-    return request.namespace.close_room(room)
+    socketio = flask.current_app.extensions['socketio']
+    socketio.server.close_room(room, namespace=flask.request.namespace)
+
+
+def rooms():
+    """Return a list of the rooms the client is in.
+
+    This function returns all the rooms the client has entered, including its
+    own room, assigned by the Socket.IO server. This is a function that can
+    only be called from a SocketIO event handler.
+    """
+    socketio = flask.current_app.extensions['socketio']
+    return socketio.server.rooms(flask.request.sid,
+                                 namespace=flask.request.namespace)
 
 
 def disconnect(silent=False):
@@ -534,4 +414,5 @@ def disconnect(silent=False):
     :param silent: close the connection, but do not actually send a disconnect
                    packet to the client.
     """
-    return request.namespace.disconnect(silent)
+    #return flask.request.namespace.disconnect(silent)
+    raise NotImplementedError()
