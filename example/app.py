@@ -93,7 +93,7 @@ def disconnect_request():
 
 
 @socketio.on('connect', namespace='/test')
-def test_connect(env):
+def test_connect():
     emit('my response', {'data': 'Connected', 'count': 0})
 
 

@@ -8,7 +8,7 @@ from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 from werkzeug._internal import _log
 
-#from test_client import SocketIOTestClient
+from .test_client import SocketIOTestClient
 
 
 class SocketIO(object):
@@ -61,43 +61,36 @@ class SocketIO(object):
         """
         namespace = namespace or '/'
 
-        if namespace in self.exception_handlers or \
-                self.default_exception_handler is not None:
-            def decorator(handler):
-                def _handler(sid, *args):
-                    with self.app.request_context(self.server.environ[sid]):
-                        if 'saved_session' in self.server.environ[sid]:
-                            self._copy_session(self.server.environ[sid]['saved_session'], flask.session)
-                        flask.request.sid = sid
-                        flask.request.namespace = namespace
-                        try:
+        def decorator(handler):
+            def _handler(sid, *args):
+                with self.app.request_context(self.server.environ[sid]):
+                    if 'saved_session' in self.server.environ[sid]:
+                        self._copy_session(
+                            self.server.environ[sid]['saved_session'],
+                            flask.session)
+                    flask.request.sid = sid
+                    flask.request.namespace = namespace
+                    try:
+                        if message == 'connect':
+                            ret = handler()
+                        else:
                             ret = handler(*args)
-                        except:
-                            err_handler = self.exception_handlers.get(
-                                namespace, self.default_exception_handler)
-                            type, value, traceback = sys.exc_info()
-                            return err_handler(value)
-                        self.server.environ[sid]['saved_session'] = {}
-                        self._copy_session(flask.session, self.server.environ[sid]['saved_session'])
-                        return ret
-                self.server.on(message, _handler, namespace=namespace)
-            return decorator
-        else:
-            def decorator(handler):
-                def _handler(sid, *args):
-                    with self.app.request_context(self.server.environ[sid]):
-                        if 'saved_session' in self.server.environ[sid]:
-                            self._copy_session(self.server.environ[sid]['saved_session'], flask.session)
-                        flask.request.sid = sid
-                        flask.request.namespace = namespace
-                        ret = handler(*args)
-                        self.server.environ[sid]['saved_session'] = {}
-                        self._copy_session(flask.session, self.server.environ[sid]['saved_session'])
-                        return ret
-                self.server.on(message, _handler, namespace=namespace)
-            return decorator
+                    except:
+                        err_handler = self.exception_handlers.get(
+                            namespace, self.default_exception_handler)
+                        if err_handler is None:
+                            raise
+                        type, value, traceback = sys.exc_info()
+                        return err_handler(value)
+                    self.server.environ[sid]['saved_session'] = {}
+                    self._copy_session(
+                        flask.session,
+                        self.server.environ[sid]['saved_session'])
+                    return ret
+            self.server.on(message, _handler, namespace=namespace)
+        return decorator
 
-    def on_error(self, namespace=''):
+    def on_error(self, namespace=None):
         """Decorator to define a custom error handler for SocketIO events.
 
         This decorator can be applied to a function that acts as an error
@@ -112,6 +105,7 @@ class SocketIO(object):
         :param namespace: The namespace for which to register the error
                           handler. Defaults to the global namespace.
         """
+        namespace = namespace or '/'
         def decorator(exception_handler):
             if not callable(exception_handler):
                 raise ValueError('exception_handler must be callable')
@@ -153,13 +147,18 @@ class SocketIO(object):
         :param room: Send the message to all the users in the given room. If
                      this parameter is not included, the event is sent to
                      all connected users.
+        :param callback: If given, this function will be called to acknowledge
+                         that the client has received the message. The
+                         arguments that will be passed to the function are
+                         those provided by the client. Callback functions can
+                         only be used when addressing an individual client.
         """
         # TODO: handle skip_sid
         self.server.emit(event, *args, namespace=kwargs.get('namespace', '/'),
                          room=kwargs.get('room'),
                          callback=kwargs.get('callback'))
 
-    def send(self, data, json=False, namespace=None, room=None):
+    def send(self, data, json=False, namespace=None, room=None, callback=None):
         """Send a server-generated SocketIO message.
 
         This function sends a simple SocketIO message to one or more connected
@@ -176,8 +175,18 @@ class SocketIO(object):
         :param room: Send the message only to the users in the given room. If
                      this parameter is not included, the message is sent to
                      all connected users.
+        :param callback: If given, this function will be called to acknowledge
+                         that the client has received the message. The
+                         arguments that will be passed to the function are
+                         those provided by the client. Callback functions can
+                         only be used when addressing an individual client.
         """
-        self.server.send(data, namespace=namespace, room=room)
+        if json:
+            self.emit('json', data, namespace=namespace, room=room,
+                      callback=callback)
+        else:
+            self.emit('message', data, namespace=namespace, room=room,
+                      callback=callback)
 
     def close_room(self, room, namespace='/'):
         """Close a room.
