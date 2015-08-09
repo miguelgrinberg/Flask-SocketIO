@@ -3,14 +3,14 @@ eventlet.monkey_patch()
 
 import time
 from threading import Thread
-from flask import Flask, render_template, session, request
+from flask import Flask, render_template, session
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms, disconnect
 
 app = Flask(__name__)
 app.debug = True
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, logger=True)
+socketio = SocketIO(app)
 thread = None
 
 

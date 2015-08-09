@@ -1,12 +1,7 @@
-import os
 import sys
 
-import eventlet
 import socketio
 import flask
-from werkzeug.debug import DebuggedApplication
-from werkzeug.serving import run_with_reloader
-from werkzeug._internal import _log
 
 from .test_client import SocketIOTestClient
 
@@ -23,6 +18,8 @@ class SocketIO(object):
     def __init__(self, app=None, **kwargs):
         self.app = None
         self.server = None
+        self.server_options = None
+        self.handlers = {}
         self.exception_handlers = {}
         self.default_exception_handler = None
         if app is not None:
@@ -35,11 +32,8 @@ class SocketIO(object):
         if not hasattr(app, 'extensions'):
             app.extensions = {}
         app.extensions['socketio'] = self
-        self.server = socketio.Server(**kwargs)
+        self.server_options = kwargs
         self.app = app
-
-    def _on_message(self, message, handler, namespace='/'):
-        self.server.on(message, handler, namespace=namespace)
 
     def on(self, message, namespace=None):
         """Decorator to register a SocketIO event handler.
@@ -70,6 +64,7 @@ class SocketIO(object):
                             flask.session)
                     flask.request.sid = sid
                     flask.request.namespace = namespace
+                    flask.request.event = {'message': message, 'args': args}
                     try:
                         if message == 'connect':
                             ret = handler()
@@ -87,7 +82,9 @@ class SocketIO(object):
                         flask.session,
                         self.server.environ[sid]['saved_session'])
                     return ret
-            self.server.on(message, _handler, namespace=namespace)
+            if namespace not in self.handlers:
+                self.handlers[namespace] = {}
+            self.handlers[namespace][message] = _handler
         return decorator
 
     def on_error(self, namespace=None):
@@ -188,7 +185,7 @@ class SocketIO(object):
             self.emit('message', data, namespace=namespace, room=room,
                       callback=callback)
 
-    def close_room(self, room, namespace='/'):
+    def close_room(self, room, namespace=None):
         """Close a room.
 
         This function removes any users that are in the given room and then
@@ -201,7 +198,7 @@ class SocketIO(object):
         """
         self.server.close_room(room, namespace)
 
-    def run(self, app, host=None, port=None, **kwargs):
+    def run(self, app=None, host=None, port=None, **kwargs):
         """Run the SocketIO web server.
 
         :param app: The Flask application instance.
@@ -211,33 +208,14 @@ class SocketIO(object):
                      5000.
         :param use_reloader: ``True`` to enable the Flask reloader, ``False``
                              to disable it.
+        :param log_output: If ``True``, the server logs all incomming
+                           connections. If ``False`` logging is disabled.
+                           Defaults to ``True`` in debug mode, ``False``
+                           otherwise.
         :param resource: The SocketIO resource name. Defaults to
                          ``'socket.io'``. Leave this as is unless you know what
                          you are doing.
-        :param transports: Optional list of transports to allow. List of
-                           strings, each string should be one of
-                           handler.SocketIOHandler.handler_types.
-        :param policy_server: Boolean describing whether or not to use the
-                              Flash policy server.  Defaults to ``True``.
-        :param policy_listener: A tuple containing (host, port) for the
-                                policy server. This is optional and used only
-                                if policy server is set to true.  Defaults to
-                                0.0.0.0:843.
-        :param heartbeat_interval: The timeout for the server, we should
-                                   receive a heartbeat from the client within
-                                   this interval. This should be less than the
-                                   ``heartbeat_timeout``.
-        :param heartbeat_timeout: The timeout for the client when it should
-                                  send a new heartbeat to the server. This
-                                  value is sent to the client after a
-                                  successful handshake.
-        :param close_timeout: The timeout for the client, when it closes the
-                              connection it still X amounts of seconds to do
-                              re-open of the connection. This value is sent to
-                              the client after a successful handshake.
-        :param log_file: The file in which you want the PyWSGI server to write
-                         its access log.  If not specified, it is sent to
-                         ``stderr`` (with gevent 0.13).
+        :param kwargs: additional options passed to the eventlet WSGI server.
         """
         if host is None:
             host = '127.0.0.1'
@@ -248,23 +226,41 @@ class SocketIO(object):
             else:
                 port = 5000
 
-        resource = kwargs.pop('resource', 'socket.io')
-        # use_reloader = kwargs.pop('use_reloader', app.debug)
-        # if use_reloader:
-        #     # monkey patching is required by the reloader
-        #     from gevent import monkey
-        #     monkey.patch_all()
-        #
-        #     def run_server():
-        #         self.server.serve_forever()
-        #     if os.environ.get('WERKZEUG_RUN_MAIN') != 'true':
-        #         _log('info', ' * Running on http://%s:%d/' % (host, port))
-        #     run_with_reloader(run_server)
-        # else:
-        #     _log('info', ' * Running on http://%s:%d/' % (host, port))
-        #     self.server.serve_forever()
-        app = socketio.Middleware(self.server, app, socketio_path=resource)
-        eventlet.wsgi.server(eventlet.listen((host, port)), app)
+        if app is None:
+            app = self.app
+        else:
+            self.app = app
+
+        self.server_options.update(kwargs)
+        log_output = self.server_options.pop('log_output', app.debug)
+        use_reloader = self.server_options.pop('use_reloader', app.debug)
+        resource = self.server_options.pop('resource', 'socket.io')
+        if resource.startswith('/'):
+            resource = resource[1:]
+        if app.debug:
+            self.server_options['async_mode'] = 'threading'
+
+        self.server = socketio.Server(**self.server_options)
+        for namespace in self.handlers.keys():
+            for message, handler in self.handlers[namespace].items():
+                self.server.on(message, handler, namespace=namespace)
+
+        app.wsgi_app = socketio.Middleware(self.server, app.wsgi_app,
+                                           socketio_path=resource)
+
+        if self.server.eio.async_mode == 'threading':
+            app.run(host=host, port=port, threaded=True,
+                    use_reloader=use_reloader)
+        elif self.server.eio.async_mode == 'eventlet':
+            import eventlet
+            eventlet.wsgi.server(eventlet.listen((host, port)), app,
+                                 log_output=log_output, **kwargs)
+        elif self.server.eio.async_mode == 'gevent':
+            from gevent import pywsgi
+            log = 'default'
+            if not log_output:
+                log = None
+            pywsgi.WSGIServer((host, port), app, log=log).serve_forever()
 
     def test_client(self, app, namespace=None):
         """Return a simple SocketIO client that can be used for unit tests."""
@@ -420,8 +416,8 @@ def disconnect(silent=False):
                 disconnect()
             # ...
 
-    :param silent: close the connection, but do not actually send a disconnect
-                   packet to the client.
+    :param silent: this option is deprecated.
     """
-    #return flask.request.namespace.disconnect(silent)
-    raise NotImplementedError()
+    socketio = flask.current_app.extensions['socketio']
+    return socketio.server.disconnect(flask.request.sid,
+                                      namespace=flask.request.namespace)
