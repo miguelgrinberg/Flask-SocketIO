@@ -30,7 +30,7 @@ class SocketIO(object):
             raise RuntimeError('Cannot associate a SocketIO instance with '
                                'more than one application')
         if not hasattr(app, 'extensions'):
-            app.extensions = {}
+            app.extensions = {}  # pragma: no cover
         app.extensions['socketio'] = self
         self.server_options = kwargs
         self.app = app
@@ -232,6 +232,7 @@ class SocketIO(object):
             self.app = app
 
         self.server_options.update(kwargs)
+        test_mode = self.server_options.pop('test_mode', False)
         log_output = self.server_options.pop('log_output', app.debug)
         use_reloader = self.server_options.pop('use_reloader', app.debug)
         resource = self.server_options.pop('resource', 'socket.io')
@@ -248,22 +249,25 @@ class SocketIO(object):
         app.wsgi_app = socketio.Middleware(self.server, app.wsgi_app,
                                            socketio_path=resource)
 
-        if self.server.eio.async_mode == 'threading':
-            app.run(host=host, port=port, threaded=True,
-                    use_reloader=use_reloader)
-        elif self.server.eio.async_mode == 'eventlet':
-            import eventlet
-            eventlet.wsgi.server(eventlet.listen((host, port)), app,
-                                 log_output=log_output, **kwargs)
-        elif self.server.eio.async_mode == 'gevent':
-            from gevent import pywsgi
-            log = 'default'
-            if not log_output:
-                log = None
-            pywsgi.WSGIServer((host, port), app, log=log).serve_forever()
+        if not test_mode:
+            if self.server.eio.async_mode == 'threading':
+                app.run(host=host, port=port, threaded=True,
+                        use_reloader=use_reloader)
+            elif self.server.eio.async_mode == 'eventlet':
+                import eventlet
+                eventlet.wsgi.server(eventlet.listen((host, port)), app,
+                                     log_output=log_output, **kwargs)
+            elif self.server.eio.async_mode == 'gevent':
+                from gevent import pywsgi
+                log = 'default'
+                if not log_output:
+                    log = None
+                pywsgi.WSGIServer((host, port), app, log=log).serve_forever()
 
     def test_client(self, app, namespace=None):
         """Return a simple SocketIO client that can be used for unit tests."""
+        if self.server is None:
+            self.run(app, test_mode=True)
         return SocketIOTestClient(app, self, namespace)
 
     def _copy_session(self, src, dest):

@@ -29,17 +29,55 @@ connection to the server. Versions 1.3.5 or newer of the Socket.IO client are
 recommended. Versions of the Socket.IO client prior to 1.0 are not supported
 anymore.
 
-Note that older versions of Flask-SocketIO had a completely different set of
-requirements. These versions had a dependency on
-`gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ and
-`gevent-websocket <https://bitbucket.org/Jeffrey/gevent-websocket>`_, which are
-not used anymore.
-
 Current Limitations
 ~~~~~~~~~~~~~~~~~~~
 
 - Flask-SocketIO can only run in a single worker process at this time. Work is
 currently in progress to eliminate this limitation.
+
+Differences With Flask-SocketIO Versions 0.x
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Older versions of Flask-SocketIO had a completely different set of
+requirements. These versions had a dependency on
+`gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ and
+`gevent-websocket <https://bitbucket.org/Jeffrey/gevent-websocket>`_, which
+were dropped in release 1.0.
+
+In spite of the change in dependencies, there aren't many significant
+changes introduced in version 1.0. Below is a detailed list of
+the actual differences:
+
+- Release 1.0 drops support for Python 2.6, and adds support for Python 3.3,
+  Python 3.4, and pypy.
+- Releases 0.x required an old version of the Socket.IO Javascript client.
+  Starting with release 1.0, the current releases of Socket.IO and Engine.IO
+  are supported.
+- The 0.x releases depended on gevent, gevent-socketio and gevent-websocket.
+  In release 1.0 gevent-socketio and gevent-websocket are not used anymore,
+  and gevent is one of three options for backend web server, with eventlet
+  and any regular multi-threaded WSGI server, including Flask's development
+  web server.
+- The Socket.IO server options have changed in release 1.0. They can be
+  provided in the SocketIO constructor, or in the ``run()`` call. The options
+  provided in these two are merged before they are used.
+- The 0.x releases exposed the gevent-socketio connection as
+  ``request.namespace``. In release 1.0 this is not available anymore. The
+  request object defines ``request.namespace`` as the name of the namespace
+  being handled, and adds ``request.sid``, defined as the unique session ID
+  for the client connection, and ``request.event``, which contains the event
+  name and arguments.
+- To get the list of rooms a client was in the 0.x release required the
+  application to use a private structure of gevent-socketio, with the
+  expression ``request.namespace.rooms``. This is not available in release
+  1.0, which includes a proper ``rooms()`` function.
+- The recommended "trick" to send a message to an individual client was to
+  put each client in a separate room, then address messages to the desired
+  room. This was formalized in release 1.0, where clients are assigned a room
+  automatically when they connect.
+- The ``'connect'`` event for the global namespace did not fire on releases
+  prior to 1.0. This has been fixed and now this event fires as expected.
+- Support for client-side callbacks was introduced in release 1.0.
 
 Initialization
 --------------
@@ -168,10 +206,20 @@ received by the client::
         emit('my response', json, callback=ack)
 
 When using callbacks the Javascript client receives a callback function to
-invoke upon receipt of the message. When the client calls the callback
-function the server invokes the corresponding server-side callback. The client
-can pass arguments in the callback function, which are transferred to the
-server and given to the server-side callback as function arguments.
+invoke upon receipt of the message. After the client application invokes the
+callback function the server invokes the corresponding server-side callback.
+If the client-side callback returns any values, these are provided as
+arguments to the server-side callback.
+
+The client application can also request an acknoledgement callback for an
+event sent to the server. If the server wants to provide arguments for this
+callback, it must return them from the event handler function::
+
+    @socketio.on('my event')
+    def handle_my_custom_event(json):
+        # ... handle the event
+
+        return 'foo', 'bar', 123  # client callback will receive these 3 arguments
 
 Broadcasting
 ------------
