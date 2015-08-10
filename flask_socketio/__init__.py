@@ -13,6 +13,50 @@ class SocketIO(object):
                 isn't known at the time this class is instantiated, then call
                 ``socketio.init_app(app)`` once the application instance is
                 available.
+    :param kwargs: Socket.IO and Engine.IO server options.
+
+    The Socket.IO options are detailed below:
+
+    :param client_manager_class: The class that will manage the client list.
+                                 The default value is appropriate for most
+                                 cases.
+    :param logger: To enable logging set to ``True`` or pass a logger object to
+                   use. To disable logging set to ``False``.
+    :param binary: ``True`` to support binary payloads, ``False`` to treat all
+                   payloads as text. On Python 2, if this is set to ``True``,
+                   ``unicode`` values are treated as text, and ``str`` and
+                   ``bytes`` values are treated as binary.  This option has no
+                   effect on Python 3, where text and binary payloads are
+                   always automatically discovered.
+
+    The Engine.IO configuration supports the following settings:
+
+    :param async_mode: The library used for asynchronous operations. Valid
+                       options are "threading", "eventlet" and "gevent". If
+                       this argument is not given, "eventlet" is tried first,
+                       then "gevent", and finally "threading". The websocket
+                       transport is only supported in "eventlet" mode.
+    :param ping_timeout: The time in seconds that the client waits for the
+                         server to respond before disconnecting.
+    :param ping_interval: The interval in seconds at which the client pings
+                          the server.
+    :param max_http_buffer_size: The maximum size of a message when using the
+                                 polling transport.
+    :param allow_upgrades: Whether to allow transport upgrades or not.
+    :param http_compression: Whether to compress packages when using the
+                             polling transport.
+    :param compression_threshold: Only compress messages when their byte size
+                                  is greater than this value.
+    :param cookie: Name of the HTTP cookie that contains the client session
+                   id. If set to ``None``, a cookie is not sent to the client.
+    :param cors_allowed_origins: List of origins that are allowed to connect
+                                 to this server. All origins are allowed by
+                                 default.
+    :param cors_credentials: Whether credentials (cookies, authentication) are
+                             allowed in requests to this server.
+    :param engineio_logger: To enable Engine.IO logging set to ``True`` or pass
+                            a logger object to use. To disable logging set to
+                            ``False``.
     """
 
     def __init__(self, app=None, **kwargs):
@@ -215,7 +259,9 @@ class SocketIO(object):
         :param resource: The SocketIO resource name. Defaults to
                          ``'socket.io'``. Leave this as is unless you know what
                          you are doing.
-        :param kwargs: additional options passed to the eventlet WSGI server.
+        :param kwargs: Socket.IO and Engine.IO server options. See the
+                       constructor of this class for the list of available
+                       options.
         """
         if host is None:
             host = '127.0.0.1'
