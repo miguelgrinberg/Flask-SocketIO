@@ -305,10 +305,22 @@ class SocketIO(object):
                                      log_output=log_output, **kwargs)
             elif self.server.eio.async_mode == 'gevent':
                 from gevent import pywsgi
+                try:
+                    from geventwebsocket.handler import WebSocketHandler
+                    websocket = True
+                except ImportError:
+                    websocket = False
+
                 log = 'default'
                 if not log_output:
                     log = None
-                pywsgi.WSGIServer((host, port), app, log=log).serve_forever()
+                if websocket:
+                    pywsgi.WSGIServer((host, port), app,
+                                      handler_class=WebSocketHandler,
+                                      log=log).serve_forever()
+                else:
+                    pywsgi.WSGIServer((host, port), app,
+                                      log=log).serve_forever()
 
     def test_client(self, app, namespace=None):
         """Return a simple SocketIO client that can be used for unit tests."""
