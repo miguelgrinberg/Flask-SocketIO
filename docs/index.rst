@@ -39,7 +39,7 @@ Differences With Flask-SocketIO Versions 0.x
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Older versions of Flask-SocketIO had a completely different set of
-requirements. These versions had a dependency on
+requirements. Those versions had a dependency on
 `gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ and
 `gevent-websocket <https://bitbucket.org/Jeffrey/gevent-websocket>`_, which
 were dropped in release 1.0.
@@ -52,7 +52,8 @@ the actual differences:
   Python 3.4, and pypy.
 - Releases 0.x required an old version of the Socket.IO Javascript client.
   Starting with release 1.0, the current releases of Socket.IO and Engine.IO
-  are supported.
+  are supported. Releases of the Socket.IO client prior to 1.0 are no
+  supported.
 - The 0.x releases depended on gevent, gevent-socketio and gevent-websocket.
   In release 1.0 gevent-socketio and gevent-websocket are not used anymore,
   and gevent is one of three options for backend web server, with eventlet
@@ -61,6 +62,9 @@ the actual differences:
 - The Socket.IO server options have changed in release 1.0. They can be
   provided in the SocketIO constructor, or in the ``run()`` call. The options
   provided in these two are merged before they are used.
+- In release 1.0, when Flask debug mode is enabled, Werkzeug is used as server,
+  even if eventlet or gevent are configured. The WebSocket transport is
+  disabled when running in debug mode.
 - The 0.x releases exposed the gevent-socketio connection as
   ``request.namespace``. In release 1.0 this is not available anymore. The
   request object defines ``request.namespace`` as the name of the namespace
@@ -461,6 +465,16 @@ in this way is shown below::
 
 In this command ``module`` is the Python module or package that defines the
 application instance, and ``app`` is the application instance itself.
+
+WebSocket support comes standard with eventlet, but when using gevent, to
+enable WebSocket it is necessary to also install package gevent-websocket. If
+this package is not installed the server will only use the long-polling
+transport mechanism.
+
+When using gunicorn with the gevent worker and WebSocket, the command that
+starts the server must be changed to the following::
+
+    gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker module:app
 
 Using nginx as a WebSocket Reverse Proxy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
