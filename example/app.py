@@ -1,5 +1,11 @@
-import eventlet
-eventlet.monkey_patch()
+async_mode = 'threading'
+
+if async_mode == 'eventlet':
+    import eventlet
+    eventlet.monkey_patch()
+elif async_mode == 'gevent':
+    from gevent import monkey
+    monkey.patch_all()
 
 import time
 from threading import Thread
@@ -9,7 +15,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, \
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode=async_mode)
 thread = None
 
 
