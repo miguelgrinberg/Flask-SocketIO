@@ -28,6 +28,10 @@ class SocketIO(object):
                    ``bytes`` values are treated as binary.  This option has no
                    effect on Python 3, where text and binary payloads are
                    always automatically discovered.
+    :param json: An alternative json module to use for encoding and decoding
+                 packets. Custom json modules must have ``dumps`` and ``loads``
+                 functions that are compatible with the standard library
+                 versions.
 
     The Engine.IO configuration supports the following settings:
 
