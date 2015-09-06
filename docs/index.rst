@@ -416,14 +416,14 @@ regular Flask-Login authentication is performed and the ``login_user()``
 function is called to record the user in the user session, any SocketIO
 connections will have access to the ``current_user`` context variable::
 
-    @socketio.on('my event')
-    def handle_my_custom_event(data):
+    @socketio.on('connect')
+    def connect_handler():
         if current_user.is_authenticated():
             emit('my response',
                  {'message': '{0} has joined'.format(current_user.name)},
                  broadcast=True)
         else:
-            request.namespace.disconnect()  # not allowed here
+            return False  # not allowed here
 
 Note that the ``login_required`` decorator cannot be used with SocketIO event
 handlers, but a custom decorator that disconnects non-authenticated users can
@@ -431,13 +431,14 @@ be created as follows::
 
     import functools
     from flask import request
-    from flask.ext.login import current_user
+    from flask_login import current_user
+    from flask_socketio import disconnect
 
     def authenticated_only(f):
         @functools.wraps(f)
         def wrapped(*args, **kwargs):
             if not current_user.is_authenticated():
-                request.namespace.disconnect()
+                disconnect()
             else:
                 return f(*args, **kwargs)
         return wrapped
@@ -516,7 +517,7 @@ example nginx configuration that proxies regular and WebSocket requests::
 API Reference
 -------------
 
-.. module:: flask.ext.socketio
+.. module:: flask_socketio
 .. autoclass:: SocketIO
    :members:
 .. autofunction:: emit
