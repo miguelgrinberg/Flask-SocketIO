@@ -192,18 +192,23 @@ class SocketIO(object):
         :param room: Send the message to all the users in the given room. If
                      this parameter is not included, the event is sent to
                      all connected users.
+        :param include_self: ``True`` to include the sender when broadcasting
+                             or addressing a room, or ``False`` to send to
+                             everyone but the sender.
         :param callback: If given, this function will be called to acknowledge
                          that the client has received the message. The
                          arguments that will be passed to the function are
                          those provided by the client. Callback functions can
                          only be used when addressing an individual client.
         """
-        # TODO: handle skip_sid
+        skip_sid = flask.request.sid \
+            if not kwargs.get('include_self', True) else None
         self.server.emit(event, *args, namespace=kwargs.get('namespace', '/'),
-                         room=kwargs.get('room'),
+                         room=kwargs.get('room'), skip_sid=skip_sid,
                          callback=kwargs.get('callback'))
 
-    def send(self, data, json=False, namespace=None, room=None, callback=None):
+    def send(self, data, json=False, namespace=None, room=None,
+             callback=None, include_self=True):
         """Send a server-generated SocketIO message.
 
         This function sends a simple SocketIO message to one or more connected
@@ -220,18 +225,22 @@ class SocketIO(object):
         :param room: Send the message only to the users in the given room. If
                      this parameter is not included, the message is sent to
                      all connected users.
+        :param include_self: ``True`` to include the sender when broadcasting
+                             or addressing a room, or ``False`` to send to
+                             everyone but the sender.
         :param callback: If given, this function will be called to acknowledge
                          that the client has received the message. The
                          arguments that will be passed to the function are
                          those provided by the client. Callback functions can
                          only be used when addressing an individual client.
         """
+        skip_sid = flask.request.sid if not include_self else None
         if json:
             self.emit('json', data, namespace=namespace, room=room,
-                      callback=callback)
+                      skip_sid=skip_sid, callback=callback)
         else:
             self.emit('message', data, namespace=namespace, room=room,
-                      callback=callback)
+                      skip_sid=skip_sid, callback=callback)
 
     def close_room(self, room, namespace=None):
         """Close a room.
@@ -359,17 +368,21 @@ def emit(event, *args, **kwargs):
                       ``False`` to only reply to the sender of the originating
                       event.
     :param room: Send the message to all the users in the given room.
+    :param include_self: ``True`` to include the sender when broadcasting or
+                         addressing a room, or ``False`` to send to everyone
+                         but the sender.
     """
-    broadcast = kwargs.get('broadcast')
-    room = kwargs.get('room')
     namespace = kwargs.get('namespace', flask.request.namespace)
     callback = kwargs.get('callback')
+    broadcast = kwargs.get('broadcast')
+    room = kwargs.get('room')
     if room is None and not broadcast:
         room = flask.request.sid
+    include_self = kwargs.get('include_self', True)
 
     socketio = flask.current_app.extensions['socketio']
     return socketio.emit(event, *args, namespace=namespace, room=room,
-                         callback=callback)
+                         include_self=include_self, callback=callback)
 
 
 def send(message, **kwargs):
@@ -390,6 +403,9 @@ def send(message, **kwargs):
                       ``False`` to only reply to the sender of the originating
                       event.
     :param room: Send the message to all the users in the given room.
+    :param include_self: ``True`` to include the sender when broadcasting or
+                         addressing a room, or ``False`` to send to everyone
+                         but the sender.
     """
     namespace = kwargs.get('namespace', flask.request.namespace)
     callback = kwargs.get('callback')
@@ -397,10 +413,11 @@ def send(message, **kwargs):
     room = kwargs.get('room')
     if room is None and not broadcast:
         room = flask.request.sid
+    include_self = kwargs.get('include_self', True)
 
     socketio = flask.current_app.extensions['socketio']
     return socketio.send(message, namespace=namespace, room=room,
-                         callback=callback)
+                         include_self=include_self, callback=callback)
 
 
 def join_room(room):
