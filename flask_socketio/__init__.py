@@ -70,6 +70,16 @@ class SocketIO(object):
                 app = self.request
                 return self.socketio._dispatch_message(app, self, message, args)
 
+            def get_room(self, room):
+                if not self.socketio.rooms.get(self.ns_name, False):
+                    return []
+                room = self.socketio.rooms[self.ns_name].get(room, [])
+                return [client.socket.sessid for client in room]
+
+            def get_rooms(self):
+                rooms = self.socketio.rooms.get(self.ns_name, {})
+                return rooms.keys()
+
             def join_room(self, room):
                 if self.socketio._join_room(self, room):
                     self.rooms.add(room)
@@ -115,22 +125,24 @@ class SocketIO(object):
                 ns_name = kwargs.pop('namespace', None)
                 broadcast = kwargs.pop('broadcast', False)
                 room = kwargs.pop('room', None)
-                if broadcast or room:
+                client_id = kwargs.pop('client_id', None)
+                if broadcast or room or client_id:
                     if ns_name is None:
                         ns_name = self.ns_name
                     return self.socketio.emit(event, *args, namespace=ns_name,
-                                              room=room)
+                                              room=room, client_id=client_id)
                 if ns_name is None:
                     return self.base_emit(event, *args, **kwargs)
                 return request.namespace.socket[ns_name].base_emit(event, *args,
                                                                    **kwargs)
 
             def send(self, message, json=False, ns_name=None, callback=None,
-                     broadcast=False, room=None):
-                if broadcast or room:
+                     broadcast=False, room=None, client_id=None):
+                if broadcast or room or client_id:
                     if ns_name is None:
                         ns_name = self.ns_name
-                    return self.socketio.send(message, json, ns_name, room)
+                    return self.socketio.send(message, json, ns_name, room,
+                                              client_id)
                 if ns_name is None:
                     return request.namespace.base_send(message, json, callback)
                 return request.namespace.socket[ns_name].base_send(message,
@@ -289,11 +301,21 @@ class SocketIO(object):
         :param namespace: The namespace under which the message is to be sent.
                           Defaults to the global namespace.
         :param room: Send the message to all the users in the given room. If
-                     this parameter is not included, the event is sent to
-                     all connected users.
+                     this parameter is not included, and neither is client_id,
+                     the event is sent to all connected users.
+        :param client_id: Send the message to a specific client whose sessid
+                          is the given client_id. If no room or client_id is
+                          specified, the message is sent to all connected
+                          users.
         """
         ns_name = kwargs.pop('namespace', '')
         room = kwargs.pop('room', None)
+        client_id = kwargs.pop('client_id', None)
+        if client_id:
+            client = self.server.sockets.get(client_id, None)
+            if client and client.active_ns.get(ns_name):
+                client[ns_name].base_emit(event, *args, **kwargs)
+            return
         if room is not None:
             for client in self.rooms.get(ns_name, {}).get(room, set()):
                 client.base_emit(event, *args, **kwargs)
@@ -302,7 +324,8 @@ class SocketIO(object):
                 if socket.active_ns.get(ns_name):
                     socket[ns_name].base_emit(event, *args, **kwargs)
 
-    def send(self, message, json=False, namespace=None, room=None):
+    def send(self, message, json=False, namespace=None, room=None,
+             client_id=None):
         """Send a server-generated SocketIO message.
 
         This function sends a simple SocketIO message to one or more connected
@@ -317,12 +340,21 @@ class SocketIO(object):
         :param namespace: The namespace under which the message is to be sent.
                           Defaults to the global namespace.
         :param room: Send the message only to the users in the given room. If
-                     this parameter is not included, the message is sent to
-                     all connected users.
+                     this parameter is not included, and neither is client_id,
+                     the message is sent to all connected users.
+        :param client_id: Send the message to a specific client whose sessid
+                          is the given client_id. If no room or client_id is
+                          specified, the message is sent to all connected
+                          users.
         """
         ns_name = namespace
         if ns_name is None:
             ns_name = ''
+        if client_id:
+            client = self.server.sockets.get(client_id, None)
+            if client and client.active_ns.get(ns_name):
+                client[ns_name].base_send(message, json)
+            return
         if room:
             for client in self.rooms.get(ns_name, {}).get(room, set()):
                 client.base_send(message, json)
@@ -443,12 +475,13 @@ def emit(event, *args, **kwargs):
                       ``False`` to only reply to the sender of the originating
                       event.
     :param room: Send the message to all the users in the given room.
+    :param client_id: Send the message to a specific client.
     """
     return request.namespace.emit(event, *args, **kwargs)
 
 
 def send(message, json=False, namespace=None, callback=None, broadcast=False,
-         room=None):
+         room=None, client_id=None):
     """Send a SocketIO message.
 
     This function sends a simple SocketIO message to one or more connected
@@ -467,9 +500,10 @@ def send(message, json=False, namespace=None, callback=None, broadcast=False,
                       ``False`` to only reply to the sender of the originating
                       event.
     :param room: Send the message to all the users in the given room.
+    :param client_id: Send the message to a specific client.
     """
     return request.namespace.send(message, json, namespace, callback, broadcast,
-                                  room)
+                                  room, client_id)
 
 
 def join_room(room):
@@ -520,6 +554,26 @@ def close_room(room):
     :param room: The name of the room to close.
     """
     return request.namespace.close_room(room)
+
+
+def room(room):
+    """List the clients connected to a room
+
+    This function will return a list containing the clients inside a room on the
+    current namespace.
+
+    :param room: the name of the room that will be consulted.
+    """
+    return request.namespace.get_room(room);
+
+
+def rooms():
+    """List the name of all rooms in a namespace
+
+    This function returns a list with the name of all rooms in the current
+    namespace.
+    """
+    return request.namespace.get_rooms();
 
 
 def disconnect(silent=False):
