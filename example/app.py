@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+
+# set this variable to "threading", "eventlet" or "gevent" to test the
+# different async modes
 async_mode = 'threading'
 
 if async_mode == 'eventlet':
@@ -9,7 +13,7 @@ elif async_mode == 'gevent':
 
 import time
 from threading import Thread
-from flask import Flask, render_template, session
+from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms, disconnect
 
@@ -104,8 +108,8 @@ def test_connect():
 
 @socketio.on('disconnect', namespace='/test')
 def test_disconnect():
-    print('Client disconnected')
+    print('Client disconnected', request.sid)
 
 
 if __name__ == '__main__':
-    socketio.run(app)
+    socketio.run(debug=True)

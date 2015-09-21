@@ -2,6 +2,8 @@ import sys
 
 import socketio
 import flask
+from werkzeug.debug import DebuggedApplication
+from werkzeug.serving import run_with_reloader
 
 from .test_client import SocketIOTestClient
 
@@ -258,17 +260,23 @@ class SocketIO(object):
     def run(self, app=None, host=None, port=None, **kwargs):
         """Run the SocketIO web server.
 
-        :param app: The Flask application instance.
+        :param app: The Flask application instance. This argument is kept for
+                    legacy reasons, it can be omitted.
         :param host: The hostname or IP address for the server to listen on.
                      Defaults to 127.0.0.1.
         :param port: The port number for the server to listen on. Defaults to
                      5000.
+        :param debug: ``True`` to start the server in debug mode, ``False`` to
+                      start in normal mode.
         :param use_reloader: ``True`` to enable the Flask reloader, ``False``
                              to disable it.
+        :param extra_files: A list of additional files that the Flask
+                            reloader should watch. Defaults to ``None``
         :param log_output: If ``True``, the server logs all incomming
                            connections. If ``False`` logging is disabled.
                            Defaults to ``True`` in debug mode, ``False``
-                           otherwise.
+                           in normal mode. Unused wheb the threading async
+                           mode is used.
         :param resource: The SocketIO resource name. Defaults to
                          ``'socket.io'``. Leave this as is unless you know what
                          you are doing.
@@ -276,6 +284,11 @@ class SocketIO(object):
                        constructor of this class for the list of available
                        options.
         """
+        if app is None:
+            app = self.app
+        else:
+            self.app = app
+
         if host is None:
             host = '127.0.0.1'
         if port is None:
@@ -285,26 +298,24 @@ class SocketIO(object):
             else:
                 port = 5000
 
-        if app is None:
-            app = self.app
-        else:
-            self.app = app
-
         self.server_options.update(kwargs)
         test_mode = self.server_options.pop('test_mode', False)
-        log_output = self.server_options.pop('log_output', app.debug)
-        use_reloader = self.server_options.pop('use_reloader', app.debug)
+        debug = self.server_options.pop('debug', app.debug)
+        log_output = self.server_options.pop('log_output', debug)
+        use_reloader = self.server_options.pop('use_reloader', debug)
+        extra_files = kwargs.pop('extra_files', None)
         resource = self.server_options.pop('resource', 'socket.io')
         if resource.startswith('/'):
             resource = resource[1:]
-        if app.debug:
-            self.server_options['async_mode'] = 'threading'
 
         self.server = socketio.Server(**self.server_options)
         for namespace in self.handlers.keys():
             for message, handler in self.handlers[namespace].items():
                 self.server.on(message, handler, namespace=namespace)
 
+        app.debug = debug
+        if app.debug and self.server.eio.async_mode != 'threading':
+            app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
         app.wsgi_app = socketio.Middleware(self.server, app.wsgi_app,
                                            socketio_path=resource)
 
@@ -313,9 +324,15 @@ class SocketIO(object):
                 app.run(host=host, port=port, threaded=True,
                         use_reloader=use_reloader)
             elif self.server.eio.async_mode == 'eventlet':
-                import eventlet
-                eventlet.wsgi.server(eventlet.listen((host, port)), app,
-                                     log_output=log_output, **kwargs)
+                def run_server():
+                    import eventlet
+                    eventlet.wsgi.server(eventlet.listen((host, port)), app,
+                                         log_output=log_output, **kwargs)
+
+                if use_reloader:
+                    run_with_reloader(run_server, extra_files=extra_files)
+                else:
+                    run_server()
             elif self.server.eio.async_mode == 'gevent':
                 from gevent import pywsgi
                 try:
@@ -328,12 +345,23 @@ class SocketIO(object):
                 if not log_output:
                     log = None
                 if websocket:
-                    pywsgi.WSGIServer((host, port), app,
-                                      handler_class=WebSocketHandler,
-                                      log=log).serve_forever()
+                    server = pywsgi.WSGIServer((host, port), app,
+                                               handler_class=WebSocketHandler,
+                                               log=log)
                 else:
-                    pywsgi.WSGIServer((host, port), app,
-                                      log=log).serve_forever()
+                    server = pywsgi.WSGIServer((host, port), app, log=log)
+
+                if use_reloader:
+                    # monkey patching is required by the reloader
+                    from gevent import monkey
+                    monkey.patch_all()
+
+                    def run_server():
+                        server.serve_forever()
+
+                    run_with_reloader(run_server, extra_files=extra_files)
+                else:
+                    server.serve_forever()
 
     def test_client(self, app, namespace=None):
         """Return a simple SocketIO client that can be used for unit tests."""
