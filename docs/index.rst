@@ -15,19 +15,29 @@ server.
 Requirements
 ------------
 
-Since version 1.0, this extension is fully compatible with Python 2.7 and
-Python 3.3+, and a few different asynchronous frameworks can be used. At this
-time, the most complete implementation uses
-`eventlet <http://eventlet.net/>`_ as a dependency. As an alternative,
-`gevent <http://www.gevent.org/>`_ can be used instead of eventlet. The Flask
-development server based on Werkzeug can be used as well, with the caveat that
-it lacks the performance of the other two options, so it should only be used
-to simplify the development workflow.
+Since version 1.0, this extension is compatible with both Python 2.7 and
+Python 3.3+. The asynchronous services that this package relies on can be
+selected among three choices:
 
-On the client-side, the Socket.IO Javascript library is used to establish a
-connection to the server. Versions 1.3.5 or newer of the Socket.IO client are
-recommended. Versions of the Socket.IO client prior to 1.0 are not supported
-anymore.
+- `eventlet <http://eventlet.net/>`_ is the best performant option, with
+  support for long-polling and WebSocket transports.
+- `gevent <http://www.gevent.org/>`_ is the framework used in previous
+  releases of this extension. The long-polling transport is fully supported.
+  To add support for WebSocket, the `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_
+  package must be installed as well.
+- The Flask development server based on Werkzeug can be used as well, with the
+  caveat that it lacks the performance of the other two options, so it should
+  only be used to simplify the development workflow. This option only supports
+  the long-polling transport.
+
+The extension automatically detects which asynchronous framework to use based
+on what is installed. Preference is given to eventlet, followed by gevent. If
+neither one is installed, then the Flask development server is used.
+
+On the client-side, the official Socket.IO Javascript client library can be
+used to establish a connection to the server. There are also official clients
+written in Swift and C++. Unofficial clients may also work, as long as they
+implement the `Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_.
 
 Current Limitations
 ~~~~~~~~~~~~~~~~~~~
@@ -41,8 +51,8 @@ Differences With Flask-SocketIO Versions 0.x
 Older versions of Flask-SocketIO had a completely different set of
 requirements. Those versions had a dependency on
 `gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ and
-`gevent-websocket <https://bitbucket.org/Jeffrey/gevent-websocket>`_, which
-were dropped in release 1.0.
+`gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_, which
+are not required in release 1.0 and instead are optional.
 
 In spite of the change in dependencies, there aren't many significant
 changes introduced in version 1.0. Below is a detailed list of
@@ -53,18 +63,15 @@ the actual differences:
 - Releases 0.x required an old version of the Socket.IO Javascript client.
   Starting with release 1.0, the current releases of Socket.IO and Engine.IO
   are supported. Releases of the Socket.IO client prior to 1.0 are no
-  supported.
+  supported. The Swift and C++ official Socket.IO clients are now supported
+  as well.
 - The 0.x releases depended on gevent, gevent-socketio and gevent-websocket.
-  In release 1.0 gevent-socketio and gevent-websocket are not used anymore,
-  and gevent is one of three options for backend web server, with eventlet
-  and any regular multi-threaded WSGI server, including Flask's development
-  web server.
+  In release 1.0 gevent-socketio is not used anymore, and gevent is one of
+  three options for backend web server, with eventlet and any regular
+  multi-threaded WSGI server, including Flask's development web server.
 - The Socket.IO server options have changed in release 1.0. They can be
   provided in the SocketIO constructor, or in the ``run()`` call. The options
   provided in these two are merged before they are used.
-- In release 1.0, when Flask debug mode is enabled, Werkzeug is used as server,
-  even if eventlet or gevent are configured. The WebSocket transport is
-  disabled when running in debug mode.
 - The 0.x releases exposed the gevent-socketio connection as
   ``request.namespace``. In release 1.0 this is not available anymore. The
   request object defines ``request.namespace`` as the name of the namespace
@@ -159,6 +166,19 @@ multiplex several independent connections on the same physical socket::
 
 When a namespace is not specified a default global namespace with the name
 ``'/'`` is used.
+
+Clients may request an acknowledgement callback that confirms receipt of a
+message. Any values returned from the handler function will be passed to the
+client as arguments in the callback function::
+
+    @socketio.on('my event')
+    def handle_my_custom_event(json):
+        print('received json: ' + str(json))
+        return 'one', 2
+
+In the above example, the client callback function will be invoked with
+two arguments, ``'one'`` and ``2``. If a handler function does not return any
+vallues, the client callback function will be invoked without arguments.
 
 Sending Messages
 ----------------
@@ -418,7 +438,7 @@ connections will have access to the ``current_user`` context variable::
 
     @socketio.on('connect')
     def connect_handler():
-        if current_user.is_authenticated():
+        if current_user.is_authenticated:
             emit('my response',
                  {'message': '{0} has joined'.format(current_user.name)},
                  broadcast=True)
@@ -437,7 +457,7 @@ be created as follows::
     def authenticated_only(f):
         @functools.wraps(f)
         def wrapped(*args, **kwargs):
-            if not current_user.is_authenticated():
+            if not current_user.is_authenticated:
                 disconnect()
             else:
                 return f(*args, **kwargs)
@@ -453,27 +473,31 @@ Deployment
 ----------
 
 The simplest deployment strategy is to have eventlet or gevent installed, and
-start the web server by calling ``socketio.run(app)`` as shown above, but with
-debug mode turned off in the configuration. This will run the application on
-the eventlet or gevent web servers, in that order of preference.
+start the web server by calling ``socketio.run(app)`` as shown above. This
+will run the application on the eventlet or gevent web servers, in that order
+of preference.
 
 An alternative is to use `gunicorn <http://gunicorn.org/>`_ as web server,
-using the eventlet or gevent workers. The command line that starts the server
-in this way is shown below::
+using the eventlet or gevent workers. The command line that starts the
+eventlet server is shown below::
 
     gunicorn --worker-class eventlet module:app
+
+If you prefer to use gevent, the command to start the server is::
+
     gunicorn --worker-class gevent module:app
 
-In this command ``module`` is the Python module or package that defines the
+In these commands ``module`` is the Python module or package that defines the
 application instance, and ``app`` is the application instance itself.
 
 WebSocket support comes standard with eventlet, but when using gevent, to
 enable WebSocket it is necessary to also install package gevent-websocket. If
-this package is not installed the server will only use the long-polling
+this package is not installed the gevent server will only use the long-polling
 transport mechanism.
 
 When using gunicorn with the gevent worker and WebSocket, the command that
-starts the server must be changed to the following::
+starts the server must be changed to select a custom gevent web server that
+supports WebSocket. The modified command is the following::
 
     gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker module:app
 

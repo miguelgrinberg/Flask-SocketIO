@@ -94,12 +94,13 @@ class SocketIO(object):
             def handle_my_custom_event(json):
                 print('received json: ' + str(json))
 
-        :param message: The name of the event. Use ``'message'`` to define a
-                        handler that takes a string payload, ``'json'`` to
-                        define a handler that takes a JSON blob payload,
-                        ``'connect'`` or ``'disconnect'`` to create handlers
-                        for connection and disconnection events, or else, use a
-                        custom event name, and use a JSON blob as payload.
+        :param message: The name of the event. This is normally a user defined
+                        string, but a few event names are already defined. Use
+                        ``'message'`` to define a handler that takes a string
+                        payload, ``'json'`` to define a handler that takes a
+                        JSON blob payload, ``'connect'`` or ``'disconnect'`` to
+                        create handlers for connection and disconnection
+                        events.
         :param namespace: The namespace on which the handler is to be
                           registered. Defaults to the global namespace.
         """
@@ -153,6 +154,7 @@ class SocketIO(object):
                           handler. Defaults to the global namespace.
         """
         namespace = namespace or '/'
+
         def decorator(exception_handler):
             if not callable(exception_handler):
                 raise ValueError('exception_handler must be callable')
