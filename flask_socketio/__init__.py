@@ -136,6 +136,7 @@ class SocketIO(object):
             if namespace not in self.handlers:
                 self.handlers[namespace] = {}
             self.handlers[namespace][message] = _handler
+            return _handler
         return decorator
 
     def on_error(self, namespace=None):
@@ -159,6 +160,7 @@ class SocketIO(object):
             if not callable(exception_handler):
                 raise ValueError('exception_handler must be callable')
             self.exception_handlers[namespace] = exception_handler
+            return exception_handler
         return decorator
 
     def on_error_default(self, exception_handler):
@@ -175,6 +177,7 @@ class SocketIO(object):
         if not callable(exception_handler):
             raise ValueError('exception_handler must be callable')
         self.default_exception_handler = exception_handler
+        return exception_handler
 
     def emit(self, event, *args, **kwargs):
         """Emit a server generated SocketIO event.
