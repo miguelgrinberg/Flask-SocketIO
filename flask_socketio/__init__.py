@@ -19,6 +19,8 @@ class SocketIO(object):
 
     The Socket.IO options are detailed below:
 
+    :param resource: The SocketIO resource name. Defaults to ``'socket.io'``.
+                     Leave this as is unless you know what you are doing.
     :param client_manager_class: The class that will manage the client list.
                                  The default value is appropriate for most
                                  cases.
@@ -69,7 +71,6 @@ class SocketIO(object):
         self.app = None
         self.server = None
         self.server_options = None
-        self.handlers = {}
         self.exception_handlers = {}
         self.default_exception_handler = None
         if app is not None:
@@ -82,8 +83,15 @@ class SocketIO(object):
         if not hasattr(app, 'extensions'):
             app.extensions = {}  # pragma: no cover
         app.extensions['socketio'] = self
-        self.server_options = kwargs
         self.app = app
+        self.server_options = kwargs
+
+        resource = kwargs.get('resource', 'socket.io')
+        if resource.startswith('/'):
+            resource = resource[1:]
+        self.server = socketio.Server(**self.server_options)
+        app.wsgi_app = socketio.Middleware(self.server, app.wsgi_app,
+                                           socketio_path=resource)
 
     def on(self, message, namespace=None):
         """Decorator to register a SocketIO event handler.
@@ -133,9 +141,7 @@ class SocketIO(object):
                         flask.session,
                         self.server.environ[sid]['saved_session'])
                     return ret
-            if namespace not in self.handlers:
-                self.handlers[namespace] = {}
-            self.handlers[namespace][message] = _handler
+            self.server.on(message, _handler, namespace=namespace)
             return _handler
         return decorator
 
@@ -282,12 +288,11 @@ class SocketIO(object):
                            Defaults to ``True`` in debug mode, ``False``
                            in normal mode. Unused wheb the threading async
                            mode is used.
-        :param resource: The SocketIO resource name. Defaults to
-                         ``'socket.io'``. Leave this as is unless you know what
-                         you are doing.
-        :param kwargs: Socket.IO and Engine.IO server options. See the
-                       constructor of this class for the list of available
-                       options.
+        :param kwargs: Additional Socket.IO and Engine.IO server options. See
+                       the constructor of this class for the list of available
+                       options. Note that the options provided here will not be
+                       available when using an external web server, since this
+                       method will not be called.
         """
         if app is None:
             app = self.app
@@ -304,74 +309,62 @@ class SocketIO(object):
                 port = 5000
 
         self.server_options.update(kwargs)
-        test_mode = self.server_options.pop('test_mode', False)
         debug = self.server_options.pop('debug', app.debug)
         log_output = self.server_options.pop('log_output', debug)
         use_reloader = self.server_options.pop('use_reloader', debug)
         extra_files = kwargs.pop('extra_files', None)
-        resource = self.server_options.pop('resource', 'socket.io')
-        if resource.startswith('/'):
-            resource = resource[1:]
-
-        self.server = socketio.Server(**self.server_options)
-        for namespace in self.handlers.keys():
-            for message, handler in self.handlers[namespace].items():
-                self.server.on(message, handler, namespace=namespace)
 
         app.debug = debug
         if app.debug and self.server.eio.async_mode != 'threading':
             app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
-        app.wsgi_app = socketio.Middleware(self.server, app.wsgi_app,
-                                           socketio_path=resource)
 
-        if not test_mode:
-            if self.server.eio.async_mode == 'threading':
-                app.run(host=host, port=port, threaded=True,
-                        use_reloader=use_reloader)
-            elif self.server.eio.async_mode == 'eventlet':
+        if self.server.eio.async_mode == 'threading':
+            app.run(host=host, port=port, threaded=True,
+                    use_reloader=use_reloader)
+        elif self.server.eio.async_mode == 'eventlet':
+            def run_server():
+                import eventlet
+                eventlet.wsgi.server(eventlet.listen((host, port)), app,
+                                     log_output=log_output, **kwargs)
+
+            if use_reloader:
+                run_with_reloader(run_server, extra_files=extra_files)
+            else:
+                run_server()
+        elif self.server.eio.async_mode == 'gevent':
+            from gevent import pywsgi
+            try:
+                from geventwebsocket.handler import WebSocketHandler
+                websocket = True
+            except ImportError:
+                websocket = False
+
+            log = 'default'
+            if not log_output:
+                log = None
+            if websocket:
+                server = pywsgi.WSGIServer((host, port), app,
+                                           handler_class=WebSocketHandler,
+                                           log=log)
+            else:
+                server = pywsgi.WSGIServer((host, port), app, log=log)
+
+            if use_reloader:
+                # monkey patching is required by the reloader
+                from gevent import monkey
+                monkey.patch_all()
+
                 def run_server():
-                    import eventlet
-                    eventlet.wsgi.server(eventlet.listen((host, port)), app,
-                                         log_output=log_output, **kwargs)
-
-                if use_reloader:
-                    run_with_reloader(run_server, extra_files=extra_files)
-                else:
-                    run_server()
-            elif self.server.eio.async_mode == 'gevent':
-                from gevent import pywsgi
-                try:
-                    from geventwebsocket.handler import WebSocketHandler
-                    websocket = True
-                except ImportError:
-                    websocket = False
-
-                log = 'default'
-                if not log_output:
-                    log = None
-                if websocket:
-                    server = pywsgi.WSGIServer((host, port), app,
-                                               handler_class=WebSocketHandler,
-                                               log=log)
-                else:
-                    server = pywsgi.WSGIServer((host, port), app, log=log)
-
-                if use_reloader:
-                    # monkey patching is required by the reloader
-                    from gevent import monkey
-                    monkey.patch_all()
-
-                    def run_server():
-                        server.serve_forever()
-
-                    run_with_reloader(run_server, extra_files=extra_files)
-                else:
                     server.serve_forever()
+
+                run_with_reloader(run_server, extra_files=extra_files)
+            else:
+                server.serve_forever()
 
     def test_client(self, app, namespace=None):
         """Return a simple SocketIO client that can be used for unit tests."""
         if self.server is None:
-            self.run(app, test_mode=True)
+            self.run(app)
         return SocketIOTestClient(app, self, namespace)
 
     def _copy_session(self, src, dest):
