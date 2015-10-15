@@ -8,6 +8,22 @@ from werkzeug.serving import run_with_reloader
 from .test_client import SocketIOTestClient
 
 
+class _SocketIOMiddleware(socketio.Middleware):
+    """This WSGI middleware simply pushes a Flask application context before
+    before executing the request.
+    """
+    def __init__(self, socketio_app, flask_app, socketio_path='socket.io'):
+        self.flask_app = flask_app
+        super(_SocketIOMiddleware, self).__init__(socketio_app,
+                                                  flask_app.wsgi_app,
+                                                  socketio_path)
+
+    def __call__(self, environ, start_response):
+        with self.flask_app.app_context():
+            return super(_SocketIOMiddleware, self).__call__(environ,
+                                                             start_response)
+
+
 class SocketIO(object):
     """Create a Flask-SocketIO server.
 
@@ -68,7 +84,6 @@ class SocketIO(object):
     """
 
     def __init__(self, app=None, **kwargs):
-        self.app = None
         self.server = None
         self.server_options = None
         self.exception_handlers = {}
@@ -77,20 +92,16 @@ class SocketIO(object):
             self.init_app(app, **kwargs)
 
     def init_app(self, app, **kwargs):
-        if self.app is not None and self.app != app:
-            raise RuntimeError('Cannot associate a SocketIO instance with '
-                               'more than one application')
         if not hasattr(app, 'extensions'):
             app.extensions = {}  # pragma: no cover
         app.extensions['socketio'] = self
-        self.app = app
         self.server_options = kwargs
 
         resource = kwargs.get('resource', 'socket.io')
         if resource.startswith('/'):
             resource = resource[1:]
         self.server = socketio.Server(**self.server_options)
-        app.wsgi_app = socketio.Middleware(self.server, app.wsgi_app,
+        app.wsgi_app = _SocketIOMiddleware(self.server, app,
                                            socketio_path=resource)
 
     def on(self, message, namespace=None):
@@ -116,7 +127,8 @@ class SocketIO(object):
 
         def decorator(handler):
             def _handler(sid, *args):
-                with self.app.request_context(self.server.environ[sid]):
+                with flask.current_app.request_context(
+                        self.server.environ[sid]):
                     if 'saved_session' in self.server.environ[sid]:
                         self._copy_session(
                             self.server.environ[sid]['saved_session'],
@@ -268,11 +280,10 @@ class SocketIO(object):
         """
         self.server.close_room(room, namespace)
 
-    def run(self, app=None, host=None, port=None, **kwargs):
+    def run(self, app, host=None, port=None, **kwargs):
         """Run the SocketIO web server.
 
-        :param app: The Flask application instance. This argument is kept for
-                    legacy reasons, it can be omitted.
+        :param app: The Flask application instance.
         :param host: The hostname or IP address for the server to listen on.
                      Defaults to 127.0.0.1.
         :param port: The port number for the server to listen on. Defaults to
@@ -294,11 +305,6 @@ class SocketIO(object):
                        available when using an external web server, since this
                        method will not be called.
         """
-        if app is None:
-            app = self.app
-        else:
-            self.app = app
-
         if host is None:
             host = '127.0.0.1'
         if port is None:

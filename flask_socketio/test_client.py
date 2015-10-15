@@ -28,6 +28,7 @@ class SocketIOTestClient(object):
                 self.ack = {'args': pkt.data,
                             'namespace': pkt.namespace or '/'}
 
+        self.app = app
         self.sid = uuid.uuid4().hex
         self.callback_counter = 0
         self.socketio = socketio
@@ -38,15 +39,19 @@ class SocketIOTestClient(object):
     def connect(self, namespace=None):
         """Connect the client."""
         environ = EnvironBuilder('/socket.io').get_environ()
-        self.socketio.server._handle_eio_connect(self.sid, environ)
+        with self.app.app_context():
+            self.socketio.server._handle_eio_connect(self.sid, environ)
         if namespace is not None and namespace != '/':
             pkt = packet.Packet(packet.CONNECT, namespace=namespace)
-            self.socketio.server._handle_eio_message(self.sid, pkt.encode())
+            with self.app.app_context():
+                self.socketio.server._handle_eio_message(self.sid,
+                                                         pkt.encode())
 
     def disconnect(self, namespace=None):
         """Disconnect the client."""
         pkt = packet.Packet(packet.DISCONNECT, namespace=namespace)
-        self.socketio.server._handle_eio_message(self.sid, pkt.encode())
+        with self.app.app_context():
+            self.socketio.server._handle_eio_message(self.sid, pkt.encode())
 
     def emit(self, event, *args, **kwargs):
         """Emit an event to the server."""
@@ -59,7 +64,8 @@ class SocketIOTestClient(object):
         pkt = packet.Packet(packet.EVENT, data=[event] + list(args),
                             namespace=namespace, id=id, binary=False)
         self.ack = None
-        self.socketio.server._handle_eio_message(self.sid, pkt.encode())
+        with self.app.app_context():
+            self.socketio.server._handle_eio_message(self.sid, pkt.encode())
         if self.ack is not None:
             return self.ack['args'][0] if len(self.ack['args']) == 1 \
                 else self.ack['args']
