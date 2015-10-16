@@ -39,8 +39,8 @@ class SocketIOTestClient(object):
     def connect(self, namespace=None):
         """Connect the client."""
         environ = EnvironBuilder('/socket.io').get_environ()
-        with self.app.app_context():
-            self.socketio.server._handle_eio_connect(self.sid, environ)
+        environ['flask.app'] = self.app
+        self.socketio.server._handle_eio_connect(self.sid, environ)
         if namespace is not None and namespace != '/':
             pkt = packet.Packet(packet.CONNECT, namespace=namespace)
             with self.app.app_context():

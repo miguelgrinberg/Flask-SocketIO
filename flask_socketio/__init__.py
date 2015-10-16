@@ -9,8 +9,8 @@ from .test_client import SocketIOTestClient
 
 
 class _SocketIOMiddleware(socketio.Middleware):
-    """This WSGI middleware simply pushes a Flask application context before
-    before executing the request.
+    """This WSGI middleware simply exposes the Flask application in the WSGI
+    environment before executing the request.
     """
     def __init__(self, socketio_app, flask_app, socketio_path='socket.io'):
         self.flask_app = flask_app
@@ -19,9 +19,9 @@ class _SocketIOMiddleware(socketio.Middleware):
                                                   socketio_path)
 
     def __call__(self, environ, start_response):
-        with self.flask_app.app_context():
-            return super(_SocketIOMiddleware, self).__call__(environ,
-                                                             start_response)
+        environ['flask.app'] = self.flask_app
+        return super(_SocketIOMiddleware, self).__call__(environ,
+                                                         start_response)
 
 
 class SocketIO(object):
@@ -127,8 +127,8 @@ class SocketIO(object):
 
         def decorator(handler):
             def _handler(sid, *args):
-                with flask.current_app.request_context(
-                        self.server.environ[sid]):
+                app = self.server.environ[sid]['flask.app']
+                with app.request_context(self.server.environ[sid]):
                     if 'saved_session' in self.server.environ[sid]:
                         self._copy_session(
                             self.server.environ[sid]['saved_session'],
