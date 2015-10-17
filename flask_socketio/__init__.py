@@ -31,12 +31,14 @@ class SocketIO(object):
                 isn't known at the time this class is instantiated, then call
                 ``socketio.init_app(app)`` once the application instance is
                 available.
-    :param kwargs: Socket.IO and Engine.IO server options.
-
-    The Socket.IO options are detailed below:
 
     :param resource: The SocketIO resource name. Defaults to ``'socket.io'``.
                      Leave this as is unless you know what you are doing.
+
+    :param kwargs: Socket.IO and Engine.IO server options.
+
+    The Socket.IO server options are detailed below:
+
     :param client_manager_class: The class that will manage the client list.
                                  The default value is appropriate for most
                                  cases.
@@ -53,7 +55,7 @@ class SocketIO(object):
                  functions that are compatible with the standard library
                  versions.
 
-    The Engine.IO configuration supports the following settings:
+    The Engine.IO server configuration supports the following settings:
 
     :param async_mode: The library used for asynchronous operations. Valid
                        options are "threading", "eventlet" and "gevent". If
@@ -97,7 +99,7 @@ class SocketIO(object):
         app.extensions['socketio'] = self
         self.server_options = kwargs
 
-        resource = kwargs.get('resource', 'socket.io')
+        resource = kwargs.pop('resource', 'socket.io')
         if resource.startswith('/'):
             resource = resource[1:]
         self.server = socketio.Server(**self.server_options)
