@@ -31,10 +31,8 @@ class SocketIO(object):
                 isn't known at the time this class is instantiated, then call
                 ``socketio.init_app(app)`` once the application instance is
                 available.
-
     :param resource: The SocketIO resource name. Defaults to ``'socket.io'``.
                      Leave this as is unless you know what you are doing.
-
     :param kwargs: Socket.IO and Engine.IO server options.
 
     The Socket.IO server options are detailed below:
@@ -371,8 +369,6 @@ class SocketIO(object):
 
     def test_client(self, app, namespace=None):
         """Return a simple SocketIO client that can be used for unit tests."""
-        if self.server is None:
-            self.run(app)
         return SocketIOTestClient(app, self, namespace)
 
     def _copy_session(self, src, dest):
