@@ -148,10 +148,11 @@ class SocketIO(object):
                             raise
                         type, value, traceback = sys.exc_info()
                         return err_handler(value)
-                    self.server.environ[sid]['saved_session'] = {}
-                    self._copy_session(
-                        flask.session,
-                        self.server.environ[sid]['saved_session'])
+                    if flask.session.modified:
+                        self.server.environ[sid]['saved_session'] = {}
+                        self._copy_session(
+                            flask.session,
+                            self.server.environ[sid]['saved_session'])
                     return ret
             self.server.on(message, _handler, namespace=namespace)
             return _handler

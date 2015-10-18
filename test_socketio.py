@@ -16,7 +16,6 @@ disconnected = None
 @socketio.on('connect')
 def on_connect():
     send('connected')
-    session['a'] = 'b'
 
 
 @socketio.on('disconnect')
@@ -39,6 +38,8 @@ def on_disconnect_test():
 @socketio.on('message')
 def on_message(message):
     send(message)
+    if message == 'test session':
+        session['a'] = 'b'
     if message not in "test noack":
         return message
 
@@ -264,7 +265,7 @@ class TestSocketIO(unittest.TestCase):
         global request_event_data
         request_event_data = None
         client.emit('other custom event', 'foo')
-        expected_data = {'message': 'other custom event', 'args' : ('foo',)}
+        expected_data = {'message': 'other custom event', 'args': ('foo',)}
         self.assertTrue(request_event_data == expected_data)
 
     def test_emit_namespace(self):
@@ -310,6 +311,8 @@ class TestSocketIO(unittest.TestCase):
         client = socketio.test_client(app)
         client.get_received()
         client.send('echo this message back')
+        self.assertNotIn('saved_session', socketio.server.environ[client.sid])
+        client.send('test session')
         session = socketio.server.environ[client.sid]['saved_session']
         self.assertTrue(session['a'] == 'b')
 

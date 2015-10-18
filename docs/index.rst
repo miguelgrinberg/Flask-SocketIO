@@ -407,7 +407,7 @@ regular HTTP request. The following list describes what works and what doesn't:
 - An application context is pushed before invoking an event handler making
   ``current_app`` and ``g`` available to the handler.
 - A request context is also pushed before invoking a handler, also making
-  ``request`` and ``session`` available. Note that WebSocket events do not
+  ``request`` and ``session`` available. But note that WebSocket events do not
   have individual requests associated with them, so the request context that
   started the connection is pushed for all the events that are dispatched
   during the life of the connection.
@@ -420,14 +420,17 @@ regular HTTP request. The following list describes what works and what doesn't:
 - The ``session`` context global behaves in a different way than in regular
   requests. A copy of the user session at the time the SocketIO connection is
   established is made available to handlers invoked in the context of that
-  connection. Any changes made to the session inside a SocketIO handler are
-  preserved, but only in the SocketIO context, these changes will not be seen
-  by regular HTTP handlers. The technical reason for this limitation is that to
-  save the user session a cookie needs to be sent to the client, and that
-  requires HTTP request and response, which do not exist in a socket
-  connection. When using server-side session storage SocketIO handlers can
-  update user sessions even for HTTP routes (see the
-  `Flask-KVsession <http://pythonhosted.org/Flask-KVSession/>`_ extension).
+  connection. If a SocketIO handler modifies the session, the modified session
+  will be preserved for future SocketIO handlers, but regular HTTP route
+  handlers will not see these changes. Effectively, when a SocketIO handler
+  modifies the session, a "fork" of the session is created exclusively for
+  these handlers. The technical reason for this limitation is that to save the
+  user session a cookie needs to be sent to the client, and that requires HTTP
+  request and response, which do not exist in a SocketIO connection. When
+  using server-side sessions such as those provided by the Flask-Session or
+  Flask-KVSession extensions, changes made to the session in HTTP route
+  handlers can be seen by SocketIO handlers, as long as the session is not
+  modified in the SocketIO handlers.
 - The ``before_request`` and ``after_request`` hooks are not invoked for
   SocketIO event handlers.
 - SocketIO handlers can take custom decorators, but most Flask decorators will
