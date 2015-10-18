@@ -299,11 +299,14 @@ class SocketIO(object):
                            Defaults to ``True`` in debug mode, ``False``
                            in normal mode. Unused wheb the threading async
                            mode is used.
-        :param kwargs: Additional Socket.IO and Engine.IO server options. See
-                       the constructor of this class for the list of available
-                       options. Note that the options provided here will not be
-                       available when using an external web server, since this
-                       method will not be called.
+        :param kwargs: Additional web server, Socket.IO, Engine.IO options.
+                       The web server options are specific to the server used
+                       in each of the supported async modes. See the
+                       constructor of this class for the list of Socket.IO and
+                       Engine.IO options. Note that options provided here will
+                       not be available when using an external web server such
+                       as gunicorn, since this method is not called in that
+                       case.
         """
         if host is None:
             host = '127.0.0.1'
@@ -326,7 +329,7 @@ class SocketIO(object):
 
         if self.server.eio.async_mode == 'threading':
             app.run(host=host, port=port, threaded=True,
-                    use_reloader=use_reloader)
+                    use_reloader=use_reloader, **kwargs)
         elif self.server.eio.async_mode == 'eventlet':
             def run_server():
                 import eventlet
