@@ -52,7 +52,7 @@ Older versions of Flask-SocketIO had a completely different set of
 requirements. Those versions had a dependency on
 `gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ and
 `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_, which
-are not required in release 1.0 and instead are optional.
+are not required in release 1.0.
 
 In spite of the change in dependencies, there aren't many significant
 changes introduced in version 1.0. Below is a detailed list of
@@ -89,6 +89,29 @@ the actual differences:
 - The ``'connect'`` event for the global namespace did not fire on releases
   prior to 1.0. This has been fixed and now this event fires as expected.
 - Support for client-side callbacks was introduced in release 1.0.
+
+Upgrading to Flask-SocketIO 1.x from older releases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+On the client side, you need to upgrade your Socket.IO Javascript client from
+the 0.9.x releases to the 1.3.x or newer releases.
+
+On the server side, there are a few points to consider:
+
+- If you wish to continue using gevent, then uninstall gevent-socketio from
+  your virtual environment, as this package is not used anymore and may
+  collide with its replacement, python-socketio.
+- If you want to have slightly better performance and stability, then it is
+  recommended that you switch to eventlet. To do this, uninstall gevent,
+  gevent-socketio and gevent-websocket, and install eventlet.
+- If your application uses monkey patching and you switched to eventlet, call
+  `eventlet.monkey_patch()` instead of gevent's `monkey.patch_all()`. Also,
+  any calls to gevent must be replaced with equivalent calls to eventlet.
+- Any uses of `request.namespace` must be replaced with direct calls into the
+  Flask-SocketIO functions. For example, `request.namespace.rooms` must be
+  replaced with the `rooms()` function.
+- Any uses of internal gevent-socketio objects must be removed, as this
+  package is not a dependency anymore.
 
 Initialization
 --------------
