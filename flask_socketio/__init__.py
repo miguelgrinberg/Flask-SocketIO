@@ -314,11 +314,11 @@ class SocketIO(object):
             else:
                 port = 5000
 
-        self.server_options.update(kwargs)
-        debug = self.server_options.pop('debug', app.debug)
-        log_output = self.server_options.pop('log_output', debug)
-        use_reloader = self.server_options.pop('use_reloader', debug)
+        debug = kwargs.pop('debug', app.debug)
+        log_output = kwargs.pop('log_output', debug)
+        use_reloader = kwargs.pop('use_reloader', debug)
         extra_files = kwargs.pop('extra_files', None)
+        self.server_options.update(kwargs)
 
         app.debug = debug
         if app.debug and self.server.eio.async_mode != 'threading':
