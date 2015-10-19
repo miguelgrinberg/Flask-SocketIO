@@ -86,6 +86,7 @@ class SocketIO(object):
     def __init__(self, app=None, **kwargs):
         self.server = None
         self.server_options = None
+        self.handlers = []
         self.exception_handlers = {}
         self.default_exception_handler = None
         if app is not None:
@@ -101,6 +102,8 @@ class SocketIO(object):
         if resource.startswith('/'):
             resource = resource[1:]
         self.server = socketio.Server(**self.server_options)
+        for handler in self.handlers:
+            self.server.on(handler[0], handler[1], namespace=handler[2])
         app.wsgi_app = _SocketIOMiddleware(self.server, app,
                                            socketio_path=resource)
 
@@ -117,8 +120,8 @@ class SocketIO(object):
                         string, but a few event names are already defined. Use
                         ``'message'`` to define a handler that takes a string
                         payload, ``'json'`` to define a handler that takes a
-                        JSON blob payload, ``'connect'`` or ``'disconnect'`` to
-                        create handlers for connection and disconnection
+                        JSON blob payload, ``'connect'`` or ``'disconnect'``
+                        to create handlers for connection and disconnection
                         events.
         :param namespace: The namespace on which the handler is to be
                           registered. Defaults to the global namespace.
@@ -154,7 +157,10 @@ class SocketIO(object):
                             flask.session,
                             self.server.environ[sid]['saved_session'])
                     return ret
-            self.server.on(message, _handler, namespace=namespace)
+            if self.server:
+                self.server.on(message, _handler, namespace=namespace)
+            else:
+                self.handlers.append((message, _handler, namespace))
             return _handler
         return decorator
 
