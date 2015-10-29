@@ -61,6 +61,7 @@ def index():
     global thread
     if thread is None:
         thread = Thread(target=background_thread)
+        thread.daemon = True
         thread.start()
     return render_template('index.html')
 
