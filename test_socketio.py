@@ -1,6 +1,3 @@
-from gevent import monkey
-monkey.patch_all()
-
 import unittest
 import coverage
 
@@ -19,7 +16,6 @@ disconnected = None
 @socketio.on('connect')
 def on_connect():
     send('connected')
-    session['a'] = 'b'
 
 
 @socketio.on('disconnect')
@@ -42,14 +38,18 @@ def on_disconnect_test():
 @socketio.on('message')
 def on_message(message):
     send(message)
+    if message == 'test session':
+        session['a'] = 'b'
     if message not in "test noack":
         return message
+
 
 @socketio.on('json')
 def on_json(data):
     send(data, json=True, broadcast=True)
     if not data.get('noack'):
         return data
+
 
 @socketio.on('message', namespace='/test')
 def on_message_test(message):
@@ -66,6 +66,7 @@ def on_custom_event(data):
     emit('my custom response', data)
     if not data.get('noack'):
         return data
+
 
 @socketio.on('other custom event')
 def get_request_event(data):
@@ -213,7 +214,7 @@ class TestSocketIO(unittest.TestCase):
 
     def test_send(self):
         client = socketio.test_client(app)
-        client.get_received()  # clean received
+        client.get_received()
         client.send('echo this message back')
         received = client.get_received()
         self.assertTrue(len(received) == 1)
@@ -222,8 +223,8 @@ class TestSocketIO(unittest.TestCase):
     def test_send_json(self):
         client1 = socketio.test_client(app)
         client2 = socketio.test_client(app)
-        client1.get_received()  # clean received
-        client2.get_received()  # clean received
+        client1.get_received()
+        client2.get_received()
         client1.send({'a': 'b'}, json=True)
         received = client1.get_received()
         self.assertTrue(len(received) == 1)
@@ -234,7 +235,7 @@ class TestSocketIO(unittest.TestCase):
 
     def test_send_namespace(self):
         client = socketio.test_client(app, namespace='/test')
-        client.get_received('/test')  # clean received
+        client.get_received('/test')
         client.send('echo this message back', namespace='/test')
         received = client.get_received('/test')
         self.assertTrue(len(received) == 1)
@@ -242,7 +243,7 @@ class TestSocketIO(unittest.TestCase):
 
     def test_send_json_namespace(self):
         client = socketio.test_client(app, namespace='/test')
-        client.get_received('/test')  # clean received
+        client.get_received('/test')
         client.send({'a': 'b'}, json=True, namespace='/test')
         received = client.get_received('/test')
         self.assertTrue(len(received) == 1)
@@ -250,7 +251,7 @@ class TestSocketIO(unittest.TestCase):
 
     def test_emit(self):
         client = socketio.test_client(app)
-        client.get_received()  # clean received
+        client.get_received()
         client.emit('my custom event', {'a': 'b'})
         received = client.get_received()
         self.assertTrue(len(received) == 1)
@@ -260,16 +261,16 @@ class TestSocketIO(unittest.TestCase):
 
     def test_request_event_data(self):
         client = socketio.test_client(app)
-        client.get_received()  # clean received
+        client.get_received()
         global request_event_data
         request_event_data = None
         client.emit('other custom event', 'foo')
-        expected_data = {'message': 'other custom event', 'args' : ('foo',)}
+        expected_data = {'message': 'other custom event', 'args': ('foo',)}
         self.assertTrue(request_event_data == expected_data)
 
     def test_emit_namespace(self):
         client = socketio.test_client(app, namespace='/test')
-        client.get_received('/test')  # clean received
+        client.get_received('/test')
         client.emit('my custom namespace event', {'a': 'b'}, namespace='/test')
         received = client.get_received('/test')
         self.assertTrue(len(received) == 1)
@@ -281,8 +282,8 @@ class TestSocketIO(unittest.TestCase):
         client1 = socketio.test_client(app)
         client2 = socketio.test_client(app)
         client3 = socketio.test_client(app, namespace='/test')
-        client2.get_received()  # clean
-        client3.get_received('/test')  # clean
+        client2.get_received()
+        client3.get_received('/test')
         client1.emit('my custom broadcast event', {'a': 'b'}, broadcast=True)
         received = client2.get_received()
         self.assertTrue(len(received) == 1)
@@ -295,8 +296,8 @@ class TestSocketIO(unittest.TestCase):
         client1 = socketio.test_client(app, namespace='/test')
         client2 = socketio.test_client(app, namespace='/test')
         client3 = socketio.test_client(app)
-        client2.get_received('/test')  # clean
-        client3.get_received()  # clean
+        client2.get_received('/test')
+        client3.get_received()
         client1.emit('my custom broadcast namespace event', {'a': 'b'},
                      namespace='/test')
         received = client2.get_received('/test')
@@ -308,17 +309,20 @@ class TestSocketIO(unittest.TestCase):
 
     def test_session(self):
         client = socketio.test_client(app)
-        client.get_received()  # clean received
+        client.get_received()
         client.send('echo this message back')
-        self.assertTrue(client.socket[''].session['a'] == 'b')
+        self.assertNotIn('saved_session', socketio.server.environ[client.sid])
+        client.send('test session')
+        session = socketio.server.environ[client.sid]['saved_session']
+        self.assertTrue(session['a'] == 'b')
 
     def test_room(self):
         client1 = socketio.test_client(app)
         client2 = socketio.test_client(app)
         client3 = socketio.test_client(app, namespace='/test')
-        client1.get_received()  # clean
-        client2.get_received()  # clean
-        client3.get_received('/test')  # clean
+        client1.get_received()
+        client2.get_received()
+        client3.get_received('/test')
         client1.emit('join room', {'room': 'one'})
         client2.emit('join room', {'room': 'one'})
         client3.emit('join room', {'room': 'one'}, namespace='/test')
@@ -346,18 +350,21 @@ class TestSocketIO(unittest.TestCase):
         self.assertTrue(len(received) == 0)
         received = client3.get_received('/test')
         self.assertTrue(len(received) == 0)
-        client3.emit('my room namespace event', {'room': 'one'}, namespace='/test')
+        client3.emit('my room namespace event', {'room': 'one'},
+                     namespace='/test')
         received = client3.get_received('/test')
         self.assertTrue(len(received) == 1)
         self.assertTrue(received[0]['name'] == 'message')
         self.assertTrue(received[0]['args'] == 'room message')
-        self.assertTrue(len(socketio.rooms) == 1)
         socketio.close_room('one', namespace='/test')
-        self.assertTrue(len(socketio.rooms) == 0)
+        client3.emit('my room namespace event', {'room': 'one'},
+                     namespace='/test')
+        received = client3.get_received('/test')
+        self.assertTrue(len(received) == 0)
 
     def test_error_handling(self):
         client = socketio.test_client(app)
-        client.get_received()       # clean client
+        client.get_received()
         global error_testing
         error_testing = False
         client.emit("error testing", "")
@@ -379,42 +386,42 @@ class TestSocketIO(unittest.TestCase):
         client.emit("error testing", "", namespace='/unused_namespace')
         self.assertTrue(error_testing_default)
 
-	def test_ack(self):
-		client1 = socketio.test_client(app)
-		ack = client1.send('echo this message back')
-		self.assertIsNot(ack, None)
-		self.assertIs(ack, 'echo this message back')
-		client2 = socketio.test_client(app)
-		ack2 = client2.send({'a': 'b'}, json=True)
-		self.assertIsNot(ack2, None)
-		self.assertEqual(ack2, {'a': 'b'})
-		client3 = socketio.test_client(app)
-		ack3 = client3.emit('my custom event', {'a': 'b'})
-		self.assertIsNot(ack3, None)
-		self.assertEqual(ack3, {'a': 'b'})
+    def test_ack(self):
+        client1 = socketio.test_client(app)
+        ack = client1.send('echo this message back', callback=True)
+        self.assertEqual(ack, 'echo this message back')
+        client2 = socketio.test_client(app)
+        ack2 = client2.send({'a': 'b'}, json=True, callback=True)
+        self.assertEqual(ack2, {'a': 'b'})
+        client3 = socketio.test_client(app)
+        ack3 = client3.emit('my custom event', {'a': 'b'}, callback=True)
+        self.assertEqual(ack3, {'a': 'b'})
 
-	def test_noack(self):
-		client1 = socketio.test_client(app)
-		no_ack_dict = {'noack': True}
-		noack = client1.send("test noack")
-		self.assertIs(noack, None)
-		client2 = socketio.test_client(app)
-		noack2 = client2.send(no_ack_dict, json=True)
-		client3 = socketio.test_client(app)
-		self.assertIs(noack2, None)
-		noack3 = client3.emit('my custom event', no_ack_dict)
-		self.assertIs(noack3, None)
+    def test_noack(self):
+        client1 = socketio.test_client(app)
+        no_ack_dict = {'noack': True}
+        noack = client1.send("test noack", callback=True)
+        self.assertIsNone(noack)
+        client2 = socketio.test_client(app)
+        noack2 = client2.send(no_ack_dict, json=True, callback=True)
+        client3 = socketio.test_client(app)
+        self.assertIsNone(noack2)
+        noack3 = client3.emit('my custom event', no_ack_dict)
+        self.assertIsNone(noack3)
 
-	def test_error_handling_ack(self):
-		client1 = socketio.test_client(app)
-		errorack = client1.emit("error testing", "")
-		self.assertIsNotNone(errorack)
-		client2 = socketio.test_client(app, namespace='/test')
-		errorack_namespace = client2.emit("error testing", "", namespace='/test')
-		self.assertIsNotNone(errorack_namespace)
-		client3 = socketio.test_client(app, namespace='/unused_namespace')
-		errorack_default = client3.emit("error testing", "", namespace='/unused_namespace')
-		self.assertIsNotNone(errorack_default)
+    def test_error_handling_ack(self):
+        client1 = socketio.test_client(app)
+        errorack = client1.emit("error testing", "", callback=True)
+        self.assertIsNotNone(errorack)
+        client2 = socketio.test_client(app, namespace='/test')
+        errorack_namespace = client2.emit("error testing", "",
+                                          namespace='/test', callback=True)
+        self.assertIsNotNone(errorack_namespace)
+        client3 = socketio.test_client(app, namespace='/unused_namespace')
+        errorack_default = client3.emit("error testing", "",
+                                        namespace='/unused_namespace',
+                                        callback=True)
+        self.assertIsNotNone(errorack_default)
 
 if __name__ == '__main__':
     unittest.main()
