@@ -1,5 +1,18 @@
 import sys
 
+# make sure gevent-socketio is not installed, as it conflicts with
+# python-socketio
+gevent_socketio_found = True
+try:
+    from socketio import socketio_manage
+except ImportError:
+    gevent_socketio_found = False
+if gevent_socketio_found:
+    print('The gevent-socketio package is incompatible with this version of '
+          'the Flask-SocketIO extension. Please uinistall it, and then '
+          'install the latest version of python-socketio in its place.')
+    sys.exit(1)
+
 import socketio
 import flask
 from werkzeug.debug import DebuggedApplication
