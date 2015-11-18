@@ -44,7 +44,7 @@ Current Limitations
 ~~~~~~~~~~~~~~~~~~~
 
 - Flask-SocketIO can only run in a single worker process at this time. Work is
-currently in progress to eliminate this limitation.
+  currently in progress to eliminate this limitation.
 
 Differences With Flask-SocketIO Versions 0.x
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -576,4 +576,5 @@ API Reference
 .. autofunction:: join_room
 .. autofunction:: leave_room
 .. autofunction:: close_room
+.. autofunction:: rooms
 .. autofunction:: disconnect
