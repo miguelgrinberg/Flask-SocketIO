@@ -12,6 +12,13 @@ client-side application can use the `SocketIO <http://socket.io>`_ Javascript
 library or any compatible client to establish a permanent connection to the
 server.
 
+Installation
+------------
+
+You can install this package in the usual way using ``pip``::
+
+    pip install flask-socketio
+
 Requirements
 ------------
 
