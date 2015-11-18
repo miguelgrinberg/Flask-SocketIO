@@ -99,6 +99,7 @@ class SocketIO(object):
     def __init__(self, app=None, **kwargs):
         self.server = None
         self.server_options = None
+        self.wsgi_server = None
         self.handlers = []
         self.exception_handlers = {}
         self.default_exception_handler = None
@@ -376,11 +377,11 @@ class SocketIO(object):
             if not log_output:
                 log = None
             if websocket:
-                server = pywsgi.WSGIServer((host, port), app,
-                                           handler_class=WebSocketHandler,
-                                           log=log)
+                self.wsgi_server = pywsgi.WSGIServer(
+                    (host, port), app, handler_class=WebSocketHandler,
+                    log=log)
             else:
-                server = pywsgi.WSGIServer((host, port), app, log=log)
+                self.wsgi_server = pywsgi.WSGIServer((host, port), app, log=log)
 
             if use_reloader:
                 # monkey patching is required by the reloader
@@ -388,11 +389,27 @@ class SocketIO(object):
                 monkey.patch_all()
 
                 def run_server():
-                    server.serve_forever()
+                    self.wsgi_server.serve_forever()
 
                 run_with_reloader(run_server, extra_files=extra_files)
             else:
-                server.serve_forever()
+                self.wsgi_server.serve_forever()
+
+    def stop(self):
+        """Stop a running SocketIO web server.
+
+        This method must be called from a HTTP or SocketIO handler function.
+        """
+        if self.server.eio.async_mode == 'threading':
+            func = flask.request.environ.get('werkzeug.server.shutdown')
+            if func:
+                func()
+            else:
+                raise RuntimeError('Cannot stop unknown web server')
+        elif self.server.eio.async_mode == 'eventlet':
+            raise SystemExit
+        elif self.server.eio.async_mode == 'gevent':
+            self.wsgi_server.stop()
 
     def test_client(self, app, namespace=None):
         """Return a simple SocketIO client that can be used for unit tests."""
