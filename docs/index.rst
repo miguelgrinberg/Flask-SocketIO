@@ -535,6 +535,10 @@ supports WebSocket. The modified command is the following::
 
     gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker module:app
 
+Gunicorn release 18.0 is the recommended release to use with Flask-SocketIO.
+The 19.x releases are known to have incompatibilities in certain deployment
+scenarios.
+
 Using nginx as a WebSocket Reverse Proxy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
