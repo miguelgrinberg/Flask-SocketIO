@@ -187,15 +187,15 @@ class TestSocketIO(unittest.TestCase):
     def test_connect(self):
         client = socketio.test_client(app)
         received = client.get_received()
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(received[0]['args'] == 'connected')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args'], 'connected')
         client.disconnect()
 
     def test_connect_namespace(self):
         client = socketio.test_client(app, namespace='/test')
         received = client.get_received('/test')
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(received[0]['args'] == 'connected-test')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args'], 'connected-test')
         client.disconnect(namespace='/test')
 
     def test_disconnect(self):
@@ -203,22 +203,22 @@ class TestSocketIO(unittest.TestCase):
         disconnected = None
         client = socketio.test_client(app)
         client.disconnect()
-        self.assertTrue(disconnected == '/')
+        self.assertEqual(disconnected, '/')
 
     def test_disconnect_namespace(self):
         global disconnected
         disconnected = None
         client = socketio.test_client(app, namespace='/test')
         client.disconnect('/test')
-        self.assertTrue(disconnected == '/test')
+        self.assertEqual(disconnected, '/test')
 
     def test_send(self):
         client = socketio.test_client(app)
         client.get_received()
         client.send('echo this message back')
         received = client.get_received()
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(received[0]['args'] == 'echo this message back')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args'], 'echo this message back')
 
     def test_send_json(self):
         client1 = socketio.test_client(app)
@@ -227,11 +227,11 @@ class TestSocketIO(unittest.TestCase):
         client2.get_received()
         client1.send({'a': 'b'}, json=True)
         received = client1.get_received()
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(received[0]['args']['a'] == 'b')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args']['a'], 'b')
         received = client2.get_received()
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(received[0]['args']['a'] == 'b')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args']['a'], 'b')
 
     def test_send_namespace(self):
         client = socketio.test_client(app, namespace='/test')
@@ -246,18 +246,18 @@ class TestSocketIO(unittest.TestCase):
         client.get_received('/test')
         client.send({'a': 'b'}, json=True, namespace='/test')
         received = client.get_received('/test')
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(received[0]['args']['a'] == 'b')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args']['a'], 'b')
 
     def test_emit(self):
         client = socketio.test_client(app)
         client.get_received()
         client.emit('my custom event', {'a': 'b'})
         received = client.get_received()
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(len(received[0]['args']) == 1)
-        self.assertTrue(received[0]['name'] == 'my custom response')
-        self.assertTrue(received[0]['args'][0]['a'] == 'b')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my custom response')
+        self.assertEqual(received[0]['args'][0]['a'], 'b')
 
     def test_request_event_data(self):
         client = socketio.test_client(app)
@@ -266,17 +266,17 @@ class TestSocketIO(unittest.TestCase):
         request_event_data = None
         client.emit('other custom event', 'foo')
         expected_data = {'message': 'other custom event', 'args': ('foo',)}
-        self.assertTrue(request_event_data == expected_data)
+        self.assertEqual(request_event_data, expected_data)
 
     def test_emit_namespace(self):
         client = socketio.test_client(app, namespace='/test')
         client.get_received('/test')
         client.emit('my custom namespace event', {'a': 'b'}, namespace='/test')
         received = client.get_received('/test')
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(len(received[0]['args']) == 1)
-        self.assertTrue(received[0]['name'] == 'my custom namespace response')
-        self.assertTrue(received[0]['args'][0]['a'] == 'b')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my custom namespace response')
+        self.assertEqual(received[0]['args'][0]['a'], 'b')
 
     def test_broadcast(self):
         client1 = socketio.test_client(app)
@@ -286,11 +286,11 @@ class TestSocketIO(unittest.TestCase):
         client3.get_received('/test')
         client1.emit('my custom broadcast event', {'a': 'b'}, broadcast=True)
         received = client2.get_received()
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(len(received[0]['args']) == 1)
-        self.assertTrue(received[0]['name'] == 'my custom response')
-        self.assertTrue(received[0]['args'][0]['a'] == 'b')
-        self.assertTrue(len(client3.get_received('/test')) == 0)
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my custom response')
+        self.assertEqual(received[0]['args'][0]['a'], 'b')
+        self.assertEqual(len(client3.get_received('/test')), 0)
 
     def test_broadcast_namespace(self):
         client1 = socketio.test_client(app, namespace='/test')
@@ -301,11 +301,11 @@ class TestSocketIO(unittest.TestCase):
         client1.emit('my custom broadcast namespace event', {'a': 'b'},
                      namespace='/test')
         received = client2.get_received('/test')
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(len(received[0]['args']) == 1)
-        self.assertTrue(received[0]['name'] == 'my custom namespace response')
-        self.assertTrue(received[0]['args'][0]['a'] == 'b')
-        self.assertTrue(len(client3.get_received()) == 0)
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my custom namespace response')
+        self.assertEqual(received[0]['args'][0]['a'], 'b')
+        self.assertEqual(len(client3.get_received()), 0)
 
     def test_session(self):
         client = socketio.test_client(app)
@@ -314,7 +314,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertNotIn('saved_session', socketio.server.environ[client.sid])
         client.send('test session')
         session = socketio.server.environ[client.sid]['saved_session']
-        self.assertTrue(session['a'] == 'b')
+        self.assertEqual(session['a'], 'b')
 
     def test_room(self):
         client1 = socketio.test_client(app)
@@ -328,39 +328,39 @@ class TestSocketIO(unittest.TestCase):
         client3.emit('join room', {'room': 'one'}, namespace='/test')
         client1.emit('my room event', {'a': 'b', 'room': 'one'})
         received = client1.get_received()
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(len(received[0]['args']) == 1)
-        self.assertTrue(received[0]['name'] == 'my room response')
-        self.assertTrue(received[0]['args'][0]['a'] == 'b')
-        self.assertTrue(received == client2.get_received())
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my room response')
+        self.assertEqual(received[0]['args'][0]['a'], 'b')
+        self.assertEqual(received, client2.get_received())
         received = client3.get_received('/test')
-        self.assertTrue(len(received) == 0)
+        self.assertEqual(len(received), 0)
         client1.emit('leave room', {'room': 'one'})
         client1.emit('my room event', {'a': 'b', 'room': 'one'})
         received = client1.get_received()
-        self.assertTrue(len(received) == 0)
+        self.assertEqual(len(received), 0)
         received = client2.get_received()
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(len(received[0]['args']) == 1)
-        self.assertTrue(received[0]['name'] == 'my room response')
-        self.assertTrue(received[0]['args'][0]['a'] == 'b')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my room response')
+        self.assertEqual(received[0]['args'][0]['a'], 'b')
         client2.disconnect()
         socketio.emit('my room event', {'a': 'b'}, room='one')
         received = client1.get_received()
-        self.assertTrue(len(received) == 0)
+        self.assertEqual(len(received), 0)
         received = client3.get_received('/test')
-        self.assertTrue(len(received) == 0)
+        self.assertEqual(len(received), 0)
         client3.emit('my room namespace event', {'room': 'one'},
                      namespace='/test')
         received = client3.get_received('/test')
-        self.assertTrue(len(received) == 1)
-        self.assertTrue(received[0]['name'] == 'message')
-        self.assertTrue(received[0]['args'] == 'room message')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['name'], 'message')
+        self.assertEqual(received[0]['args'], 'room message')
         socketio.close_room('one', namespace='/test')
         client3.emit('my room namespace event', {'room': 'one'},
                      namespace='/test')
         received = client3.get_received('/test')
-        self.assertTrue(len(received) == 0)
+        self.assertEqual(len(received), 0)
 
     def test_error_handling(self):
         client = socketio.test_client(app)
