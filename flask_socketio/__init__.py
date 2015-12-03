@@ -346,7 +346,13 @@ class SocketIO(object):
 
         app.debug = debug
         if app.debug and self.server.eio.async_mode != 'threading':
-            app.wsgi_app = DebuggedApplication(app.wsgi_app, evalex=True)
+            # app.wsgi_app is the _SocketIOMiddleware instance, set in the
+            # constructor.
+            # app.wsgi_app.wsgi_app is the wsgi_app from the Flask application
+            # instance
+            flask_app = app.wsgi_app
+            flask_app.wsgi_app = DebuggedApplication(flask_app.wsgi_app,
+                                                     evalex=True)
 
         if self.server.eio.async_mode == 'threading':
             from werkzeug._internal import _log
