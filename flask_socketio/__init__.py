@@ -318,7 +318,7 @@ class SocketIO(object):
         :param log_output: If ``True``, the server logs all incomming
                            connections. If ``False`` logging is disabled.
                            Defaults to ``True`` in debug mode, ``False``
-                           in normal mode. Unused wheb the threading async
+                           in normal mode. Unused when the threading async
                            mode is used.
         :param kwargs: Additional web server, Socket.IO, Engine.IO options.
                        The web server options are specific to the server used
