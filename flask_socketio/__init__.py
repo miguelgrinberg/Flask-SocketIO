@@ -72,7 +72,7 @@ class SocketIO(object):
                        options are "threading", "eventlet" and "gevent". If
                        this argument is not given, "eventlet" is tried first,
                        then "gevent", and finally "threading". The websocket
-                       transport is only supported in "eventlet" mode.
+                       transport is not supported in "ithreading" mode.
     :param ping_timeout: The time in seconds that the client waits for the
                          server to respond before disconnecting.
     :param ping_interval: The interval in seconds at which the client pings
@@ -221,11 +221,12 @@ class SocketIO(object):
     def emit(self, event, *args, **kwargs):
         """Emit a server generated SocketIO event.
 
-        This function emits a user-specific SocketIO event to one or more
-        connected clients. A JSON blob can be attached to the event as payload.
-        This function can be used outside of a SocketIO event context, so it is
-        appropriate to use when the server is the originator of an event, for
-        example as a result of a regular HTTP message. Example::
+        This function emits a SocketIO event to one or more connected clients.
+        A JSON blob can be attached to the event as payload. This function can
+        be used outside of a SocketIO event context, so it is appropriate to
+        use when the server is the originator of an event, outside of any
+        client context, such as in a regular HTTP request handler or a
+        background task. Example::
 
             @app.route('/ping')
             def ping():
@@ -387,7 +388,8 @@ class SocketIO(object):
                     (host, port), app, handler_class=WebSocketHandler,
                     log=log)
             else:
-                self.wsgi_server = pywsgi.WSGIServer((host, port), app, log=log)
+                self.wsgi_server = pywsgi.WSGIServer((host, port), app,
+                                                     log=log)
 
             if use_reloader:
                 # monkey patching is required by the reloader
@@ -429,9 +431,10 @@ class SocketIO(object):
 def emit(event, *args, **kwargs):
     """Emit a SocketIO event.
 
-    This function emits a user-specific SocketIO event to one or more connected
-    clients. A JSON blob can be attached to the event as payload. This is a
-    function that can only be called from a SocketIO event handler. Example::
+    This function emits a SocketIO event to one or more connected clients. A
+    JSON blob can be attached to the event as payload. This is a function that
+    can only be called from a SocketIO event handler, as in obtains some
+    information from the current client context. Example::
 
         @socketio.on('my event')
         def handle_my_custom_event(json):
@@ -441,13 +444,14 @@ def emit(event, *args, **kwargs):
     :param args: A dictionary with the JSON data to send as payload.
     :param namespace: The namespace under which the message is to be sent.
                       Defaults to the namespace used by the originating event.
-                      An empty string can be used to use the global namespace.
+                      A ``'/'`` can be used to explicitly specify the global
+                      namespace.
     :param callback: Callback function to invoke with the client's
                      acknowledgement.
-    :param broadcast: ``True`` to send the message to all connected clients, or
-                      ``False`` to only reply to the sender of the originating
-                      event.
-    :param room: Send the message to all the users in the given room.
+    :param broadcast: ``True`` to send the message to all clients, or ``False``
+                      to only reply to the sender of the originating event.
+    :param room: Send the message to all the users in the given room. If this
+                 argument is set, then broadcast is implied to be ``True``.
     :param include_self: ``True`` to include the sender when broadcasting or
                          addressing a room, or ``False`` to send to everyone
                          but the sender.
