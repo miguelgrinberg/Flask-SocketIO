@@ -229,7 +229,7 @@ them::
 
     @socketio.on('json')
     def handle_json(json):
-        send(message, json=True)
+        send(json, json=True)
 
     @socketio.on('my event')
     def handle_my_custom_event(json):
