@@ -44,15 +44,22 @@ class SocketIO(object):
                 isn't known at the time this class is instantiated, then call
                 ``socketio.init_app(app)`` once the application instance is
                 available.
+    :param message_queue: A connection URL for a message queue service the
+                          server can use for multi-process communication. A
+                          message queue is not required when using a single
+                          server process.
     :param resource: The SocketIO resource name. Defaults to ``'socket.io'``.
                      Leave this as is unless you know what you are doing.
     :param kwargs: Socket.IO and Engine.IO server options.
 
     The Socket.IO server options are detailed below:
 
-    :param client_manager_class: The class that will manage the client list.
-                                 The default value is appropriate for most
-                                 cases.
+    :param client_manager: The client manager instance that will manage the
+                           client list. When this is omitted, the client list
+                           is stored in an in-memory structure, so the use of
+                           multiple connected servers is not possible. In most
+                           cases, this argument does not need to be set
+                           explicitly.
     :param logger: To enable logging set to ``True`` or pass a logger object to
                    use. To disable logging set to ``False``.
     :param binary: ``True`` to support binary payloads, ``False`` to treat all
@@ -111,6 +118,12 @@ class SocketIO(object):
             app.extensions = {}  # pragma: no cover
         app.extensions['socketio'] = self
         self.server_options = kwargs
+
+        if 'client_manager' not in self.server_options:
+            url = kwargs.pop('message_queue', None)
+            if url:
+                queue = socketio.KombuManager(url)
+                self.server_options['client_manager'] = queue
 
         resource = kwargs.pop('resource', 'socket.io')
         if resource.startswith('/'):
@@ -321,12 +334,10 @@ class SocketIO(object):
                            Defaults to ``True`` in debug mode, ``False``
                            in normal mode. Unused when the threading async
                            mode is used.
-        :param kwargs: Additional web server, Socket.IO, Engine.IO options.
-                       The web server options are specific to the server used
-                       in each of the supported async modes. See the
-                       constructor of this class for the list of Socket.IO and
-                       Engine.IO options. Note that options provided here will
-                       not be available when using an external web server such
+        :param kwargs: Additional web server options. The web server options
+                       are specific to the server used in each of the supported
+                       async modes. Note that options provided here will
+                       not be seen when using an external web server such
                        as gunicorn, since this method is not called in that
                        case.
         """
@@ -343,7 +354,6 @@ class SocketIO(object):
         log_output = kwargs.pop('log_output', debug)
         use_reloader = kwargs.pop('use_reloader', debug)
         extra_files = kwargs.pop('extra_files', None)
-        self.server_options.update(kwargs)
 
         app.debug = debug
         if app.debug and self.server.eio.async_mode != 'threading':
