@@ -9,7 +9,7 @@ except ImportError:
     gevent_socketio_found = False
 if gevent_socketio_found:
     print('The gevent-socketio package is incompatible with this version of '
-          'the Flask-SocketIO extension. Please uinistall it, and then '
+          'the Flask-SocketIO extension. Please uninstall it, and then '
           'install the latest version of python-socketio in its place.')
     sys.exit(1)
 
