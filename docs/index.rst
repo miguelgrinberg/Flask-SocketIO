@@ -36,7 +36,7 @@ selected among three choices:
 - The Flask development server based on Werkzeug can be used as well, with the
   caveat that it lacks the performance of the other two options, so it should
   only be used to simplify the development workflow. This option only supports
-  the long-polling transport only.
+  the long-polling transport.
 
 The extension automatically detects which asynchronous framework to use based
 on what is installed. Preference is given to eventlet, followed by gevent. If
@@ -47,17 +47,11 @@ used to establish a connection to the server. There are also official clients
 written in Swift and C++. Unofficial clients may also work, as long as they
 implement the `Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_.
 
-Current Limitations
-~~~~~~~~~~~~~~~~~~~
-
-- Flask-SocketIO can only run in a single worker process at this time. Work is
-  currently in progress to eliminate this limitation.
-
 Differences With Flask-SocketIO Versions 0.x
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Older versions of Flask-SocketIO had a completely different set of
-requirements. Those versions had a dependency on
+requirements. Those old versions had a dependency on
 `gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ and
 `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_, which
 are not required in release 1.0.
@@ -98,8 +92,8 @@ the actual differences:
   prior to 1.0. This has been fixed and now this event fires as expected.
 - Support for client-side callbacks was introduced in release 1.0.
 
-Upgrading to Flask-SocketIO 1.x from older releases
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Upgrading to Flask-SocketIO 1.x and 2.x from older releases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 On the client side, you need to upgrade your Socket.IO Javascript client from
 the 0.9.x releases to the 1.3.x or newer releases.
@@ -397,8 +391,8 @@ debugging outside the event handler::
 
     @socketio.on_error_default
     def default_error_handler(e):
-        print request.event["message"] # "my error event"
-        print request.event["args"]    # (data,)
+        print(request.event["message"]) # "my error event"
+        print(request.event["args"])    # (data,)
 
 Access to Flask's Context Globals
 ---------------------------------
@@ -506,38 +500,52 @@ be created as follows::
 Deployment
 ----------
 
+Unfortunately, the complexity in deploying a Python server that supports
+WebSocket is very high. The options are many, and they are full of exceptions
+and limitations. In this section, the most commonly used options are described.
+
+Embedded Server
+~~~~~~~~~~~~~~~
+
 The simplest deployment strategy is to have eventlet or gevent installed, and
-start the web server by calling ``socketio.run(app)`` as shown above. This
-will run the application on the eventlet or gevent web servers, in that order
-of preference.
+start the web server by calling ``socketio.run(app)`` as shown in examples
+above. This will run the application on the eventlet or gevent web servers,
+whichever is installed. Note that ``socketio.run(app)`` runs a production ready
+server when eventlet or gevent are installed. If neither of these are installed,
+then the application runs on Flask's development web server, which is not
+appropriate for production use.
 
-An alternative is to use `gunicorn <http://gunicorn.org/>`_ as web server,
-using the eventlet or gevent workers. The command line that starts the
-eventlet server is shown below::
+Gunicorn Web Server
+~~~~~~~~~~~~~~~~~~~
 
-    gunicorn --worker-class eventlet module:app
+An alternative to ``socketio.run(app)`` is to use
+`gunicorn <http://gunicorn.org/>`_ as web server, using the eventlet or gevent
+workers. For this option, eventlet or gevent need to be installed, in addition
+to gunicorn. The command line that starts the eventlet server via gunicorn is::
+
+    gunicorn --worker-class eventlet -w 1 module:app
 
 If you prefer to use gevent, the command to start the server is::
 
-    gunicorn --worker-class gevent module:app
+    gunicorn -k gevent -w 1 module:app
 
-In these commands ``module`` is the Python module or package that defines the
-application instance, and ``app`` is the application instance itself.
+When using gunicorn with the gevent worker and the WebSocket support provided
+by gevent-websocket, the command that starts the server must be changed to
+select a custom gevent web server that supports the WebSocket protocol. The
+modified command is::
 
-WebSocket support comes standard with eventlet, but when using gevent, to
-enable WebSocket it is necessary to also install package gevent-websocket. If
-this package is not installed the gevent server will only use the long-polling
-transport mechanism.
+    gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 module:app
 
-When using gunicorn with the gevent worker and WebSocket, the command that
-starts the server must be changed to select a custom gevent web server that
-supports WebSocket. The modified command is the following::
-
-    gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker module:app
+In all these commands, ``module`` is the Python module or package that defines
+the application instance, and ``app`` is the application instance itself.
 
 Gunicorn release 18.0 is the recommended release to use with Flask-SocketIO.
 The 19.x releases are known to have incompatibilities in certain deployment
-scenarios.
+scenarios that include WebSocket.
+
+Due to the limited load balancing algorithm used by gunicorn, it is not possible
+to use more than one worker process when using this web server. For that reason,
+all the examples above include the ``-w 1`` option.
 
 Using nginx as a WebSocket Reverse Proxy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -575,6 +583,46 @@ example nginx configuration that proxies regular and WebSocket requests::
             proxy_set_header Connection "Upgrade";
         }
     }
+
+Using Multiple Workers
+~~~~~~~~~~~~~~~~~~~~~~
+
+Flask-SocketIO supports multiple workers behind a load balancer starting with
+release 2.0. Deploying multiple workers gives applications that use
+Flask-SocketIO the ability to split the client connections among multiple
+processes or even hosts, and in this way scale to support large numbers of
+concurrent clients.
+
+There are two requirements to use multiple Flask-SocketIO workers:
+
+- The load balancer must be configured to forward all HTTP requests from a
+  given client always to the same worker. For nginx, use the ``ip_hash``
+  directive. Gunicorn cannot be used with multiple workers due to its limited
+  load balancing algorithm.
+
+- Since each of the servers owns only a subset of the client connections, a
+  message queue such as Redis or RabbitMQ is used by the servers to coordinate
+  complex operations such as broadcasting or rooms. The Kombu package is used
+  to access the message queue, so it must be installed (i.e. ``pip install
+  kombu``). Depending on the selected message queue, Kombu may require
+  additional packages to be installed.
+
+To start multiple Flask-SocketIO servers, you must first ensure you have a
+compatible message queue running. The supported list of message queues can be
+seen in the documentation for `Kombu 
+<http://docs.celeryproject.org/projects/kombu/en/latest/introduction.html#transport-comparison>`_.
+Note that if you are using Redis, Kombu needs its Python package to also be
+installed (i.e. ``pip install redis``).
+
+To start a Socket.IO server and have it connect to the message queue, add
+the ``message_queue`` argument to the ``SocketIO`` constructor::
+
+    socketio = SocketIO(app, message_queue='redis://')
+
+The value of the ``message_queue`` argument is the connection URL of the
+queue service that is used. The Kombu package has a `documentation section
+<http://docs.celeryproject.org/projects/kombu/en/latest/userguide/connections.html?highlight=urls#urls>`_
+that describes the format of the URLs for all the supported queues.
 
 API Reference
 -------------
