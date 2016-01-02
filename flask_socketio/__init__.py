@@ -396,7 +396,7 @@ class SocketIO(object):
             if websocket:
                 self.wsgi_server = pywsgi.WSGIServer(
                     (host, port), app, handler_class=WebSocketHandler,
-                    log=log)
+                    log=log, **kwargs)
             else:
                 self.wsgi_server = pywsgi.WSGIServer((host, port), app,
                                                      log=log)
