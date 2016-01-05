@@ -375,7 +375,20 @@ class SocketIO(object):
         elif self.server.eio.async_mode == 'eventlet':
             def run_server():
                 import eventlet
-                eventlet.wsgi.server(eventlet.listen((host, port)), app,
+                eventlet_socket = eventlet.listen((host, port))
+
+                # If provided an SSL argument, use an SSL socket
+                ssl_args = [
+                    'keyfile', 'certfile', 'cert_reqs', 'ssl_version',
+                    'ca_certs', 'do_handshake_on_connect', 'server_side'
+                ]
+                if (any(ssl_arg in kwargs for ssl_arg in ssl_args)):
+                    ssl_args = dict([[k, kwargs.pop(k, None)] for k in ssl_args])
+                    ssl_args = {k: v for k, v in ssl_args.items() if v is not None}
+                    ssl_args['server_side'] = True # Listening requires true
+                    eventlet_socket = eventlet.wrap_ssl(eventlet_socket, **ssl_args)
+
+                eventlet.wsgi.server(eventlet_socket, app,
                                      log_output=log_output, **kwargs)
 
             if use_reloader:
