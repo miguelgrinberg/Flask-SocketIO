@@ -48,6 +48,11 @@ class SocketIO(object):
                           server can use for multi-process communication. A
                           message queue is not required when using a single
                           server process.
+    :param channel: The channel name, when using a message queue. Normally this
+                    does not need to be set, but if multiple clusters of
+                    processes need to use the same message queue, then each
+                    group should use a different channel so that they do not
+                    interfere.
     :param resource: The SocketIO resource name. Defaults to ``'socket.io'``.
                      Leave this as is unless you know what you are doing.
     :param kwargs: Socket.IO and Engine.IO server options.
@@ -121,8 +126,9 @@ class SocketIO(object):
 
         if 'client_manager' not in self.server_options:
             url = kwargs.pop('message_queue', None)
+            channel = kwargs.pop('channel', None)
             if url:
-                queue = socketio.KombuManager(url)
+                queue = socketio.KombuManager(url, channel=channel)
                 self.server_options['client_manager'] = queue
 
         resource = kwargs.pop('resource', 'socket.io')

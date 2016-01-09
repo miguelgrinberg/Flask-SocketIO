@@ -500,9 +500,9 @@ be created as follows::
 Deployment
 ----------
 
-Unfortunately, the complexity in deploying a Python server that supports
-WebSocket is very high. The options are many, and they are full of exceptions
-and limitations. In this section, the most commonly used options are described.
+There are many options to deploy a Flask-SocketIO server, ranging from the
+to the insanely complex. In this section, the most commonly used options are
+described.
 
 Embedded Server
 ~~~~~~~~~~~~~~~
@@ -510,10 +510,12 @@ Embedded Server
 The simplest deployment strategy is to have eventlet or gevent installed, and
 start the web server by calling ``socketio.run(app)`` as shown in examples
 above. This will run the application on the eventlet or gevent web servers,
-whichever is installed. Note that ``socketio.run(app)`` runs a production ready
-server when eventlet or gevent are installed. If neither of these are installed,
-then the application runs on Flask's development web server, which is not
-appropriate for production use.
+whichever is installed.
+
+Note that ``socketio.run(app)`` runs a production ready server when eventlet
+or gevent are installed. If neither of these are installed, then the
+application runs on Flask's development web server, which is not appropriate
+for production use.
 
 Gunicorn Web Server
 ~~~~~~~~~~~~~~~~~~~
@@ -551,9 +553,9 @@ Using nginx as a WebSocket Reverse Proxy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 It is possible to use nginx as a front-end reverse proxy that passes requests
-to the application. However, it is important to note that only releases of
-nginx 1.4 and newer support proxying of the WebSocket protocol. Below is an
-example nginx configuration that proxies regular and WebSocket requests::
+to the application. However, only releases of nginx 1.4 and newer support
+proxying of the WebSocket protocol. Below is an example nginx configuration
+that proxies HTTP and WebSocket requests::
 
     server {
         listen 80;
@@ -589,8 +591,8 @@ Using Multiple Workers
 
 Flask-SocketIO supports multiple workers behind a load balancer starting with
 release 2.0. Deploying multiple workers gives applications that use
-Flask-SocketIO the ability to split the client connections among multiple
-processes or even hosts, and in this way scale to support large numbers of
+Flask-SocketIO the ability to spread the client connections among multiple
+processes and hosts, and in this way scale to support very large numbers of
 concurrent clients.
 
 There are two requirements to use multiple Flask-SocketIO workers:
@@ -623,6 +625,20 @@ The value of the ``message_queue`` argument is the connection URL of the
 queue service that is used. The Kombu package has a `documentation section
 <http://docs.celeryproject.org/projects/kombu/en/latest/userguide/connections.html?highlight=urls#urls>`_
 that describes the format of the URLs for all the supported queues.
+
+Emitting from an External Process
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For many types of applications, it is necessary to emit events from a process
+that is not the SocketIO server, for a example a Celery worker. To do this,
+the external process must create a ``SocketIO`` instances similar to the one
+used by the main process. For example, if the application is using a Redis
+message queue, the following Python script can broadcast an event to all
+clients::
+
+    app = create_app()
+    socketio = SocketIO(app, message_queue='redis://')
+    socketio.emit('my event', {'data': 'foo'}, namespace='/test')
 
 API Reference
 -------------
