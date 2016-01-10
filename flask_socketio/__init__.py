@@ -48,11 +48,11 @@ class SocketIO(object):
                           server can use for multi-process communication. A
                           message queue is not required when using a single
                           server process.
-    :param channel: The channel name, when using a message queue. Normally this
-                    does not need to be set, but if multiple clusters of
-                    processes need to use the same message queue, then each
-                    group should use a different channel so that they do not
-                    interfere.
+    :param channel: The channel name, when using a message queue. If a channel
+                    isn't specified, a default channel will be used. If
+                    multiple clusters of SocketIO processes need to use the
+                    same message queue without interfering with each other, then
+                    each cluster should use a different channel.
     :param resource: The SocketIO resource name. Defaults to ``'socket.io'``.
                      Leave this as is unless you know what you are doing.
     :param kwargs: Socket.IO and Engine.IO server options.
@@ -115,20 +115,27 @@ class SocketIO(object):
         self.handlers = []
         self.exception_handlers = {}
         self.default_exception_handler = None
-        if app is not None:
+        if app is not None or len(kwargs) > 0:
             self.init_app(app, **kwargs)
 
     def init_app(self, app, **kwargs):
-        if not hasattr(app, 'extensions'):
-            app.extensions = {}  # pragma: no cover
-        app.extensions['socketio'] = self
+        if app is not None:
+            if not hasattr(app, 'extensions'):
+                app.extensions = {}  # pragma: no cover
+            app.extensions['socketio'] = self
         self.server_options = kwargs
 
         if 'client_manager' not in self.server_options:
             url = kwargs.pop('message_queue', None)
-            channel = kwargs.pop('channel', None)
+            channel = kwargs.pop('channel', 'flask-socketio')
+            write_only = app is None
             if url:
-                queue = socketio.KombuManager(url, channel=channel)
+                if url.startswith('redis://'):
+                    queue_class = socketio.RedisManager
+                else:
+                    queue_class = socketio.KombuManager
+                queue = queue_class(url, channel=channel,
+                                    write_only=write_only)
                 self.server_options['client_manager'] = queue
 
         resource = kwargs.pop('resource', 'socket.io')
@@ -137,8 +144,9 @@ class SocketIO(object):
         self.server = socketio.Server(**self.server_options)
         for handler in self.handlers:
             self.server.on(handler[0], handler[1], namespace=handler[2])
-        app.wsgi_app = _SocketIOMiddleware(self.server, app,
-                                           socketio_path=resource)
+        if app is not None:
+            app.wsgi_app = _SocketIOMiddleware(self.server, app,
+                                               socketio_path=resource)
 
     def on(self, message, namespace=None):
         """Decorator to register a SocketIO event handler.

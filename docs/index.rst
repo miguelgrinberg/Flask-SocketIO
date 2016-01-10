@@ -604,41 +604,63 @@ There are two requirements to use multiple Flask-SocketIO workers:
 
 - Since each of the servers owns only a subset of the client connections, a
   message queue such as Redis or RabbitMQ is used by the servers to coordinate
-  complex operations such as broadcasting or rooms. The Kombu package is used
-  to access the message queue, so it must be installed (i.e. ``pip install
-  kombu``). Depending on the selected message queue, Kombu may require
-  additional packages to be installed.
+  complex operations such as broadcasting or rooms.
 
-To start multiple Flask-SocketIO servers, you must first ensure you have a
-compatible message queue running. The supported list of message queues can be
-seen in the documentation for `Kombu 
-<http://docs.celeryproject.org/projects/kombu/en/latest/introduction.html#transport-comparison>`_.
-Note that if you are using Redis, Kombu needs its Python package to also be
-installed (i.e. ``pip install redis``).
+When working with a message queue, there are additional dependencies that need to
+be installed:
 
-To start a Socket.IO server and have it connect to the message queue, add
-the ``message_queue`` argument to the ``SocketIO`` constructor::
+- For Redis, the package ``redis`` must be installed (``pip install redis``).
+- For RabbitMQ, the package ``kombu`` must be installed (``pip install kombu``).
+- For ther message queues supported by Kombu, see the `Kombu documentation 
+  <http://docs.celeryproject.org/projects/kombu/en/latest/introduction.html#transport-comparison>`_
+  to find out what dependencies are needed.
+
+To start multiple Flask-SocketIO servers, you must first ensure you have the
+message queue service running. To start a Socket.IO server and have it connect to
+the message queue, add the ``message_queue`` argument to the ``SocketIO``
+constructor::
 
     socketio = SocketIO(app, message_queue='redis://')
 
 The value of the ``message_queue`` argument is the connection URL of the
-queue service that is used. The Kombu package has a `documentation section
-<http://docs.celeryproject.org/projects/kombu/en/latest/userguide/connections.html?highlight=urls#urls>`_
+queue service that is used. For a redis queue running on the same host as the
+server, the ``'redis://`` URL can be used. Likewise, for a default RabbitMQ
+queue the ``'amqp://'`` URL can be used. The Kombu package has a `documentation
+section <http://docs.celeryproject.org/projects/kombu/en/latest/userguide/connections.html?highlight=urls#urls>`_
 that describes the format of the URLs for all the supported queues.
 
 Emitting from an External Process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For many types of applications, it is necessary to emit events from a process
-that is not the SocketIO server, for a example a Celery worker. To do this,
-the external process must create a ``SocketIO`` instances similar to the one
-used by the main process. For example, if the application is using a Redis
-message queue, the following Python script can broadcast an event to all
-clients::
+that is not the SocketIO server, for a example a Celery worker. If the
+SocketIO server or servers are configured to listen on a message queue as
+shown in the previous section, then any other process can create its own
+``SocketIO`` instance and use it to emit events in the same way the server
+does.
 
-    app = create_app()
-    socketio = SocketIO(app, message_queue='redis://')
+For example, for an application that runs on an eventlet web server and uses
+a Redis message queue, the following Python script can broadcast an event to
+all clients::
+
+    import eventlet
+    eventlet.monkey_patch()
+    socketio = SocketIO(message_queue='redis://')
     socketio.emit('my event', {'data': 'foo'}, namespace='/test')
+
+Note that a Flask application instance is not required when initializing a
+``SocketIO`` object that is only going to be used to emit events and not as a
+server.
+
+The ``channel`` argument to ``SocketIO`` can be used to select a specific
+channel of communication through the message queue. Using a custom channel
+name is necessary when there are multiple independent SocketIO services
+sharing the same queue.
+
+Note that Flask-SocketIO does not apply monkey patching when eventlet or
+gevent are used. When working with a message queue, it is very likely that
+the Python package that talks to the message queue service will hang if the
+Python standard library is not monkey patched.
 
 API Reference
 -------------
