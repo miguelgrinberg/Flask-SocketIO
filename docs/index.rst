@@ -549,6 +549,22 @@ Due to the limited load balancing algorithm used by gunicorn, it is not possible
 to use more than one worker process when using this web server. For that reason,
 all the examples above include the ``-w 1`` option.
 
+uWSGI Web Server
+~~~~~~~~~~~~~~~~
+
+At this time, uWSGI is not a good choice of web server for a SocketIO
+application due to the following limitations:
+
+- The ``'eventlet'`` async mode cannot be used, as uWSGI currently does not
+  support web servers based on eventlet.
+- The ``'gevent'`` async mode is supported, but uWSGI is currently
+  incompatible with the gevent-websocket package, so only the long-polling
+  transport can be used.
+- The native WebSocket support available from uWSGI is not based eventlet or
+  gevent, so it cannot be used at this time. If possible, a WebSocket
+  transport based on the uWSGI WebSocket implementation will be made available
+  in a future release.
+
 Using nginx as a WebSocket Reverse Proxy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -657,10 +673,10 @@ channel of communication through the message queue. Using a custom channel
 name is necessary when there are multiple independent SocketIO services
 sharing the same queue.
 
-Note that Flask-SocketIO does not apply monkey patching when eventlet or
-gevent are used. When working with a message queue, it is very likely that
-the Python package that talks to the message queue service will hang if the
-Python standard library is not monkey patched.
+Flask-SocketIO does not apply monkey patching when eventlet or gevent are
+used. When working with a message queue, it is very likely that the Python
+package that talks to the message queue service will hang if the Python
+standard library is not monkey patched.
 
 API Reference
 -------------
