@@ -42,10 +42,17 @@ The extension automatically detects which asynchronous framework to use based
 on what is installed. Preference is given to eventlet, followed by gevent. If
 neither one is installed, then the Flask development server is used.
 
+If using multiple processes, a message queue service is used by the processes
+to coordinate operations such as broadcasting. The supported queues are
+`Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_, and any
+other message queues supported by the 
+`Kombu <http://kombu.readthedocs.org/en/latest/>`_ package.
+
 On the client-side, the official Socket.IO Javascript client library can be
 used to establish a connection to the server. There are also official clients
-written in Swift and C++. Unofficial clients may also work, as long as they
-implement the `Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_.
+written in Swift, Java and C++. Unofficial clients may also work, as long as
+they implement the
+`Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_.
 
 Differences With Flask-SocketIO Versions 0.x
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -560,8 +567,8 @@ application due to the following limitations:
 - The ``'gevent'`` async mode is supported, but uWSGI is currently
   incompatible with the gevent-websocket package, so only the long-polling
   transport can be used.
-- The native WebSocket support available from uWSGI is not based eventlet or
-  gevent, so it cannot be used at this time. If possible, a WebSocket
+- The native WebSocket support available from uWSGI is not based on eventlet
+  or gevent, so it cannot be used at this time. If possible, a WebSocket
   transport based on the uWSGI WebSocket implementation will be made available
   in a future release.
 
@@ -614,13 +621,14 @@ concurrent clients.
 There are two requirements to use multiple Flask-SocketIO workers:
 
 - The load balancer must be configured to forward all HTTP requests from a
-  given client always to the same worker. For nginx, use the ``ip_hash``
-  directive. Gunicorn cannot be used with multiple workers due to its limited
-  load balancing algorithm.
+  given client always to the same worker. This is sometimes referenced as
+  "sticky sessions". For nginx, use the ``ip_hash`` directive to achieve this.
+  Gunicorn cannot be used with multiple workers because its load balancer
+  algorithm does not support sticky sessions.
 
 - Since each of the servers owns only a subset of the client connections, a
   message queue such as Redis or RabbitMQ is used by the servers to coordinate
-  complex operations such as broadcasting or rooms.
+  complex operations such as broadcasting and rooms.
 
 When working with a message queue, there are additional dependencies that need to
 be installed:
@@ -640,7 +648,7 @@ constructor::
 
 The value of the ``message_queue`` argument is the connection URL of the
 queue service that is used. For a redis queue running on the same host as the
-server, the ``'redis://`` URL can be used. Likewise, for a default RabbitMQ
+server, the ``'redis://'`` URL can be used. Likewise, for a default RabbitMQ
 queue the ``'amqp://'`` URL can be used. The Kombu package has a `documentation
 section <http://docs.celeryproject.org/projects/kombu/en/latest/userguide/connections.html?highlight=urls#urls>`_
 that describes the format of the URLs for all the supported queues.
@@ -656,7 +664,7 @@ shown in the previous section, then any other process can create its own
 does.
 
 For example, for an application that runs on an eventlet web server and uses
-a Redis message queue, the following Python script can broadcast an event to
+a Redis message queue, the following Python script broadcasts an event to
 all clients::
 
     import eventlet
@@ -664,9 +672,8 @@ all clients::
     socketio = SocketIO(message_queue='redis://')
     socketio.emit('my event', {'data': 'foo'}, namespace='/test')
 
-Note that a Flask application instance is not required when initializing a
-``SocketIO`` object that is only going to be used to emit events and not as a
-server.
+When using the ``SocketIO`` instance in this way, the Flask application
+instance is not passed to the constructor.
 
 The ``channel`` argument to ``SocketIO`` can be used to select a specific
 channel of communication through the message queue. Using a custom channel
@@ -674,7 +681,7 @@ name is necessary when there are multiple independent SocketIO services
 sharing the same queue.
 
 Flask-SocketIO does not apply monkey patching when eventlet or gevent are
-used. When working with a message queue, it is very likely that the Python
+used. But when working with a message queue, it is very likely that the Python
 package that talks to the message queue service will hang if the Python
 standard library is not monkey patched.
 
