@@ -635,7 +635,7 @@ be installed:
 
 - For Redis, the package ``redis`` must be installed (``pip install redis``).
 - For RabbitMQ, the package ``kombu`` must be installed (``pip install kombu``).
-- For ther message queues supported by Kombu, see the `Kombu documentation 
+- For other message queues supported by Kombu, see the `Kombu documentation 
   <http://docs.celeryproject.org/projects/kombu/en/latest/introduction.html#transport-comparison>`_
   to find out what dependencies are needed.
 
