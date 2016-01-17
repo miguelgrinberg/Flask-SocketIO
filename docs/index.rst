@@ -8,9 +8,9 @@ Welcome to Flask-SocketIO's documentation!
 
 **Flask-SocketIO** gives Flask applications access to low latency
 bi-directional communications between the clients and the server. The
-client-side application can use the `SocketIO <http://socket.io>`_ Javascript
-library or any compatible client to establish a permanent connection to the
-server.
+client-side application can use any of the `SocketIO <http://socket.io>`_ 
+official clients libraries in Javascript, C++, Java and Swift, or any
+compatible client to establish a permanent connection to the server.
 
 Installation
 ------------
@@ -180,11 +180,19 @@ JSON data::
     def handle_json(json):
         print('received json: ' + str(json))
 
-The most flexible type of event uses custom event names::
+The most flexible type of event uses custom event names. The message data for
+these events can be string, bytes, int, or JSON::
 
     @socketio.on('my event')
     def handle_my_custom_event(json):
         print('received json: ' + str(json))
+
+Custom named events can also support multiple arguments::
+
+    @socketio.on('my event')
+    def handle_my_custom_event(arg1, arg2, arg3):
+        print('received args: ' + arg1 + arg2 + arg3)
+
 
 Named events are the most flexible, as they eliminate the need to include
 additional metadata to describe the message type.
@@ -250,6 +258,12 @@ the optional ``namespace`` argument::
     @socketio.on('my event')
     def handle_my_custom_event(json):
         emit('my response', json, namespace='/chat')
+
+To send an event with multiple arguments, send a tuple::
+
+    @socketio.on('my event')
+    def handle_my_custom_event(json):
+        emit('my response', ('foo', 'bar', json), namespace='/chat')
 
 SocketIO supports acknowledgement callbacks that confirm that a message was
 received by the client::
