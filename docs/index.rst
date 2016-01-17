@@ -521,7 +521,7 @@ be created as follows::
 Deployment
 ----------
 
-There are many options to deploy a Flask-SocketIO server, ranging from the
+There are many options to deploy a Flask-SocketIO server, ranging from simple
 to the insanely complex. In this section, the most commonly used options are
 described.
 
