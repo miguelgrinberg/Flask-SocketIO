@@ -25,7 +25,7 @@
 这个包所依赖的异步服务器可以从下面三个中任选其一即可:
 
 - `eventlet <http://eventlet.net/>`_ 从性能上来说是目前最好的选择，
-它支持长 long-polling 和 WebSocket transports。
+  它支持长 long-polling 和 WebSocket transports。
 
 - `gevent <http://www.gevent.org/>`_ 是这个扩展早期版本使用的框架。
   long-polling 是完全支持的，但是如果要想支持 WebSocket，就必须将
