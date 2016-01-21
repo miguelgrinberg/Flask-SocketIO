@@ -28,12 +28,12 @@
 它支持长 long-polling 和 WebSocket transports。
 
 - `gevent <http://www.gevent.org/>`_ 是这个扩展早期版本使用的框架。
-long-polling 是完全支持的，但是如果要想支持 WebSocket，就必须将
-`gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_ 安装好。
-使用 gevent 和 gevent-websocket 性能也很不错，不过要比 eventlet 稍微低一点点。
+  long-polling 是完全支持的，但是如果要想支持 WebSocket，就必须将
+  `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_ 安装好。
+  使用 gevent 和 gevent-websocket 性能也很不错，不过要比 eventlet 稍微低一点点。
 
 - 基于 Werkzeug 的 Flask 开发服务器也可以被很好的使用，但是需要提醒的是，它的性能远不如
-其他两个可选方案，因此它应该仅用作来简化开发流程。这个选项仅支持long-polling transport。
+  其他两个可选方案，因此它应该仅用作来简化开发流程。这个选项仅支持long-polling transport。
 
 这个扩展将根据你所安装的异步框架来自动选择，优先选择 eventlet，其次是 gevent。
 如果这两个都没有被安装，将会使用 Flask 开发服务器。
