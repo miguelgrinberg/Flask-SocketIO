@@ -24,12 +24,14 @@
 自从 1.0 版本以来，这个扩展便支持 Python2.7 和 Python 3.3+ 了。
 这个包所依赖的异步服务器可以从下面三个中任选其一即可:
 
-- `eventlet <http://eventlet.net/>`_ 从性能上来说是目前最好的选择，它支持长
-long-polling 和 WebSocket transports。
+- `eventlet <http://eventlet.net/>`_ 从性能上来说是目前最好的选择，
+它支持长 long-polling 和 WebSocket transports。
+
 - `gevent <http://www.gevent.org/>`_ 是这个扩展早期版本使用的框架。
 long-polling 是完全支持的，但是如果要想支持 WebSocket，就必须将
 `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_ 安装好。
 使用 gevent 和 gevent-websocket 性能也很不错，不过要比 eventlet 稍微低一点点。
+
 - 基于 Werkzeug 的 Flask 开发服务器也可以被很好的使用，但是需要提醒的是，它的性能远不如
 其他两个可选方案，因此它应该仅用作来简化开发流程。这个选项仅支持long-polling transport。
 
@@ -38,7 +40,7 @@ long-polling 是完全支持的，但是如果要想支持 WebSocket，就必须
 
 如果使用多个进程，将使用一个消息队列来协调操作。
 支持队列的有 `Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_,
- The supported queues are
+The supported queues are
 `Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_, 或者其他任何支持
 `Kombu <http://kombu.readthedocs.org/en/latest/>`_ 包的消息队列。
 
