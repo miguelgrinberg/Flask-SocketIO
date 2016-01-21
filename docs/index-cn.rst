@@ -6,9 +6,10 @@
 欢迎来到 Flask-SocketIO 中文文档!
 ===============================
 
-**Flask-SocketIO** 使得 Flask 应用在服务端和客户端的双向通信中有更低的延迟。
-客户端的应用程序可以使用任何在Javascript，  C++, Java 和 Swift 或者任何官方的
-`SocketIO <http://socket.io>`_ 客户端，与服务端简历永久的链接。
+**Flask-SocketIO** 使得 Flask 应用在服务端和客户端的双向通信中延迟更低。
+客户端的应用程序可以使用任何Javascript，  C++, Java 和 Swift 的官方的客户端库，
+或者其他任何官方的`SocketIO <http://socket.io>`_ 客户端，
+与服务端简历永久的链接。
 
 安装
 -------------------------------
@@ -17,40 +18,34 @@
 
     pip install flask-socketio
 
-Requirements
+依赖
 ------------
 
-Since version 1.0, this extension is compatible with both Python 2.7 and
-Python 3.3+. The asynchronous services that this package relies on can be
-selected among three choices:
+自从 1.0 版本以来，这个扩展便支持 Python2.7 和 Python 3.3+ 了。
+这个包所依赖的异步服务器可以从下面三个中任选其一即可:
 
-- `eventlet <http://eventlet.net/>`_ is the best performant option, with
-  support for long-polling and WebSocket transports.
-- `gevent <http://www.gevent.org/>`_ is the framework used in previous
-  releases of this extension. The long-polling transport is fully supported.
-  To add support for WebSocket, the `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_
-  package must be installed as well. The use of gevent and gevent-websocket
-  is also a performant option, but slightly lower than eventlet.
-- The Flask development server based on Werkzeug can be used as well, with the
-  caveat that it lacks the performance of the other two options, so it should
-  only be used to simplify the development workflow. This option only supports
-  the long-polling transport.
+- `eventlet <http://eventlet.net/>`_ 从性能上来说是目前最好的选择，它支持长
+long-polling 和 WebSocket transports。
+- `gevent <http://www.gevent.org/>`_ 是这个扩展早期版本使用的框架。
+long-polling 是完全支持的，但是如果要想支持 WebSocket，就必须将
+`gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_ 安装好。
+使用 gevent 和 gevent-websocket 性能也很不错，不过要比 eventlet 稍微低一点点。
+- 基于 Werkzeug 的 Flask 开发服务器也可以被很好的使用，但是需要提醒的是，它的性能远不如
+其他两个可选方案，因此它应该仅用作来简化开发流程。这个选项仅支持long-polling transport。
 
-The extension automatically detects which asynchronous framework to use based
-on what is installed. Preference is given to eventlet, followed by gevent. If
-neither one is installed, then the Flask development server is used.
+这个扩展将根据你所安装的异步框架来自动选择，优先选择 eventlet，其次是 gevent。
+如果这两个都没有被安装，将会使用 Flask 开发服务器。
 
-If using multiple processes, a message queue service is used by the processes
-to coordinate operations such as broadcasting. The supported queues are
-`Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_, and any
-other message queues supported by the 
-`Kombu <http://kombu.readthedocs.org/en/latest/>`_ package.
+如果使用多个进程，将使用一个消息队列来协调操作。
+支持队列的有 `Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_,
+ The supported queues are
+`Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_, 或者其他任何支持
+`Kombu <http://kombu.readthedocs.org/en/latest/>`_ 包的消息队列。
 
-On the client-side, the official Socket.IO Javascript client library can be
-used to establish a connection to the server. There are also official clients
-written in Swift, Java and C++. Unofficial clients may also work, as long as
-they implement the
-`Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_.
+在客户端，官方的 Socket.IO Javascript 客户端库可以用于建立与服务器的链接。
+也有用 Swift， Java， C++ 写的官方客户端。非官方的客户端，只要实现了
+`Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_. 也行。
+
 
 Differences With Flask-SocketIO Versions 0.x
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
