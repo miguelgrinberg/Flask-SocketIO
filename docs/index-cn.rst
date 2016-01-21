@@ -4,14 +4,14 @@
    contain the root `toctree` directive.
 
 欢迎来到 Flask-SocketIO 中文文档!
-===
+===============================
 
 **Flask-SocketIO** 使得 Flask 应用在服务端和客户端的双向通信中有更低的延迟。
 客户端的应用程序可以使用任何在Javascript，  C++, Java 和 Swift 或者任何官方的
 `SocketIO <http://socket.io>`_ 客户端，与服务端简历永久的链接。
 
 安装
----
+-------------------------------
 
 你可以使用 ``pip`` 安装这个包：
 
