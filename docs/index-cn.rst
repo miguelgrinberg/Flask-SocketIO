@@ -165,7 +165,6 @@ The supported queues are
 
 
 命名事件是最灵活的，因为他们不再需要包括元数据来描述消息类型.
-
 Flask-SocketIO 也支持 SocketIO 的命名空间，它允许客户端多路复用与相同的物理 socket 建立几个独立的连接::
 
     @socketio.on('my event', namespace='/test')
@@ -173,7 +172,6 @@ Flask-SocketIO 也支持 SocketIO 的命名空间，它允许客户端多路复�
         print('received json: ' + str(json))
 
 如果命名空间未指定，一个默认的全局的命名空间 ``'/'`` 将会被使用.
-
 客户端可以请求确认回调以确认收到消息.
 从处理函数返回的任何参数将会被传递到客户端的回调函数里::
 
