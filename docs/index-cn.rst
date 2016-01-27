@@ -49,79 +49,63 @@ The supported queues are
 `Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_. 也行。
 
 
-Differences With Flask-SocketIO Versions 0.x
+与 Flask-SocketIO 0.x 版本的差异
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Older versions of Flask-SocketIO had a completely different set of
-requirements. Those old versions had a dependency on
-`gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ and
-`gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_, which
-are not required in release 1.0.
+旧版本的 Flask-SocketIO 有着完全不同的依赖关系。
+这些老版本依赖的
+`gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ 和
+`gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_, 在 1.0 版本都不再依赖.
 
-In spite of the change in dependencies, there aren't many significant
-changes introduced in version 1.0. Below is a detailed list of
-the actual differences:
+尽管依赖关系有变化，但是在1.0 版本中并没有什么显著的变化。
+下面是实际的差异列表：
 
-- Release 1.0 drops support for Python 2.6, and adds support for Python 3.3,
-  Python 3.4, and pypy.
-- Releases 0.x required an old version of the Socket.IO Javascript client.
-  Starting with release 1.0, the current releases of Socket.IO and Engine.IO
-  are supported. Releases of the Socket.IO client prior to 1.0 are no
-  supported. The Swift and C++ official Socket.IO clients are now supported
-  as well.
-- The 0.x releases depended on gevent, gevent-socketio and gevent-websocket.
-  In release 1.0 gevent-socketio is not used anymore, and gevent is one of
-  three options for backend web server, with eventlet and any regular
-  multi-threaded WSGI server, including Flask's development web server.
-- The Socket.IO server options have changed in release 1.0. They can be
-  provided in the SocketIO constructor, or in the ``run()`` call. The options
-  provided in these two are merged before they are used.
-- The 0.x releases exposed the gevent-socketio connection as
-  ``request.namespace``. In release 1.0 this is not available anymore. The
-  request object defines ``request.namespace`` as the name of the namespace
-  being handled, and adds ``request.sid``, defined as the unique session ID
-  for the client connection, and ``request.event``, which contains the event
-  name and arguments.
+- 1.0 版本删除了对 Python 2.6 的支持， 并且添加了对 Python 3.3, Python 3.4 和 pypy 的支持.
+- 使用 0.x 版本需要一个老版本的 Socket.IO Javascript 客户端.
+  从 1.0 版本开始，可支持 Socket.IO 和 Engine.IO 当前的版本.
+  Releases of the Socket.IO client prior to 1.0 are no supported.
+  Swift 和 C++ 官方的 Socket.IO 客户端也可以很好的支持.
+- 0.x 版本 依赖与 gevent，gevent-socketio 和 gevent-websocket.
+  在 1.0 版本中， 将不再使用 gevent-socketio ,
+  并且 gevent 是三个后端 web server 选项中一个, 包括 eventlet 和 任何常规的多线程 WSGI 服务器，以及 Flask 的 开发服务器.
+- Socket.IO 服务器选项已经在 1.0 版本更改.
+  他们可以在 SocketIO 的构造函数中被提供，或者通过 ``run()`` 调用.
+  这提供的两个选项在使用前已经被合并。
+- 0.x 版本使用 ``request.namespace`` 暴露了 gevent-socketio 的连接.
+  在 1.0 版本这些将不再可用.
+  请求对象 ``request.namespace`` 作为命名空间被处理，并且添加了 ``request.sid``，
+  定义为客户端链接会话的唯一id，并且 ``request.event`` 中包含了事情名称和参数.
 - To get the list of rooms a client was in the 0.x release required the
   application to use a private structure of gevent-socketio, with the
   expression ``request.namespace.rooms``. This is not available in release
   1.0, which includes a proper ``rooms()`` function.
-- The recommended "trick" to send a message to an individual client was to
-  put each client in a separate room, then address messages to the desired
-  room. This was formalized in release 1.0, where clients are assigned a room
-  automatically when they connect.
+- 推荐的 "trick" 是发送一条消息给一个客户端，是将他们单独放到一个房间里，然后发送消息到这个房间.
+  这就是 1.0 版本，当客户端连接时将自动分配给他们一个房间.
 - The ``'connect'`` event for the global namespace did not fire on releases
   prior to 1.0. This has been fixed and now this event fires as expected.
 - Support for client-side callbacks was introduced in release 1.0.
 
-Upgrading to Flask-SocketIO 1.x and 2.x from older releases
+从更早的版本升级 Flask-SocketIO 到 1.x 和 2.x
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-On the client side, you need to upgrade your Socket.IO Javascript client from
-the 0.9.x releases to the 1.3.x or newer releases.
+在客户端，你需要去升级你的 Socket.IO Javascript 客户端 到 1.3.x 或者更新.
 
-On the server side, there are a few points to consider:
+在客户端，有一些需要考虑的地方：
 
-- If you wish to continue using gevent, then uninstall gevent-socketio from
-  your virtual environment, as this package is not used anymore and may
-  collide with its replacement, python-socketio.
-- If you want to have slightly better performance and stability, then it is
-  recommended that you switch to eventlet. To do this, uninstall gevent,
-  gevent-socketio and gevent-websocket, and install eventlet.
-- If your application uses monkey patching and you switched to eventlet, call
-  `eventlet.monkey_patch()` instead of gevent's `monkey.patch_all()`. Also,
-  any calls to gevent must be replaced with equivalent calls to eventlet.
-- Any uses of `request.namespace` must be replaced with direct calls into the
-  Flask-SocketIO functions. For example, `request.namespace.rooms` must be
-  replaced with the `rooms()` function.
-- Any uses of internal gevent-socketio objects must be removed, as this
-  package is not a dependency anymore.
+- 如果你希望继续使用 gevent， 然后你需要从你的虚拟环境中卸载 gevent-socketio ，
+  因为不再使用该软件包，并且可能与他的替代软件包 python-socketio 发生冲突.
+- 如果你希望有个较好的性能和稳定性，建议你切换到 eventlet. 为了做到这一点，
+  卸载 gevent， gevent-socketio 和 gevent-websocket, 然后安装 eventlet.
+- 如果你的应用使用 monkey patching 并且你切换到了 eventlet, 调用 `eventlet.monkey_patch()`
+  替代 gevent 的 `monkey.patch_all()` . 此外，任何调用 gevent 都必须替换成相当与调用 eventlet.
+- 任何使用 `request.namespace` 都必须替换成直接调用 Flask-SocketIO 的方法.
+  例如，`request.namespace.rooms` 必须替换成 `rooms()` 方法.
+- 内部的任何 gevent-socketio 对象都必须移除, 因为已经不再依赖与这个包了.
 
-Initialization
+安装
 --------------
 
-The following code example shows how to add Flask-SocketIO to a Flask
-application::
+下面的代码演示了如何添加 Flask-SocketIO 到 一个 Flask 应用中::
 
     from flask import Flask, render_template
     from flask_socketio import SocketIO
@@ -133,17 +117,13 @@ application::
     if __name__ == '__main__':
         socketio.run(app)
 
-The ``init_app()`` style of initialization is also supported. Note the way the
-web server is started. The ``socketio.run()`` function encapsulates the start
-up of the web server and replaces the standard ``app.run()`` standard Flask
-development server start up. When the application is in debug mode the
-Werkzeug development server is still used and configured properly inside
-``socketio.run()``. In production mode the eventlet web server is used if
-available, else the gevent web server is used. If eventlet and gevent are not
-installed, the Werkzeug development web server is used.
+同样也支持 ``init_app()`` 的初始化风格. 注意这个 web server 启动的方法.
+``socketio.run()`` 封装了 web server 的启动并且替代了 Flask 开发环境标准的启动方式 ``app.run()`` .
+当应用在 debug 模式下，Werkzeug 开发服务器依然在使用并且正确配置了 ``socketio.run()`` .
+在生产环境中，如果 eventlet 可用的话将使用 eventlet， 否则将会使用 gevent .
+如果 eventlet 和 gevent 都没有被安装, 将使用 Werkzeug 的开发服务器.
 
-The application must serve a page to the client that loads the Socket.IO
-library and establishes a connection::
+应用程序必须服务一个客户端页面以此来加载 Socket.IO 库和建立一个连接::
 
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
     <script type="text/javascript" charset="utf-8">
@@ -153,77 +133,65 @@ library and establishes a connection::
         });
     </script>
 
-Receiving Messages
+接收消息
 ------------------
 
-When using SocketIO, messages are received by both parties as events. On the
-client side Javascript callbacks are used. With Flask-SocketIO the server
-needs to register handlers for these events, similarly to how routes are
-handled by view functions.
+当使用 SocketIO, 接收到消息是双方的事件.在客户端 Javascript 回调将被使用.
+使用 Flask-SocketIO 服务端需要注册这些事件的处理，类似与路由是如何通过视图函数处理的.
 
-The following example creates a server-side event handler for an unnamed
-event::
+下面的示例为一个没有定义的事件创建了一个服务端事件处理::
 
     @socketio.on('message')
     def handle_message(message):
         print('received message: ' + message)
 
-The above example uses string messages. Another type of unnamed events use
-JSON data::
+上面的例子使用字符串消息. 另一种未命名的事件使用 json 格式的数据::
 
     @socketio.on('json')
     def handle_json(json):
         print('received json: ' + str(json))
 
-The most flexible type of event uses custom event names. The message data for
-these events can be string, bytes, int, or JSON::
+最灵活的事件类型使用自定义事件名称. 事件的消息数据可以为 string， bytes, int, or json::
 
     @socketio.on('my event')
     def handle_my_custom_event(json):
         print('received json: ' + str(json))
 
-Custom named events can also support multiple arguments::
+自定义命名事件也可以支持多个参数::
 
     @socketio.on('my event')
     def handle_my_custom_event(arg1, arg2, arg3):
         print('received args: ' + arg1 + arg2 + arg3)
 
 
-Named events are the most flexible, as they eliminate the need to include
-additional metadata to describe the message type.
+命名事件是最灵活的，因为他们不再需要包括元数据来描述消息类型.
 
-Flask-SocketIO also supports SocketIO namespaces, which allow the client to
-multiplex several independent connections on the same physical socket::
+Flask-SocketIO 也支持 SocketIO 的命名空间，它允许客户端多路复用与相同的物理 socket 建立几个独立的连接::
 
     @socketio.on('my event', namespace='/test')
     def handle_my_custom_namespace_event(json):
         print('received json: ' + str(json))
 
-When a namespace is not specified a default global namespace with the name
-``'/'`` is used.
+如果命名空间未指定，一个默认的全局的命名空间 ``'/'`` 将会被使用.
 
-Clients may request an acknowledgement callback that confirms receipt of a
-message. Any values returned from the handler function will be passed to the
-client as arguments in the callback function::
+客户端可以请求确认回调以确认收到消息.
+从处理函数返回的任何参数将会被传递到客户端的回调函数里::
 
     @socketio.on('my event')
     def handle_my_custom_event(json):
         print('received json: ' + str(json))
         return 'one', 2
 
-In the above example, the client callback function will be invoked with
-two arguments, ``'one'`` and ``2``. If a handler function does not return any
-vallues, the client callback function will be invoked without arguments.
+在上面的例子中，客户端的回调函数被调用时使用两个参数,``'one'`` 和 ``2``.
+如果一个处理函数没有返回任何的值，客户端回调函数将会不带参数被调用.
 
 Sending Messages
 ----------------
 
-SocketIO event handlers defined as shown in the previous section can send
-reply messages to the connected client using the ``send()`` and ``emit()``
-functions.
+SocketIO 事件处理定义了在前一节中展示的可以在与连接的客户端中使用 ``send()`` 和 ``emit()`` 函数
+来在发送和接收消息.
 
-The following examples bounce received events back to the client that sent
-them::
+下面的例子返回接收的事件给他们的客户端::
 
     from flask_socketio import send, emit
 
@@ -239,12 +207,10 @@ them::
     def handle_my_custom_event(json):
         emit('my response', json)
 
-Note how ``send()`` and ``emit()`` are used for unnamed and named events
-respectively.
+注意 ``send()`` 和 ``emit()`` 分别在命名和未命名的事件中是如何发送的.
 
-When working with namespaces, ``send()`` and ``emit()`` use the namespace of
-the incoming message by default. A different namespace can be specified with
-the optional ``namespace`` argument::
+当使用命名空间时， ``send()`` 和 ``emit()`` 默认使用传入参数的命名空间.
+可以通过选项 ``namespace`` 来指定一个不同的命名空间::
 
     @socketio.on('message')
     def handle_message(message):
@@ -254,14 +220,13 @@ the optional ``namespace`` argument::
     def handle_my_custom_event(json):
         emit('my response', json, namespace='/chat')
 
-To send an event with multiple arguments, send a tuple::
+要使用多个参数来发送一个事件，发送一个元组::
 
     @socketio.on('my event')
     def handle_my_custom_event(json):
         emit('my response', ('foo', 'bar', json), namespace='/chat')
 
-SocketIO supports acknowledgement callbacks that confirm that a message was
-received by the client::
+SocketIO 支持当消息被客户端接收的确认回调::
 
     def ack():
         print 'message was received!'
@@ -271,14 +236,12 @@ received by the client::
         emit('my response', json, callback=ack)
 
 When using callbacks the Javascript client receives a callback function to
-invoke upon receipt of the message. After the client application invokes the
-callback function the server invokes the corresponding server-side callback.
-If the client-side callback returns any values, these are provided as
-arguments to the server-side callback.
+invoke upon receipt of the message.
+在客户端应用程序调用了回调函数后服务端调用想对应的服务端回调.
+如果客户端回调返回任何值，他们将被作为参数传递给服务端的回调函数.
 
-The client application can also request an acknoledgement callback for an
-event sent to the server. If the server wants to provide arguments for this
-callback, it must return them from the event handler function::
+客户端应用程序也可以请求一个事件的确认回调然后发送给服务器.
+如果服务器需要提供此回调的证据，就必须从事件处理函数返回他们::
 
     @socketio.on('my event')
     def handle_my_custom_event(json):
@@ -286,28 +249,26 @@ callback, it must return them from the event handler function::
 
         return 'foo', 'bar', 123  # client callback will receive these 3 arguments
 
-Broadcasting
+广播
 ------------
 
-Another very useful feature of SocketIO is the broadcasting of messages.
-Flask-SocketIO supports this feature with the ``broadcast=True`` optional
-argument to ``send()`` and ``emit()``::
+SocketIO 的另一个有用的功能是消息的广播.
+Flask-SocketIO 也支持这个功能, 只需要给 ``send()`` 和 ``emit()`` 加上 ``broadcast=True`` 选项即可::
+
 
     @socketio.on('my event')
     def handle_my_custom_event(data):
         emit('my response', data, broadcast=True)
 
-When a message is sent with the broadcast option enabled, all clients
-connected to the namespace receive it, including the sender. When namespaces
-are not used, the clients connected to the global namespace receive the
-message. Note that callbacks are not invoked for broadcast messages.
+当一个消息被发送时开启了广播选项，所有连接到这个命名空间的客户端都将接收到这个消息，也包括发送端.
+当没有使用命名空间时, 连接到全局命名空间的客户端将收到这些消息.
+注意，在广播消息中回调将不会被调用.
 
-In all the examples shown until this point the server responds to an event
-sent by the client. But for some applications, the server needs to be the
-originator of a message. This can be useful to send notifications to clients
-of events that originated in the server, for example in a background thread.
-The ``socketio.send()`` and ``socketio.emit()`` methods can be used to
-broadcast to all connected clients::
+所有的例子直到这一点都展示服务端响应由客户端发送的事件.
+但是对于一些应用，服务器必须是消息的发起者.
+这在给客户端发送起源与服务器的事件的通知是非常有用的,例如后台线程.
+
+``socketio.send()`` 和 ``socketio.emit()`` 可以被用作广播到所有的连接的客户端上::
 
     def some_function():
         socketio.emit('some event', {'data': 42})
