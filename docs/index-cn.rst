@@ -276,14 +276,13 @@ functions as the context-aware ``send()`` and ``emit()``. Also note that in the
 above usage there is no client context, so ``broadcast=True`` is assumed and
 does not need to be specified.
 
-Rooms
+房间
 -----
 
-For many applications it is necessary to group users into subsets that can be
-addressed together. The best example is a chat application with multiple rooms,
-where users receive messages from the room or rooms they are in, but not from
-other rooms where other users are. Flask-SocketIO supports this concept of
-rooms through the ``join_room()`` and ``leave_room()`` functions::
+对很多应用来说，把用户分组是非常有必要的，以便可以统一处理.
+最好的例子就是，一个聊天应用有多个房间，用户可以从一个房间或他们所在的其他房间接收消息，
+但是不能从其他用户所在的房间里接收消息.
+Flask-SocketIO 通过 ``join_room()`` 和 ``leave_room()`` 来支持房间的概念::
 
     from flask_socketio import join_room, leave_room
 
@@ -301,25 +300,22 @@ rooms through the ``join_room()`` and ``leave_room()`` functions::
         leave_room(room)
         send(username + ' has left the room.', room=room)
 
-The ``send()`` and ``emit()`` functions accept an optional ``room`` argument
-that cause the message to be sent to all the clients that are in the given
-room.
+``send()`` 和 ``emit()`` 函数接收一个可选的 ``room`` 参数来使得消息被发送到指定房间的所有客户端.
 
-All clients are assigned a room when they connect, named with the session ID
-of the connection, which can be obtained from ``request.sid``. A given client
-can join any rooms, which can be given any names. When a client disconnects it
-is removed from all the rooms it was in. The context-free ``socketio.send()``
-and ``socketio.emit()`` functions also accept a ``room`` argument to broadcast
-to all clients in a room.
+每一个连接都会被自动分配到一个房间，这个房间以连接的会话ID命名，可以通过 ``request.sid`` 获取到.
+一个给定的客户端可以加入到任何名称的任何房间.
+当一个客户端断开时，他将被所有的房间移除.
+与上下文无关的 ``socketio.send()`` 和 ``socketio.emit()`` 也接收一个 ``room`` 参数
+来广播给一个房间的所有客户端.
 
-Since all clients are assigned a personal room, to address a message to a
-single client, the session ID of the client can be used as the room argument.
+所有的客户端都被分配到一个人的房间，以处理发送给给单个客户端的消息，
+客户端的会话ID可以被用作房间的参数.
 
-Connection Events
+连接事件
 -----------------
 
-Flask-SocketIO also dispatches connection and disconnection events. The
-following example shows how to register handlers for them::
+Flask-SocketIO 还可以调度连接和断开事件.
+下面的例子展示了如何注册处理它们::
 
     @socketio.on('connect', namespace='/chat')
     def test_connect():
@@ -329,34 +325,32 @@ following example shows how to register handlers for them::
     def test_disconnect():
         print('Client disconnected')
 
-The connection event handler can optionally return ``False`` to reject the
-connection. This is so that the client can be authenticated at this point.
+连接处理程序可以选择返回 ``False`` 来拒绝连接.
+所以，客户端可以在此时进行验证.
 
-Note that connection and disconnection events are sent individually on each
-namespace used.
+需要注意的是连接和断开事件会被发送到每一个被使用的命名空间.
 
-Error Handling
+错误处理
 --------------
 
-Flask-SocketIO can also deal with exceptions::
+Flask-SocketIO 也可以处理异常::
 
-    @socketio.on_error()        # Handles the default namespace
+    @socketio.on_error()        # 处理默认的命名空间
     def error_handler(e):
         pass
 
-    @socketio.on_error('/chat') # handles the '/chat' namespace
+    @socketio.on_error('/chat') # 处理 '/chat' 命名空间
     def error_handler_chat(e):
         pass
 
-    @socketio.on_error_default  # handles all namespaces without an explicit error handler
+    @socketio.on_error_default  # 处理所有命名空间中不明确的错误处理
     def default_error_handler(e):
         pass
 
-Error handler functions take the exception object as an argument.
+错误处理函数把异常的对象作为参数.
 
-The message and data arguments of the current request can also be inspected
-with the ``request.event`` variable, which is useful for error logging and
-debugging outside the event handler::
+当前请求的消息和数据参数可以通过 ``request.event`` 变量被检查.
+这对事件处理程序之外的错误日志记录和调试很有用::
 
     from flask import request
 
@@ -372,14 +366,11 @@ debugging outside the event handler::
 Access to Flask's Context Globals
 ---------------------------------
 
-Handlers for SocketIO events are different than handlers for routes and that
-introduces a lot of confusion around what can and cannot be done in a SocketIO
-handler. The main difference is that all the SocketIO events generated for a
-client occur in the context of a single long running request.
+处理 SocketIO 事件与处理路由是不同的,主要是因为一个 SocketIO 绕能做什么和不能做什么引入了很多混乱的东西围.
+主要的区别是，客户端生成的所有 SocketIO 事件都是一个单一的长链接.
 
-In spite of the differences, Flask-SocketIO attempts to make working with
-SocketIO event handlers easier by making the environment similar to that of a
-regular HTTP request. The following list describes what works and what doesn't:
+尽管有区别， Flask-SocketIO 尝试使得处理 SocketIO 事件与类似与处理常规的HTTP请求一样容易工作.
+下面的列表说明了什么可行什么不可行:
 
 - An application context is pushed before invoking an event handler making
   ``current_app`` and ``g`` available to the handler.
@@ -417,27 +408,21 @@ regular HTTP request. The following list describes what works and what doesn't:
 Authentication
 --------------
 
-A common need of applications is to validate the identify of their users. The
-traditional mechanisms based on web forms and HTTP requests cannot be used in
-a SocketIO connection, since there is no place to send HTTP requests and
-responses. If necessary, an application can implement a customized login form
-that sends credentials to the server as a SocketIO message when the submit
-button is pressed by the user.
+应用程序的共同需求是验证识别他们的用户.基于 web 形式和传统的 HTTP 请求无法在 SocketIO 连接中使用,
+由于没有地方来发送 HTTP 请求及响应. 如果有必要的话，一个应用程序可以实现一个专门的表单，
+当用户按下提交按钮后来发送凭证给服务器.
 
-However, in most cases it is more convenient to perform the traditional
-authentication process before the SocketIO connection is established. The
-user's identify can then be recorded in the user session or in a cookie, and
-later when the SocketIO connection is established that information will be
-accessible to SocketIO event handlers.
+然而，在大多数情况下，在进行 SocketIO 连接之前进行传统的认证处理是非常方便的.
+认证的用户标识可以存储在用户的会话或者 cookie 中,在之后的请求中，
+当 SocketIO 连接是已认证通过的情况下，请求将允许被 SocketIO 事件处理.
 
 Using Flask-Login with Flask-SocketIO
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Flask-SocketIO can access login information maintained by
-`Flask-Login <https://flask-login.readthedocs.org/en/latest/>`_. After a
-regular Flask-Login authentication is performed and the ``login_user()``
-function is called to record the user in the user session, any SocketIO
-connections will have access to the ``current_user`` context variable::
+Flask-SocketIO 可以访问由 `Flask-Login <https://flask-login.readthedocs.org/en/latest/>`_ 提供的登录信息.
+在经过了 Flask-Login 的认证处理之后, ``login_user()`` 函数会被调用来记录用户到用户会话中,
+并且 SocketIO 会有权限访问上下文变量 ``current_user`` ::
+
 
     @socketio.on('connect')
     def connect_handler():
@@ -448,9 +433,8 @@ connections will have access to the ``current_user`` context variable::
         else:
             return False  # not allowed here
 
-Note that the ``login_required`` decorator cannot be used with SocketIO event
-handlers, but a custom decorator that disconnects non-authenticated users can
-be created as follows::
+需要注意的是 ``login_required`` 装饰器不能与 SocketIO 事件处理程序一起使用,
+但可以用如下的方法来创建一个自定义的装饰器来断开未经认证的用户::
 
     import functools
     from flask import request
@@ -472,81 +456,68 @@ be created as follows::
         emit('my response', {'message': '{0} has joined'.format(current_user.name)},
              broadcast=True)
 
-Deployment
+部署
 ----------
 
-There are many options to deploy a Flask-SocketIO server, ranging from simple
-to the insanely complex. In this section, the most commonly used options are
-described.
+有很多种选项来部署一个 Flask-SocketIO 服务器，从简单到非常复杂.
+在本教程中，选用最常用的选择来进行说明.
 
-Embedded Server
+嵌入式服务器
 ~~~~~~~~~~~~~~~
 
-The simplest deployment strategy is to have eventlet or gevent installed, and
-start the web server by calling ``socketio.run(app)`` as shown in examples
-above. This will run the application on the eventlet or gevent web servers,
-whichever is installed.
+最见的部署策略是安装 eventlet 或者 gevent .并通过调用在前面的例子中提到过的
+``socketio.run(app)`` 来启动 web 服务器.
+这将把应用运行在 eventlet 和 gevent 中的任何一个已安装的服务之上.
 
-Note that ``socketio.run(app)`` runs a production ready server when eventlet
-or gevent are installed. If neither of these are installed, then the
-application runs on Flask's development web server, which is not appropriate
-for production use.
+需要注意的是 ``socketio.run(app)`` 在当 eventlet 或者 gevent 已安装的情况下运行一个生产环境的服务器.
+如果两者都没有安装，应用程序将会运行在 Flask 的开发服务器之上, 这非常不适合用户生产环境.
 
-Gunicorn Web Server
+Gunicorn Web 服务器
 ~~~~~~~~~~~~~~~~~~~
 
-An alternative to ``socketio.run(app)`` is to use
-`gunicorn <http://gunicorn.org/>`_ as web server, using the eventlet or gevent
-workers. For this option, eventlet or gevent need to be installed, in addition
-to gunicorn. The command line that starts the eventlet server via gunicorn is::
+除了 ``socketio.run(app)`` 的另一种启动方式是使用
+`gunicorn <http://gunicorn.org/>`_ 作为一个 Web 服务器, 使用 eventlet 或者 gevent workers.
+对于这个选项， eventlet 或者 gevent 必须要安装一个，此外还有 gunicorn .
+下面是在命令行中通过 gunicorn 启动 eventlet 服务器的命令::
 
     gunicorn --worker-class eventlet -w 1 module:app
 
-If you prefer to use gevent, the command to start the server is::
+如果你喜欢使用 gevent 来启动服务器，命令如下所示::
 
     gunicorn -k gevent -w 1 module:app
 
-When using gunicorn with the gevent worker and the WebSocket support provided
-by gevent-websocket, the command that starts the server must be changed to
-select a custom gevent web server that supports the WebSocket protocol. The
-modified command is::
+当使用 gunicorn 与 gevent 一起工作时，WebSocket 将由 gevent-websocket 提供支持.
+启动服务器的命令必须改变,以选择支持自定义的 WebSocket 协议的 web 服务器.
+命令修改如下::
 
     gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 module:app
 
-In all these commands, ``module`` is the Python module or package that defines
-the application instance, and ``app`` is the application instance itself.
+在上面这些例子中, ``module`` 是 Python 在应用实例中定义的模块或者包,
+``app`` 是这个应用实例自身.
 
-Gunicorn release 18.0 is the recommended release to use with Flask-SocketIO.
-The 19.x releases are known to have incompatibilities in certain deployment
-scenarios that include WebSocket.
+18.0 版本的 Gunicorn 建议和 Flask-SocketIO 一起使用, 在 19.x 的版本中已知了一些
+包括 WebSocket 在内的一些不兼容情况.
 
-Due to the limited load balancing algorithm used by gunicorn, it is not possible
-to use more than one worker process when using this web server. For that reason,
-all the examples above include the ``-w 1`` option.
+由于 gunicorn 有限的负载均衡算法，当使用此 web 服务器是不可能有一个以上的工作进程的.
+出于这个原因，上面的例子都包含了 ``-w 1`` 选项.
 
-uWSGI Web Server
+uWSGI Web 服务器
 ~~~~~~~~~~~~~~~~
 
-At this time, uWSGI is not a good choice of web server for a SocketIO
-application due to the following limitations:
+此时， 对于一个 SocketIO 应用程序来说，uWSGI 不是一个很好的选择，因为它有如下限制:
 
-- The ``'eventlet'`` async mode cannot be used, as uWSGI currently does not
-  support web servers based on eventlet.
-- The ``'gevent'`` async mode is supported, but uWSGI is currently
-  incompatible with the gevent-websocket package, so only the long-polling
-  transport can be used.
-- The native WebSocket support available from uWSGI is not based on eventlet
-  or gevent, so it cannot be used at this time. If possible, a WebSocket
-  transport based on the uWSGI WebSocket implementation will be made available
-  in a future release.
+- ``'eventlet'`` 的异步模式不能使用，因为 uWSGI 目前不支持基于 eventlet 的 web 服务器.
+- 支持 ``'gevent'`` 异步模式，但是 uWSGI 当前与 gevent-websocket 包不兼容，
+  所以仅仅可以使用长轮询传输.
+- uWSGI 本身支持不基于 eventlet 和 gevent 的 WebSocket ,所以它在这个时候不能被使用.
+  如果可能的话， 基于 uWSGI 的 WebSocket 会在以后的版本中提供.
 
-Using nginx as a WebSocket Reverse Proxy
+使用 nginx 作为一个 WebSocket 的反向代理
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-It is possible to use nginx as a front-end reverse proxy that passes requests
-to the application. However, only releases of nginx 1.4 and newer support
-proxying of the WebSocket protocol. Below is an example nginx configuration
-that proxies HTTP and WebSocket requests::
+可以使用 nginx 作为一个前端的反向代理将请求传递给应用程序.
+然而，仅仅 nginx 1.4 或者更新的版本才支持代理 WebSocket 协议.
+下面是一个 nginx 代理 HTTP 和 WebSocket 请求的实例配置::
 
     server {
         listen 80;
@@ -579,47 +550,36 @@ that proxies HTTP and WebSocket requests::
 
 Using Multiple Workers
 ~~~~~~~~~~~~~~~~~~~~~~
+Flask-SocketIO 将在 2.0 版本中支持在多个进程之间实现负载均衡器.
+部署多个进程使得使用 Flask-SocketIO 的应用在连接多个主机和客户端上有更高的能力,
+这非常适合高并发的场合.
 
-Flask-SocketIO supports multiple workers behind a load balancer starting with
-release 2.0. Deploying multiple workers gives applications that use
-Flask-SocketIO the ability to spread the client connections among multiple
-processes and hosts, and in this way scale to support very large numbers of
-concurrent clients.
+使用 Flask-SocketIO 的多进程有两个要求:
 
-There are two requirements to use multiple Flask-SocketIO workers:
+- 负载均衡器必须配置同一个客户端的所有请求都转发到相同的 worker .  这被称为"sticky sessions".
+  对于nginx来说,使用 ``ip_hash`` 来实现这一目标. Gunicorn 不能使用多个工作线程，
+  因为它的负载均衡器不支持 sticky sessions.
+- 因为每个服务器仅仅拥有客户端连接的一个子集，一个消息队列如 Redis 或者 RabbitMQ 服务器
+  可以协助诸如广播和"房间"等一些复杂的操作.
 
-- The load balancer must be configured to forward all HTTP requests from a
-  given client always to the same worker. This is sometimes referenced as
-  "sticky sessions". For nginx, use the ``ip_hash`` directive to achieve this.
-  Gunicorn cannot be used with multiple workers because its load balancer
-  algorithm does not support sticky sessions.
+当使用消息队列工作时，需要额外的安装一些依赖:
 
-- Since each of the servers owns only a subset of the client connections, a
-  message queue such as Redis or RabbitMQ is used by the servers to coordinate
-  complex operations such as broadcasting and rooms.
-
-When working with a message queue, there are additional dependencies that need to
-be installed:
-
-- For Redis, the package ``redis`` must be installed (``pip install redis``).
-- For RabbitMQ, the package ``kombu`` must be installed (``pip install kombu``).
-- For other message queues supported by Kombu, see the `Kombu documentation 
+- 对于 Redis， ``redis`` 包必须要安装 (``pip install redis``).
+- 对于 RabbitMQ， ``kombu`` 包必须安装 (``pip install kombu``).
+- 对于 Kombu 支持的其他消息队列， 可以从 `Kombu documentation
   <http://docs.celeryproject.org/projects/kombu/en/latest/introduction.html#transport-comparison>`_
-  to find out what dependencies are needed.
+  找到他们对应的依赖.
 
-To start multiple Flask-SocketIO servers, you must first ensure you have the
-message queue service running. To start a Socket.IO server and have it connect to
-the message queue, add the ``message_queue`` argument to the ``SocketIO``
-constructor::
+要启动多个 Flask-SocketIO 服务器， 你必须首先确保你有消息队列在运行.
+启动 Socket.IO 服务器并且让它连接到消息队列,添加 ``message_queue`` 参数到 ``SocketIO`` 构造::
 
     socketio = SocketIO(app, message_queue='redis://')
 
-The value of the ``message_queue`` argument is the connection URL of the
-queue service that is used. For a redis queue running on the same host as the
-server, the ``'redis://'`` URL can be used. Likewise, for a default RabbitMQ
-queue the ``'amqp://'`` URL can be used. The Kombu package has a `documentation
-section <http://docs.celeryproject.org/projects/kombu/en/latest/userguide/connections.html?highlight=urls#urls>`_
-that describes the format of the URLs for all the supported queues.
+``message_queue`` 参数的值是用作队列服务的连接地址. 对于 Redis 队列来说，
+运行在同一台服务器的话默认可以使用 ``'redis://'`` .
+同样，对于默认的 RabbitMQ 也可以使用 ``'amqp://'`` . Kombu 包包含了一个
+`documentation section <http://docs.celeryproject.org/projects/kombu/en/latest/userguide/connections.html?highlight=urls#urls>`_ ，
+它描述了所有支持队列的URL格式.
 
 Emitting from an External Process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -631,9 +591,8 @@ shown in the previous section, then any other process can create its own
 ``SocketIO`` instance and use it to emit events in the same way the server
 does.
 
-For example, for an application that runs on an eventlet web server and uses
-a Redis message queue, the following Python script broadcasts an event to
-all clients::
+例如， 对于一个运行在 eventlet web 服务器和 Redis 消息队列的应用来说，下面的 Python
+脚本广播了一个事件给所有客户端::
 
     import eventlet
     eventlet.monkey_patch()
@@ -643,13 +602,12 @@ all clients::
 When using the ``SocketIO`` instance in this way, the Flask application
 instance is not passed to the constructor.
 
-The ``channel`` argument to ``SocketIO`` can be used to select a specific
-channel of communication through the message queue. Using a custom channel
-name is necessary when there are multiple independent SocketIO services
-sharing the same queue.
+``SocketIO`` 的 ``channel`` 参数可以用来在消息队列中选择一个特殊的通道.
+使用自定义的频道名称时， 多个独立的 SocketIO 服务共用一个消息队列是非常有必要的.
 
-Flask-SocketIO does not apply monkey patching when eventlet or gevent are
-used. But when working with a message queue, it is very likely that the Python
+Flask-SocketIO 使用 eventlet 或者 gevent 时将不能使用猴子补丁.
+但是，当使用消息队列时，
+it is very likely that the Python
 package that talks to the message queue service will hang if the Python
 standard library is not monkey patched.
 
