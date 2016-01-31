@@ -609,7 +609,6 @@ Flask-SocketIO 使用 eventlet 或者 gevent 时将不能使用猴子补丁。
 
 API Reference
 -------------
-
 .. module:: flask_socketio
 .. autoclass:: SocketIO
    :members:
