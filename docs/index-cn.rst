@@ -8,7 +8,7 @@
 
 **Flask-SocketIO** 使得 Flask 应用在服务端和客户端的双向通信中延迟更低.
 客户端的应用程序可以使用任何Javascript，  C++, Java 和 Swift 的官方的客户端库，
-或者其他任何官方的`SocketIO <http://socket.io>`_ 客户端，
+或者其他任何官方的 `SocketIO <http://socket.io>`_ 客户端，
 与服务端建立永久的链接。
 
 安装
