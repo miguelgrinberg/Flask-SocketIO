@@ -6,7 +6,9 @@
 欢迎来到 Flask-SocketIO 中文文档!
 ===============================
 
-**Flask-SocketIO** 使得 Flask 应用在服务端和客户端的双向通信中延迟更低.
+Note: 初次尝试着翻译文档，以此来提升自己，但水平实在有限，也没有花过多的时间在上面，所以一些翻译不当的地方还请谅解，同时还希望有同胞愿意来改进，感激不尽。
+
+**Flask-SocketIO** 使得 Flask 应用在服务端和客户端的双向通信中延迟更低。
 客户端的应用程序可以使用任何Javascript，  C++, Java 和 Swift 的官方的客户端库，
 或者其他任何官方的 `SocketIO <http://socket.io>`_ 客户端，
 与服务端建立永久的链接。
@@ -21,19 +23,19 @@
 依赖
 ------------
 
-自从 1.0 版本以来，这个扩展便支持 Python2.7 和 Python 3.3+ 了.
+自从 1.0 版本以来，这个扩展便支持 Python2.7 和 Python 3.3+ 了。
 这个包所依赖的异步服务器可以从下面三个中任选其一即可:
 
 - `eventlet <http://eventlet.net/>`_ 从性能上来说这是目前最好的选择，
   它支持长 long-polling 和 WebSocket transports。
 
-- `gevent <http://www.gevent.org/>`_ 是 flask-socketio 早期版本使用的框架.
+- `gevent <http://www.gevent.org/>`_ 是 flask-socketio 早期版本使用的框架。
   long-polling 是完全支持的，但是如果要想支持 WebSocket，就必须将
-  `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_ 安装好.
+  `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_ 安装好。
   使用 gevent 和 gevent-websocket 性能也很不错，不过要比 eventlet 稍微低一点点。
 
-- 基于 Werkzeug 的 Flask 开发服务器也可以被很好的使用，但是需要提醒的是，它的性能远不如
-  其他两个可选方案，因此它应该仅用作来简化开发流程。这个选项仅支持long-polling transport。
+- 基于 Werkzeug 的 Flask 开发服务器也可以被很好的使用，但是需要提醒的是，它的性能远不如其他两个可选方案，
+  因此它应该仅用作来简化开发流程。这个选项仅支持long-polling transport。
 
 flask-socketio 将根据你所安装的异步框架来自动选择，优先选择 eventlet，其次是 gevent。
 如果这两个都没有被安装，将会使用 Flask 开发服务器。
@@ -53,7 +55,7 @@ flask-socketio 将根据你所安装的异步框架来自动选择，优先选�
 旧版本的 Flask-SocketIO 有着完全不同的依赖关系。
 这些老版本依赖的
 `gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ 和
-`gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_, 在 1.0 版本都不再依赖.
+`gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_, 在 1.0 版本都不再依赖。
 
 尽管依赖关系有变化，但是在 1.0 版本中整体并没有什么显著的变化。
 下面是实际的差异列表：
@@ -65,7 +67,7 @@ flask-socketio 将根据你所安装的异步框架来自动选择，优先选�
   Swift 和 C++ 官方的 Socket.IO 客户端也可以很好的支持。
 - 0.x 版本 依赖 gevent，gevent-socketio 和 gevent-websocket。
   在 1.0 版本中， 将不再使用 gevent-socketio,
-  并且 gevent 是三个后端 web server 选项中的一个, 包括 eventlet 和任何常规的多线程 WSGI 服务器，以及 Flask 的开发服务器。
+  并且 gevent 是三个后端 web server 选项之一, 包括 eventlet 和任何常规的多线程 WSGI 服务器，以及 Flask 的开发服务器。
 - Socket.IO 服务器选项已经在 1.0 版本更改。
   他们可以在 SocketIO 的构造函数中被提供，或者通过 ``run()`` 调用。
   这提供的两个选项在使用前已经被合并。
@@ -83,10 +85,10 @@ flask-socketio 将根据你所安装的异步框架来自动选择，优先选�
   prior to 1.0. This has been fixed and now this event fires as expected.
 - Support for client-side callbacks was introduced in release 1.0.
 
-从更早的版本升级 Flask-SocketIO 到 1.x 和 2.x
+将 Flask-SocketIO 从更早的版本升级到 1.x 和 2.x
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-在客户端上，你需要去升级你的 Socket.IO Javascript 客户端 到 1.3.x 或者更新版本.
+在客户端上，你需要去升级你的 Socket.IO Javascript 客户端 到 1.3.x 或者更新版本。
 
 在客户端，有一些需要考虑的地方：
 
@@ -135,7 +137,7 @@ flask-socketio 将根据你所安装的异步框架来自动选择，优先选�
 ------------------
 
 当使用 SocketIO时, 接收消息是双向的事件。在客户端将使用 Javascript 回调。
-使用 Flask-SocketIO 服务端需要注册这些事件的处理，类似与路由是如何通过视图函数来处理的。
+使用 Flask-SocketIO 服务端需要注册这些事件的处理，类似与视图函数处理路由一样。
 
 下面的示例为一个没有定义的事件创建了一个服务端事件处理::
 
@@ -203,7 +205,7 @@ SocketIO 事件处理定义了在前一节中展示的可以在与连接的客�
     def handle_my_custom_event(json):
         emit('my response', json)
 
-注意 ``send()`` 和 ``emit()`` 分别在命名和未命名的事件中是如何发送的。
+注意观察 ``send()`` 和 ``emit()`` 分别在命名和未命名的事件中是如何发送的。
 
 当使用命名空间时， ``send()`` 和 ``emit()`` 默认使用传入参数的命名空间。
 可以通过选项 ``namespace`` 来指定一个不同的命名空间::
@@ -419,7 +421,7 @@ Flask-SocketIO 也可以处理异常::
 
 Flask-SocketIO 可以访问由 `Flask-Login <https://flask-login.readthedocs.org/en/latest/>`_ 提供的登录信息。
 在经过 Flask-Login 的认证处理之后, ``login_user()`` 函数会被调用，来记录用户到用户会话中,
-并且 SocketIO 会有权限访问上下文变量 ``current_user`` ::
+并且 SocketIO 会有权限访问上下文变量 ``current_user``::
 
 
     @socketio.on('connect')
@@ -556,7 +558,7 @@ Flask-SocketIO 将在 2.0 版本中支持在多个进程之间实现负载均衡
 
 - 负载均衡器必须配置成同一个客户端的所有请求都转发到相同的 worker 。  这被称为"sticky sessions"。
   对于nginx来说,使用 ``ip_hash`` 来实现这一目标。 Gunicorn 不能使用多个工作线程，
-  因为它的负载均衡器不支持 sticky sessions.
+  因为它的负载均衡器不支持 sticky sessions。
 - 因为每个服务器仅仅拥有所有客户端连接的一个子集，一个消息队列如 Redis 或者 RabbitMQ 服务器
   可以协助诸如广播和"房间"等一些复杂的操作。
 
