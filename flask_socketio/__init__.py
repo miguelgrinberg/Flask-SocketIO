@@ -145,8 +145,11 @@ class SocketIO(object):
         for handler in self.handlers:
             self.server.on(handler[0], handler[1], namespace=handler[2])
         if app is not None:
-            app.wsgi_app = _SocketIOMiddleware(self.server, app,
-                                               socketio_path=resource)
+            # here we attach the SocketIO middlware to the SocketIO object so it
+            # can be referenced later if debug middleware needs to be inserted
+            self.sockio_mw = _SocketIOMiddleware(self.server, app,
+                                                 socketio_path=resource)
+            app.wsgi_app = self.sockio_mw
 
     def on(self, message, namespace=None):
         """Decorator to register a SocketIO event handler.
@@ -371,13 +374,29 @@ class SocketIO(object):
 
         app.debug = debug
         if app.debug and self.server.eio.async_mode != 'threading':
-            # app.wsgi_app is the _SocketIOMiddleware instance, set in the
-            # constructor.
-            # app.wsgi_app.wsgi_app is the wsgi_app from the Flask application
-            # instance
-            flask_app = app.wsgi_app
-            flask_app.wsgi_app = DebuggedApplication(flask_app.wsgi_app,
-                                                     evalex=True)
+            # put the debug middleware between the SocketIO middleware
+            # and the Flask application instance
+            #
+            #    mw1   mw2   mw3   Flask app
+            #     o ---- o ---- o ---- o
+            #    /
+            #   o Flask-SocketIO
+            #    \  middleware
+            #     o
+            #  Flask-SocketIO WebSocket handler
+            #
+            # BECOMES
+            #
+            #  dbg-mw   mw1   mw2   mw3   Flask app
+            #     o ---- o ---- o ---- o ---- o
+            #    /
+            #   o Flask-SocketIO
+            #    \  middleware
+            #     o
+            #  Flask-SocketIO WebSocket handler
+            #
+            self.sockio_mw.wsgi_app = DebuggedApplication(self.sockio_mw.wsgi_app,
+                                                          evalex=True)
 
         if self.server.eio.async_mode == 'threading':
             from werkzeug._internal import _log
