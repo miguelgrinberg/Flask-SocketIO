@@ -652,6 +652,9 @@ be installed:
 - For other message queues supported by Kombu, see the `Kombu documentation 
   <http://docs.celeryproject.org/projects/kombu/en/latest/introduction.html#transport-comparison>`_
   to find out what dependencies are needed.
+- If eventlet or gevent are used, then monkey patching the Python standard
+  library is normally required to force the message queue package to use
+  coroutine friendly functions and classes.
 
 To start multiple Flask-SocketIO servers, you must first ensure you have the
 message queue service running. To start a Socket.IO server and have it connect to
@@ -681,8 +684,6 @@ For example, for an application that runs on an eventlet web server and uses
 a Redis message queue, the following Python script broadcasts an event to
 all clients::
 
-    import eventlet
-    eventlet.monkey_patch()
     socketio = SocketIO(message_queue='redis://')
     socketio.emit('my event', {'data': 'foo'}, namespace='/test')
 
@@ -698,6 +699,15 @@ Flask-SocketIO does not apply monkey patching when eventlet or gevent are
 used. But when working with a message queue, it is very likely that the Python
 package that talks to the message queue service will hang if the Python
 standard library is not monkey patched.
+
+It is important to note that an external process that wants to connect to
+a SocketIO server does not need to use eventlet or gevent like the main
+server. Having a server use a coroutine framework, while an external process
+does not is not a problem. For example, Celery workers do not need to be
+configured to use eventlet or gevent just because the main server does. But if
+your external process does use a coroutine framework for whatever reason, then
+monkey patching is likely required, so that the messaque queue accesses
+coroutine friendly functions and classes.
 
 API Reference
 -------------
