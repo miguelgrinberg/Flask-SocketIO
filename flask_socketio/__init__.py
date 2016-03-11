@@ -84,7 +84,7 @@ class SocketIO(object):
                        options are "threading", "eventlet" and "gevent". If
                        this argument is not given, "eventlet" is tried first,
                        then "gevent", and finally "threading". The websocket
-                       transport is not supported in "ithreading" mode.
+                       transport is not supported in "threading" mode.
     :param ping_timeout: The time in seconds that the client waits for the
                          server to respond before disconnecting.
     :param ping_interval: The interval in seconds at which the client pings
