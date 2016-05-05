@@ -5,7 +5,7 @@ cov = coverage.coverage()
 cov.start()
 
 from flask import Flask, session, request
-from flask.ext.socketio import SocketIO, send, emit, join_room, leave_room
+from flask_socketio import SocketIO, send, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
