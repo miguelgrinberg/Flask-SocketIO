@@ -34,6 +34,7 @@ class SocketIOTestClient(object):
         self.socketio = socketio
         socketio.server._send_packet = _mock_send_packet
         socketio.server.environ[self.sid] = {}
+        socketio.server.manager.initialize(socketio.server)
         self.connect(namespace)
 
     def connect(self, namespace=None):
