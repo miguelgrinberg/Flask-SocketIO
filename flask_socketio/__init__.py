@@ -174,6 +174,9 @@ class SocketIO(object):
 
         def decorator(handler):
             def _handler(sid, *args):
+                if sid not in self.server.environ:
+                    # we don't have record of this client, ignore this event
+                    return '', 400
                 app = self.server.environ[sid]['flask.app']
                 with app.request_context(self.server.environ[sid]):
                     if 'saved_session' in self.server.environ[sid]:
