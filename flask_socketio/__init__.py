@@ -198,7 +198,7 @@ class SocketIO(object):
                             raise
                         type, value, traceback = sys.exc_info()
                         return err_handler(value)
-                    if flask.session.modified:
+                    if flask.session.modified and sid in self.server.environ:
                         self.server.environ[sid]['saved_session'] = {}
                         self._copy_session(
                             flask.session,
