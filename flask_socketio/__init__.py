@@ -142,6 +142,7 @@ class SocketIO(object):
         if resource.startswith('/'):
             resource = resource[1:]
         self.server = socketio.Server(**self.server_options)
+        self.async_mode = self.server.async_mode
         for handler in self.handlers:
             self.server.on(handler[0], handler[1], namespace=handler[2])
         if app is not None:
@@ -479,6 +480,33 @@ class SocketIO(object):
             raise SystemExit
         elif self.server.eio.async_mode == 'gevent':
             self.wsgi_server.stop()
+
+    def start_background_task(self, target, *args, **kwargs):
+        """Start a background task using the appropriate async model.
+
+        This is a utility function that applications can use to start a
+        background task using the method that is compatible with the
+        selected async mode.
+
+        :param target: the target function to execute.
+        :param args: arguments to pass to the function.
+        :param kwargs: keyword arguments to pass to the function.
+
+        This function returns an object compatible with the `Thread` class in
+        the Python standard library. The `start()` method on this object is
+        already called by this function.
+        """
+        return self.server.start_background_task(target, *args, **kwargs)
+
+    def sleep(self, seconds=0):
+        """Sleep for the requested amount of time using the appropriate async
+        model.
+
+        This is a utility function that applications can use to put a task to
+        sleep without having to worry about using the correct call for the
+        selected async mode.
+        """
+        return self.server.sleep(seconds)
 
     def test_client(self, app, namespace=None):
         """Return a simple SocketIO client that can be used for unit tests."""
