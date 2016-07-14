@@ -53,8 +53,10 @@ class SocketIO(object):
                     multiple clusters of SocketIO processes need to use the
                     same message queue without interfering with each other, then
                     each cluster should use a different channel.
-    :param resource: The SocketIO resource name. Defaults to ``'socket.io'``.
-                     Leave this as is unless you know what you are doing.
+    :param path: The path where the Socket.IO server is exposed. Defaults to
+                 ``'socket.io'``. Leave this as is unless you know what you are
+                 doing.
+    :param resource: Alias to ``path``.
     :param kwargs: Socket.IO and Engine.IO server options.
 
     The Socket.IO server options are detailed below:
@@ -138,7 +140,7 @@ class SocketIO(object):
                                     write_only=write_only)
                 self.server_options['client_manager'] = queue
 
-        resource = kwargs.pop('resource', 'socket.io')
+        resource = kwargs.pop('path', kwargs.pop('resource', 'socket.io'))
         if resource.startswith('/'):
             resource = resource[1:]
         self.server = socketio.Server(**self.server_options)
