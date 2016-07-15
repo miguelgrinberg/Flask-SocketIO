@@ -585,7 +585,10 @@ def send(message, **kwargs):
                          addressing a room, or ``False`` to send to everyone
                          but the sender.
     """
-    namespace = kwargs.get('namespace', flask.request.namespace)
+    if 'namespace' in kwargs:
+        namespace = kwargs['namespace']
+    else:
+        namespace = flask.request.namespace
     callback = kwargs.get('callback')
     broadcast = kwargs.get('broadcast')
     room = kwargs.get('room')
