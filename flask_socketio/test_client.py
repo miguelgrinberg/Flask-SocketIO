@@ -5,7 +5,15 @@ from werkzeug.test import EnvironBuilder
 
 
 class SocketIOTestClient(object):
-    """Fake client useful for testing of a Flask-SocketIO server."""
+    """
+    This class is useful for testing a Flask-SocketIO server. It works in a
+    similar way to the Flask Test Client, but adapted to the Socket.IO server.
+
+    :param app: The Flask application instance.
+    :param socketio: The application's ``SocketIO`` instance.
+    :param namespace: The namespace for the client. If not provided, the client
+                      connects to the server on the global namespace.
+    """
     queue = {}
     ack = None
 
@@ -38,7 +46,17 @@ class SocketIOTestClient(object):
         self.connect(namespace)
 
     def connect(self, namespace=None):
-        """Connect the client."""
+        """Connect the client.
+        
+        :param namespace: The namespace for the client. If not provided, the
+                          client connects to the server on the global
+                          namespace.
+
+        Note that it is usually not necessary to explicitly call this method,
+        since a connection is automatically established when an instance of
+        this class is created. An example where it this method would be useful
+        is when the application accepts multiple namespace connections.
+        """
         environ = EnvironBuilder('/socket.io').get_environ()
         environ['flask.app'] = self.app
         self.socketio.server._handle_eio_connect(self.sid, environ)
@@ -49,13 +67,30 @@ class SocketIOTestClient(object):
                                                          pkt.encode())
 
     def disconnect(self, namespace=None):
-        """Disconnect the client."""
+        """Disconnect the client.
+        
+        :param namespace: The namespace to disconnect. The global namespace is
+                         assumed if this argument is not provided.
+        """
         pkt = packet.Packet(packet.DISCONNECT, namespace=namespace)
         with self.app.app_context():
             self.socketio.server._handle_eio_message(self.sid, pkt.encode())
 
     def emit(self, event, *args, **kwargs):
-        """Emit an event to the server."""
+        """Emit an event to the server.
+        
+        :param event: The event name.
+        :param *args: The event arguments.
+        :param callback: ``True`` if the client requests a callback, ``False``
+                         if not. Note that client-side callbacks are not
+                         implemented, a callback request will just tell the 
+                         server to provide the arguments to invoke the
+                         callback, but no callback is invoked. Instead, the
+                         arguments that the server provided for the callback
+                         are returned by this function.
+        :param namespace: The namespace of the event. The global namespace is
+                          assumed if this argument is not provided.
+        """
         namespace = kwargs.pop('namespace', None)
         callback = kwargs.pop('callback', False)
         id = None
@@ -72,7 +107,21 @@ class SocketIOTestClient(object):
                 else self.ack['args']
 
     def send(self, data, json=False, callback=False, namespace=None):
-        """Send a message to the server."""
+        """Send a text or JSON message to the server.
+
+        :param data: A string, dictionary or list to send to the server.
+        :param json: ``True`` to send a JSON message, ``False`` to send a text
+                     message.
+        :param callback: ``True`` if the client requests a callback, ``False``
+                         if not. Note that client-side callbacks are not
+                         implemented, a callback request will just tell the 
+                         server to provide the arguments to invoke the
+                         callback, but no callback is invoked. Instead, the
+                         arguments that the server provided for the callback
+                         are returned by this function.
+        :param namespace: The namespace of the event. The global namespace is
+                          assumed if this argument is not provided.
+        """
         if json:
             msg = 'json'
         else:
@@ -80,7 +129,16 @@ class SocketIOTestClient(object):
         return self.emit(msg, data, callback=callback, namespace=namespace)
 
     def get_received(self, namespace=None):
-        """Return the list of messages received from the server."""
+        """Return the list of messages received from the server.
+
+        Since this is not a real client, any time the server emits an event,
+        the event is simply stored. The test code can invoke this method to
+        obtain the list of events that were received since the last call.
+
+        :param namespace: The namespace to get events from. The global
+                          namespace is assumed if this argument is not
+                          provided.
+        """
         namespace = namespace or '/'
         r = [pkt for pkt in self.queue[self.sid]
              if pkt['namespace'] == namespace]

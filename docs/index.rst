@@ -722,3 +722,5 @@ API Reference
 .. autofunction:: close_room
 .. autofunction:: rooms
 .. autofunction:: disconnect
+.. autoclass:: SocketIOTestClient
+   :members:
