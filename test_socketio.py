@@ -75,9 +75,24 @@ def get_request_event(data):
     emit('my custom response', data)
 
 
+def get_request_event2(data):
+    global request_event_data
+    request_event_data = request.event
+    emit('my custom response', data)
+
+socketio.on_event('yet another custom event', get_request_event2)
+
+
 @socketio.on('my custom namespace event', namespace='/test')
 def on_custom_event_test(data):
     emit('my custom namespace response', data, namespace='/test')
+
+
+def on_custom_event_test2(data):
+    emit('my custom namespace response', data, namespace='/test')
+
+socketio.on_event('yet another custom namespace event', on_custom_event_test2,
+                  namespace='/test')
 
 
 @socketio.on('my custom broadcast event')
@@ -424,6 +439,27 @@ class TestSocketIO(unittest.TestCase):
                                         namespace='/unused_namespace',
                                         callback=True)
         self.assertIsNotNone(errorack_default)
+
+    def test_on_event(self):
+        client = socketio.test_client(app)
+        client.get_received()
+        global request_event_data
+        request_event_data = None
+        client.emit('yet another custom event', 'foo')
+        expected_data = {'message': 'yet another custom event',
+                         'args': ('foo',)}
+        self.assertEqual(request_event_data, expected_data)
+
+        client = socketio.test_client(app, namespace='/test')
+        client.get_received('/test')
+        client.emit('yet another custom namespace event', {'a': 'b'},
+                    namespace='/test')
+        received = client.get_received('/test')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my custom namespace response')
+        self.assertEqual(received[0]['args'][0]['a'], 'b')
+
 
 if __name__ == '__main__':
     unittest.main()

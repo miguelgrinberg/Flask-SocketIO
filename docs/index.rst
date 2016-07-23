@@ -213,6 +213,14 @@ multiplex several independent connections on the same physical socket::
 When a namespace is not specified a default global namespace with the name
 ``'/'`` is used.
 
+For cases when a decorator syntax isn't convenient, the ``on_event`` method
+can be used::
+
+    def my_function_handler(data):
+        pass
+
+    socketio.on_event('my event', my_function_handler, namespace='/test')
+
 Clients may request an acknowledgement callback that confirms receipt of a
 message. Any values returned from the handler function will be passed to the
 client as arguments in the callback function::
