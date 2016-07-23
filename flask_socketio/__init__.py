@@ -254,6 +254,32 @@ class SocketIO(object):
         self.default_exception_handler = exception_handler
         return exception_handler
 
+    def register(self, message, function, namespace=None):
+        """Register a SocketIO event handler.
+
+        ``'register'`` is the non-decorator version of ``'on'``.
+
+        Example::
+
+            def on_foo_event(json):
+                print('received json: ' + str(json))
+
+            socketio.register('my event', on_foo_event, namespace='/chat')
+
+
+        :param message: The name of the event. This is normally a user defined
+                        string, but a few event names are already defined. Use
+                        ``'message'`` to define a handler that takes a string
+                        payload, ``'json'`` to define a handler that takes a
+                        JSON blob payload, ``'connect'`` or ``'disconnect'``
+                        to create handlers for connection and disconnection
+                        events.
+        :param function: The function that is going to be called.
+        :param namespace: The namespace on which the handler is to be
+                          registered. Defaults to the global namespace.
+        """
+        self.on(message, namespace=namespace)(function)
+
     def emit(self, event, *args, **kwargs):
         """Emit a server generated SocketIO event.
 
