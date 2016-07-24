@@ -27,9 +27,6 @@ def background_thread():
 
 @app.route('/')
 def index():
-    global thread
-    if thread is None:
-        thread = socketio.start_background_task(target=background_thread)
     return render_template('index.html', async_mode=socketio.async_mode)
 
 
@@ -98,6 +95,9 @@ def ping_pong():
 
 @socketio.on('connect', namespace='/test')
 def test_connect():
+    global thread
+    if thread is None:
+        thread = socketio.start_background_task(target=background_thread)
     emit('my response', {'data': 'Connected', 'count': 0})
 
 

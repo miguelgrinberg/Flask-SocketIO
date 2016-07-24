@@ -140,12 +140,18 @@ application::
 
 The ``init_app()`` style of initialization is also supported. Note the way the
 web server is started. The ``socketio.run()`` function encapsulates the start
-up of the web server and replaces the standard ``app.run()`` standard Flask
+up of the web server and replaces the ``app.run()`` standard Flask
 development server start up. When the application is in debug mode the
 Werkzeug development server is still used and configured properly inside
 ``socketio.run()``. In production mode the eventlet web server is used if
 available, else the gevent web server is used. If eventlet and gevent are not
 installed, the Werkzeug development web server is used.
+
+The command line interface based on click introduced in Flask 0.11 is also
+supported. This extension provides a new version of the  ``flask run`` command
+that is appropriate for starting the Socket.IO server. Example usage::
+
+    $ FLASK_APP=my_app.py flask run
 
 The application must serve a page to the client that loads the Socket.IO
 library and establishes a connection::

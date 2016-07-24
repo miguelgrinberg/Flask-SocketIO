@@ -20,6 +20,11 @@ setup(
     zip_safe=False,
     include_package_data=True,
     platforms='any',
+    entry_points={
+        'flask.commands': [
+            'run=flask_socketio.cli:run'
+        ],
+    },
     install_requires=[
         'Flask>=0.9',
         'python-socketio>=1.4',
