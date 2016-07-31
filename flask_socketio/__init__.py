@@ -78,7 +78,8 @@ class SocketIO(object):
     :param json: An alternative json module to use for encoding and decoding
                  packets. Custom json modules must have ``dumps`` and ``loads``
                  functions that are compatible with the standard library
-                 versions.
+                 versions. To use the same json encoder and decoder as a Flask
+                 application, use ``flask.json``.
 
     The Engine.IO server configuration supports the following settings:
 
