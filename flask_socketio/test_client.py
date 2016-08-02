@@ -38,6 +38,7 @@ class SocketIOTestClient(object):
 
         self.app = app
         self.sid = uuid.uuid4().hex
+        self.queue[self.sid] = []
         self.callback_counter = 0
         self.socketio = socketio
         socketio.server._send_packet = _mock_send_packet
