@@ -15,6 +15,7 @@ if gevent_socketio_found:
 
 import socketio
 import flask
+from flask import json as flask_json
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 
@@ -140,6 +141,25 @@ class SocketIO(object):
                 queue = queue_class(url, channel=channel,
                                     write_only=write_only)
                 self.server_options['client_manager'] = queue
+
+        if 'json' in self.server_options and \
+                self.server_options['json'] == flask_json:
+            # flask's json module is tricky to use because its output
+            # changes when it is invoked inside or outside the app context
+            # so here to prevent any ambiguities we replace it with wrappers
+            # that ensure that the app context is always present
+            class FlaskSafeJSON(object):
+                @staticmethod
+                def dumps(*args, **kwargs):
+                    with app.app_context():
+                        return flask_json.dumps(*args, **kwargs)
+
+                @staticmethod
+                def loads(*args, **kwargs):
+                    with app.app_context():
+                        return flask_json.loads(*args, **kwargs)
+
+            self.server_options['json'] = FlaskSafeJSON
 
         resource = kwargs.pop('path', kwargs.pop('resource', 'socket.io'))
         if resource.startswith('/'):
