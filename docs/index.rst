@@ -712,7 +712,7 @@ server. Having a server use a coroutine framework, while an external process
 does not is not a problem. For example, Celery workers do not need to be
 configured to use eventlet or gevent just because the main server does. But if
 your external process does use a coroutine framework for whatever reason, then
-monkey patching is likely required, so that the messaque queue accesses
+monkey patching is likely required, so that the message queue accesses
 coroutine friendly functions and classes.
 
 API Reference
