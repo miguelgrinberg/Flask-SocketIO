@@ -435,6 +435,7 @@ class SocketIO(object):
         elif self.server.eio.async_mode == 'eventlet':
             def run_server():
                 import eventlet
+                import eventlet.wsgi
                 eventlet_socket = eventlet.listen((host, port))
 
                 # If provided an SSL argument, use an SSL socket
