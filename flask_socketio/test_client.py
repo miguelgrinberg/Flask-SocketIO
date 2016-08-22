@@ -48,7 +48,7 @@ class SocketIOTestClient(object):
 
     def connect(self, namespace=None):
         """Connect the client.
-        
+
         :param namespace: The namespace for the client. If not provided, the
                           client connects to the server on the global
                           namespace.
@@ -69,7 +69,7 @@ class SocketIOTestClient(object):
 
     def disconnect(self, namespace=None):
         """Disconnect the client.
-        
+
         :param namespace: The namespace to disconnect. The global namespace is
                          assumed if this argument is not provided.
         """
@@ -79,12 +79,12 @@ class SocketIOTestClient(object):
 
     def emit(self, event, *args, **kwargs):
         """Emit an event to the server.
-        
+
         :param event: The event name.
         :param *args: The event arguments.
         :param callback: ``True`` if the client requests a callback, ``False``
                          if not. Note that client-side callbacks are not
-                         implemented, a callback request will just tell the 
+                         implemented, a callback request will just tell the
                          server to provide the arguments to invoke the
                          callback, but no callback is invoked. Instead, the
                          arguments that the server provided for the callback
@@ -115,7 +115,7 @@ class SocketIOTestClient(object):
                      message.
         :param callback: ``True`` if the client requests a callback, ``False``
                          if not. Note that client-side callbacks are not
-                         implemented, a callback request will just tell the 
+                         implemented, a callback request will just tell the
                          server to provide the arguments to invoke the
                          callback, but no callback is invoked. Instead, the
                          arguments that the server provided for the callback

@@ -40,14 +40,14 @@ def on_message(message):
     send(message)
     if message == 'test session':
         session['a'] = 'b'
-    if message not in "test noack":
+    if message not in "test noackargs":
         return message
 
 
 @socketio.on('json')
 def on_json(data):
     send(data, json=True, broadcast=True)
-    if not data.get('noack'):
+    if not data.get('noackargs'):
         return data
 
 
@@ -64,7 +64,7 @@ def on_json_test(data):
 @socketio.on('my custom event')
 def on_custom_event(data):
     emit('my custom response', data)
-    if not data.get('noack'):
+    if not data.get('noackargs'):
         return data
 
 
@@ -390,6 +390,8 @@ class TestSocketIO(unittest.TestCase):
         client1 = socketio.test_client(app)
         ack = client1.send('echo this message back', callback=True)
         self.assertEqual(ack, 'echo this message back')
+        ack = client1.send('test noackargs', callback=True)
+        self.assertEqual(ack, [])
         client2 = socketio.test_client(app)
         ack2 = client2.send({'a': 'b'}, json=True, callback=True)
         self.assertEqual(ack2, {'a': 'b'})
@@ -399,13 +401,13 @@ class TestSocketIO(unittest.TestCase):
 
     def test_noack(self):
         client1 = socketio.test_client(app)
-        no_ack_dict = {'noack': True}
-        noack = client1.send("test noack", callback=True)
+        no_ack_dict = {'noackargs': True}
+        noack = client1.send("test noackargs", callback=False)
         self.assertIsNone(noack)
         client2 = socketio.test_client(app)
-        noack2 = client2.send(no_ack_dict, json=True, callback=True)
-        client3 = socketio.test_client(app)
+        noack2 = client2.send(no_ack_dict, json=True, callback=False)
         self.assertIsNone(noack2)
+        client3 = socketio.test_client(app)
         noack3 = client3.emit('my custom event', no_ack_dict)
         self.assertIsNone(noack3)
 
