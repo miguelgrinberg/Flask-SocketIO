@@ -406,7 +406,10 @@ class TestSocketIO(unittest.TestCase):
         ack = client1.send('echo this message back', callback=True)
         self.assertEqual(ack, 'echo this message back')
         ack = client1.send('test noackargs', callback=True)
-        self.assertEqual(ack, [])
+        # python-socketio releases before 1.5 did not correctly implement
+        # callbacks with no arguments. Here we check for [] (the correct, 1.5
+        # and up response) and None (the wrong pre-1.5 response).
+        self.assertTrue(ack == [] or ack is None)
         client2 = socketio.test_client(app)
         ack2 = client2.send({'a': 'b'}, json=True, callback=True)
         self.assertEqual(ack2, {'a': 'b'})
