@@ -19,6 +19,7 @@ from flask import json as flask_json
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 
+from .namespace import Namespace
 from .test_client import SocketIOTestClient
 
 
@@ -84,11 +85,15 @@ class SocketIO(object):
 
     The Engine.IO server configuration supports the following settings:
 
-    :param async_mode: The library used for asynchronous operations. Valid
-                       options are "threading", "eventlet" and "gevent". If
-                       this argument is not given, "eventlet" is tried first,
-                       then "gevent", and finally "threading". The websocket
-                       transport is not supported in "threading" mode.
+    :param async_mode: The asynchronous model to use. See the Deployment
+                       section in the documentation for a description of the
+                       available options. Valid async modes are
+                       ``threading``, ``eventlet``, ``gevent`` and
+                       ``gevent_uwsgi``. If this argument is not given,
+                       ``eventlet`` is tried first, then ``gevent_uwsgi``,
+                       then ``gevent``, and finally ``threading``. The
+                       first async mode that has all its dependencies installed
+                       is then one that is chosen.
     :param ping_timeout: The time in seconds that the client waits for the
                          server to respond before disconnecting.
     :param ping_interval: The interval in seconds at which the client pings
@@ -117,6 +122,7 @@ class SocketIO(object):
         self.server_options = None
         self.wsgi_server = None
         self.handlers = []
+        self.namespace_handlers = []
         self.exception_handlers = {}
         self.default_exception_handler = None
         if app is not None or len(kwargs) > 0:
@@ -168,6 +174,9 @@ class SocketIO(object):
         self.async_mode = self.server.async_mode
         for handler in self.handlers:
             self.server.on(handler[0], handler[1], namespace=handler[2])
+        for namespace_handler in self.namespace_handlers:
+            self.server.register_namespace(namespace_handler)
+
         if app is not None:
             # here we attach the SocketIO middlware to the SocketIO object so it
             # can be referenced later if debug middleware needs to be inserted
@@ -198,36 +207,9 @@ class SocketIO(object):
 
         def decorator(handler):
             def _handler(sid, *args):
-                if sid not in self.server.environ:
-                    # we don't have record of this client, ignore this event
-                    return '', 400
-                app = self.server.environ[sid]['flask.app']
-                with app.request_context(self.server.environ[sid]):
-                    if 'saved_session' in self.server.environ[sid]:
-                        self._copy_session(
-                            self.server.environ[sid]['saved_session'],
-                            flask.session)
-                    flask.request.sid = sid
-                    flask.request.namespace = namespace
-                    flask.request.event = {'message': message, 'args': args}
-                    try:
-                        if message == 'connect':
-                            ret = handler()
-                        else:
-                            ret = handler(*args)
-                    except:
-                        err_handler = self.exception_handlers.get(
-                            namespace, self.default_exception_handler)
-                        if err_handler is None:
-                            raise
-                        type, value, traceback = sys.exc_info()
-                        return err_handler(value)
-                    if flask.session.modified and sid in self.server.environ:
-                        self.server.environ[sid]['saved_session'] = {}
-                        self._copy_session(
-                            flask.session,
-                            self.server.environ[sid]['saved_session'])
-                    return ret
+                return self._handle_event(handler, message, namespace, sid,
+                                          *args)
+
             if self.server:
                 self.server.on(message, _handler, namespace=namespace)
             else:
@@ -299,6 +281,15 @@ class SocketIO(object):
                           registered. Defaults to the global namespace.
         """
         self.on(message, namespace=namespace)(handler)
+
+    def on_namespace(self, namespace_handler):
+        if not isinstance(namespace_handler, Namespace):
+            raise ValueError('Not a namespace instance.')
+        namespace_handler._set_socketio(self)
+        if self.server:
+            self.server.register_namespace(namespace_handler)
+        else:
+            self.namespace_handlers.append(namespace_handler)
 
     def emit(self, event, *args, **kwargs):
         """Emit a server generated SocketIO event.
@@ -560,6 +551,38 @@ class SocketIO(object):
     def test_client(self, app, namespace=None):
         """Return a simple SocketIO client that can be used for unit tests."""
         return SocketIOTestClient(app, self, namespace)
+
+    def _handle_event(self, handler, message, namespace, sid, *args):
+        if sid not in self.server.environ:
+            # we don't have record of this client, ignore this event
+            return '', 400
+        app = self.server.environ[sid]['flask.app']
+        with app.request_context(self.server.environ[sid]):
+            if 'saved_session' in self.server.environ[sid]:
+                self._copy_session(
+                    self.server.environ[sid]['saved_session'],
+                    flask.session)
+            flask.request.sid = sid
+            flask.request.namespace = namespace
+            flask.request.event = {'message': message, 'args': args}
+            try:
+                if message == 'connect':
+                    ret = handler()
+                else:
+                    ret = handler(*args)
+            except:
+                err_handler = self.exception_handlers.get(
+                    namespace, self.default_exception_handler)
+                if err_handler is None:
+                    raise
+                type, value, traceback = sys.exc_info()
+                return err_handler(value)
+            if flask.session.modified and sid in self.server.environ:
+                self.server.environ[sid]['saved_session'] = {}
+                self._copy_session(
+                    flask.session,
+                    self.server.environ[sid]['saved_session'])
+            return ret
 
     def _copy_session(self, src, dest):
         for k in src:

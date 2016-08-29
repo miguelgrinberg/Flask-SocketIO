@@ -1,11 +1,12 @@
 import unittest
 import coverage
 
-cov = coverage.coverage()
+cov = coverage.coverage(branch=True)
 cov.start()
 
 from flask import Flask, session, request
-from flask_socketio import SocketIO, send, emit, join_room, leave_room
+from flask_socketio import SocketIO, send, emit, join_room, leave_room, \
+    Namespace
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
@@ -183,6 +184,40 @@ def raise_error_default(data):
     raise AssertionError()
 
 
+class MyNamespace(Namespace):
+    def on_connect(self):
+        send('connected-ns')
+
+    def on_disconnect(self):
+        global disconnected
+        disconnected = '/ns'
+
+    def on_message(self, message):
+        send(message)
+        if message == 'test session':
+            session['a'] = 'b'
+        if message not in "test noackargs":
+            return message
+
+    def on_json(self, data):
+        send(data, json=True, broadcast=True)
+        if not data.get('noackargs'):
+            return data
+
+    def on_my_custom_event(self, data):
+        emit('my custom response', data)
+        if not data.get('noackargs'):
+            return data
+
+    def on_other_custom_event(self, data):
+        global request_event_data
+        request_event_data = request.event
+        emit('my custom response', data)
+
+
+socketio.on_namespace(MyNamespace('/ns'))
+
+
 class TestSocketIO(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -191,7 +226,7 @@ class TestSocketIO(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cov.stop()
-        cov.report(include='flask_socketio/__init__.py')
+        cov.report(include='flask_socketio/*', show_missing=True)
 
     def setUp(self):
         pass
@@ -462,6 +497,55 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(len(received[0]['args']), 1)
         self.assertEqual(received[0]['name'], 'my custom namespace response')
         self.assertEqual(received[0]['args'][0]['a'], 'b')
+
+    def test_connect_class_based(self):
+        client = socketio.test_client(app, namespace='/ns')
+        received = client.get_received('/ns')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args'], 'connected-ns')
+        client.disconnect('/ns')
+
+    def test_disconnect_class_based(self):
+        global disconnected
+        disconnected = None
+        client = socketio.test_client(app, namespace='/ns')
+        client.disconnect('/ns')
+        self.assertEqual(disconnected, '/ns')
+
+    def test_send_class_based(self):
+        client = socketio.test_client(app, namespace='/ns')
+        client.get_received('/ns')
+        client.send('echo this message back', namespace='/ns')
+        received = client.get_received('/ns')
+        self.assertTrue(len(received) == 1)
+        self.assertTrue(received[0]['args'] == 'echo this message back')
+
+    def test_send_json_class_based(self):
+        client = socketio.test_client(app, namespace='/ns')
+        client.get_received('/ns')
+        client.send({'a': 'b'}, json=True, namespace='/ns')
+        received = client.get_received('/ns')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args']['a'], 'b')
+
+    def test_emit_class_based(self):
+        client = socketio.test_client(app, namespace='/ns')
+        client.get_received('/ns')
+        client.emit('my_custom_event', {'a': 'b'}, namespace='/ns')
+        received = client.get_received('/ns')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my custom response')
+        self.assertEqual(received[0]['args'][0]['a'], 'b')
+
+    def test_request_event_data_class_based(self):
+        client = socketio.test_client(app, namespace='/ns')
+        client.get_received('/ns')
+        global request_event_data
+        request_event_data = None
+        client.emit('other_custom_event', 'foo', namespace='/ns')
+        expected_data = {'message': 'other_custom_event', 'args': ('foo',)}
+        self.assertEqual(request_event_data, expected_data)
 
 
 if __name__ == '__main__':

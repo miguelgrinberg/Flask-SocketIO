@@ -22,25 +22,32 @@ You can install this package in the usual way using ``pip``::
 Requirements
 ------------
 
-Since version 1.0, this extension is compatible with both Python 2.7 and
-Python 3.3+. The asynchronous services that this package relies on can be
-selected among three choices:
+Flask-SocketIO is compatible with both Python 2.7 and Python 3.3+. The
+asynchronous services that this package relies on can be selected among three
+choices:
 
 - `eventlet <http://eventlet.net/>`_ is the best performant option, with
   support for long-polling and WebSocket transports.
-- `gevent <http://www.gevent.org/>`_ is the framework used in previous
-  releases of this extension. The long-polling transport is fully supported.
-  To add support for WebSocket, the `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_
-  package must be installed as well. The use of gevent and gevent-websocket
-  is also a performant option, but slightly lower than eventlet.
+- `gevent <http://www.gevent.org/>`_ is supported in a number of different
+  configurations. The long-polling transport is fully supported with the
+  gevent package, but unlike eventlet, gevent does not have native WebSocket
+  support. To add support for WebSocket there are currently two options. The
+  `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_
+  package adds WebSocket support to gevent, but unfortunately this package is
+  current only available for Python 2. The other alternative is to use the
+  `uWSGI <https://uwsgi-docs.readthedocs.io/en/latest/>`_ web server, which
+  comes with WebSocket functionality. The use of gevent is also a performant
+  option, but slightly lower than eventlet.
 - The Flask development server based on Werkzeug can be used as well, with the
   caveat that it lacks the performance of the other two options, so it should
   only be used to simplify the development workflow. This option only supports
   the long-polling transport.
 
 The extension automatically detects which asynchronous framework to use based
-on what is installed. Preference is given to eventlet, followed by gevent. If
-neither one is installed, then the Flask development server is used.
+on what is installed. Preference is given to eventlet, followed by gevent.
+For WebSocket support in gevent, uWSGI is preferred, followed by
+gevent-websocket. If neither eventlet nor gevent are installed, then the Flask
+development server is used.
 
 If using multiple processes, a message queue service is used by the processes
 to coordinate operations such as broadcasting. The supported queues are
@@ -53,74 +60,6 @@ used to establish a connection to the server. There are also official clients
 written in Swift, Java and C++. Unofficial clients may also work, as long as
 they implement the
 `Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_.
-
-Differences With Flask-SocketIO Versions 0.x
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Older versions of Flask-SocketIO had a completely different set of
-requirements. Those old versions had a dependency on
-`gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ and
-`gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_, which
-are not required in release 1.0.
-
-In spite of the change in dependencies, there aren't many significant
-changes introduced in version 1.0. Below is a detailed list of
-the actual differences:
-
-- Release 1.0 drops support for Python 2.6, and adds support for Python 3.3,
-  Python 3.4, and pypy.
-- Releases 0.x required an old version of the Socket.IO Javascript client.
-  Starting with release 1.0, the current releases of Socket.IO and Engine.IO
-  are supported. Releases of the Socket.IO client prior to 1.0 are no
-  supported. The Swift and C++ official Socket.IO clients are now supported
-  as well.
-- The 0.x releases depended on gevent, gevent-socketio and gevent-websocket.
-  In release 1.0 gevent-socketio is not used anymore, and gevent is one of
-  three options for backend web server, with eventlet and any regular
-  multi-threaded WSGI server, including Flask's development web server.
-- The Socket.IO server options have changed in release 1.0. They can be
-  provided in the SocketIO constructor, or in the ``run()`` call. The options
-  provided in these two are merged before they are used.
-- The 0.x releases exposed the gevent-socketio connection as
-  ``request.namespace``. In release 1.0 this is not available anymore. The
-  request object defines ``request.namespace`` as the name of the namespace
-  being handled, and adds ``request.sid``, defined as the unique session ID
-  for the client connection, and ``request.event``, which contains the event
-  name and arguments.
-- To get the list of rooms a client was in the 0.x release required the
-  application to use a private structure of gevent-socketio, with the
-  expression ``request.namespace.rooms``. This is not available in release
-  1.0, which includes a proper ``rooms()`` function.
-- The recommended "trick" to send a message to an individual client was to
-  put each client in a separate room, then address messages to the desired
-  room. This was formalized in release 1.0, where clients are assigned a room
-  automatically when they connect.
-- The ``'connect'`` event for the global namespace did not fire on releases
-  prior to 1.0. This has been fixed and now this event fires as expected.
-- Support for client-side callbacks was introduced in release 1.0.
-
-Upgrading to Flask-SocketIO 1.x and 2.x from older releases
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-On the client side, you need to upgrade your Socket.IO Javascript client from
-the 0.9.x releases to the 1.3.x or newer releases.
-
-On the server side, there are a few points to consider:
-
-- If you wish to continue using gevent, then uninstall gevent-socketio from
-  your virtual environment, as this package is not used anymore and may
-  collide with its replacement, python-socketio.
-- If you want to have slightly better performance and stability, then it is
-  recommended that you switch to eventlet. To do this, uninstall gevent,
-  gevent-socketio and gevent-websocket, and install eventlet.
-- If your application uses monkey patching and you switched to eventlet, call
-  `eventlet.monkey_patch()` instead of gevent's `monkey.patch_all()`. Also,
-  any calls to gevent must be replaced with equivalent calls to eventlet.
-- Any uses of `request.namespace` must be replaced with direct calls into the
-  Flask-SocketIO functions. For example, `request.namespace.rooms` must be
-  replaced with the `rooms()` function.
-- Any uses of internal gevent-socketio objects must be removed, as this
-  package is not a dependency anymore.
 
 Initialization
 --------------
@@ -395,6 +334,44 @@ connection. This is so that the client can be authenticated at this point.
 Note that connection and disconnection events are sent individually on each
 namespace used.
 
+Class-Based Namespaces
+----------------------
+
+As an alternative to the decorator-based event handlers described above, the
+event handlers that belong to a namespace can be created as methods of a
+class. The :class:`flask_socketio.Namespace` is provided as a base class to
+create class-based namespaces::
+
+    from flask_socketio import Namespace, emit
+
+    class MyCustomNamespace(Namespace):
+        def on_connect():
+            pass
+
+        def on_disconnect():
+            pass
+
+        def on_my_event(data):
+            emit('my_response', data)
+
+    socketio.on_namespace(MyCustomNamespace('/test'))
+
+When class-based namespaces are used, any events received by the server are
+dispatched to a method named as the event name with the ``on_`` prefix. For
+example, event ``my_event`` will be handled by a method named ``on_my_event``.
+If an event is received for which there is no corresponding method defined in
+the namespace class, then the event is ignored. All event names used in
+class-based namespaces must used characters that are legal in method names.
+
+As a convenience to methods defined in a class-based namespace, the namespace
+instance includes versions of several of the methods in the 
+:class:`flask_socketio.SocketIO` class that default to the proper namespace
+when the ``namespace`` argument is not given.
+
+If an event has a handler in a class-based namespace, and also a
+decorator-based function handler, only the decorated function handler is
+invoked.
+
 Error Handling
 --------------
 
@@ -552,6 +529,9 @@ or gevent are installed. If neither of these are installed, then the
 application runs on Flask's development web server, which is not appropriate
 for production use.
 
+Unfortunately this option is not available when using gevent with uWSGI. See
+the uWSGI section below for information on this option.
+
 Gunicorn Web Server
 ~~~~~~~~~~~~~~~~~~~
 
@@ -587,18 +567,17 @@ all the examples above include the ``-w 1`` option.
 uWSGI Web Server
 ~~~~~~~~~~~~~~~~
 
-At this time, uWSGI is not a good choice of web server for a SocketIO
-application due to the following limitations:
+When using the uWSGI server in combination with gevent, the Socket.IO server
+can take advantage of uWSGI’s native WebSocket support.
 
-- The ``'eventlet'`` async mode cannot be used, as uWSGI currently does not
-  support web servers based on eventlet.
-- The ``'gevent'`` async mode is supported, but uWSGI is currently
-  incompatible with the gevent-websocket package, so only the long-polling
-  transport can be used.
-- The native WebSocket support available from uWSGI is not based on eventlet
-  or gevent, so it cannot be used at this time. If possible, a WebSocket
-  transport based on the uWSGI WebSocket implementation will be made available
-  in a future release.
+A complete explanation of the configuration and usage of the uWSGI server is
+beyond the scope of this documentation. The uWSGI server is a fairly complex
+package that provides a large and comprehensive set of options. It must be
+compiled with WebSocket and SSL support for the WebSocket transport to be
+available. As way of an introduction, the following command starts a uWSGI
+server for the example application app.py on port 5000::
+
+    $ uwsgi --http :5000 --gevent 1000 --http-websockets --master --wsgi-file app.py --callable app
 
 Using nginx as a WebSocket Reverse Proxy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -723,6 +702,73 @@ your external process does use a coroutine framework for whatever reason, then
 monkey patching is likely required, so that the message queue accesses
 coroutine friendly functions and classes.
 
+Upgrading to Flask-SocketIO 1.x and 2.x from the 0.x releases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Older versions of Flask-SocketIO had a completely different set of
+requirements. Those old versions had a dependency on
+`gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ and
+`gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_, which
+are not required in release 1.0.
+
+In spite of the change in dependencies, there aren't many significant
+changes introduced in version 1.0. Below is a detailed list of
+the actual differences:
+
+- Release 1.0 drops support for Python 2.6, and adds support for Python 3.3,
+  Python 3.4, and pypy.
+- Releases 0.x required an old version of the Socket.IO Javascript client.
+  Starting with release 1.0, the current releases of Socket.IO and Engine.IO
+  are supported. Releases of the Socket.IO client prior to 1.0 are no
+  supported. The Swift and C++ official Socket.IO clients are now supported
+  as well.
+- The 0.x releases depended on gevent, gevent-socketio and gevent-websocket.
+  In release 1.0 gevent-socketio is not used anymore, and gevent is one of
+  three options for backend web server, with eventlet and any regular
+  multi-threaded WSGI server, including Flask's development web server.
+- The Socket.IO server options have changed in release 1.0. They can be
+  provided in the SocketIO constructor, or in the ``run()`` call. The options
+  provided in these two are merged before they are used.
+- The 0.x releases exposed the gevent-socketio connection as
+  ``request.namespace``. In release 1.0 this is not available anymore. The
+  request object defines ``request.namespace`` as the name of the namespace
+  being handled, and adds ``request.sid``, defined as the unique session ID
+  for the client connection, and ``request.event``, which contains the event
+  name and arguments.
+- To get the list of rooms a client was in the 0.x release required the
+  application to use a private structure of gevent-socketio, with the
+  expression ``request.namespace.rooms``. This is not available in release
+  1.0, which includes a proper ``rooms()`` function.
+- The recommended "trick" to send a message to an individual client was to
+  put each client in a separate room, then address messages to the desired
+  room. This was formalized in release 1.0, where clients are assigned a room
+  automatically when they connect.
+- The ``'connect'`` event for the global namespace did not fire on releases
+  prior to 1.0. This has been fixed and now this event fires as expected.
+- Support for client-side callbacks was introduced in release 1.0.
+
+To upgrade to the newer Flask-SocketIO releases, you need to upgrade your
+Socket.IO client to a client that is compatible with the Socket.IO 1.0
+protocol. For the JavaScript client, the 1.3.x and 1.4.x releases have been
+extensively tested and found compatible.
+
+On the server side, there are a few points to consider:
+
+- If you wish to continue using gevent, then uninstall gevent-socketio from
+  your virtual environment, as this package is not used anymore and may
+  collide with its replacement, python-socketio.
+- If you want to have slightly better performance and stability, then it is
+  recommended that you switch to eventlet. To do this, uninstall gevent,
+  gevent-socketio and gevent-websocket, and install eventlet.
+- If your application uses monkey patching and you switched to eventlet, call
+  `eventlet.monkey_patch()` instead of gevent's `monkey.patch_all()`. Also,
+  any calls to gevent must be replaced with equivalent calls to eventlet.
+- Any uses of `request.namespace` must be replaced with direct calls into the
+  Flask-SocketIO functions. For example, `request.namespace.rooms` must be
+  replaced with the `rooms()` function.
+- Any uses of internal gevent-socketio objects must be removed, as this
+  package is not a dependency anymore.
+
 API Reference
 -------------
 
@@ -736,5 +782,7 @@ API Reference
 .. autofunction:: close_room
 .. autofunction:: rooms
 .. autofunction:: disconnect
+.. autoclass:: Namespace
+   :members:
 .. autoclass:: SocketIOTestClient
    :members:
