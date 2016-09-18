@@ -121,7 +121,7 @@ class SocketIO(object):
 
     def __init__(self, app=None, **kwargs):
         self.server = None
-        self.server_options = None
+        self.server_options = {}
         self.wsgi_server = None
         self.handlers = []
         self.namespace_handlers = []
@@ -135,7 +135,7 @@ class SocketIO(object):
             if not hasattr(app, 'extensions'):
                 app.extensions = {}  # pragma: no cover
             app.extensions['socketio'] = self
-        self.server_options = kwargs
+        self.server_options.update(kwargs)
 
         if 'client_manager' not in self.server_options:
             url = kwargs.pop('message_queue', None)
