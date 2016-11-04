@@ -1,6 +1,7 @@
 import os
+import sys
 
-from flask.cli import pass_script_info, get_debug_flag
+from flask.cli import pass_script_info, get_debug_flag, run_command
 import click
 
 
@@ -47,6 +48,12 @@ def run(info, host, port, reload, debugger, eager_loading):
 
     def run_server():
         app = info.load_app()
+        if 'socketio' not in app.extensions:
+            # flask-socketio is installed, but it isn't in this application
+            # so we invoke Flask's original run command
+            run_index = sys.argv.index('run')
+            sys.argv = sys.argv[run_index:]
+            return run_command()
         socketio = app.extensions['socketio']
         socketio.run(app, host=host, port=port, debug=debugger,
                      use_reloader=False, log_output=debugger)
