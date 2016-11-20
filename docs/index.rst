@@ -8,7 +8,7 @@ Welcome to Flask-SocketIO's documentation!
 
 **Flask-SocketIO** gives Flask applications access to low latency
 bi-directional communications between the clients and the server. The
-client-side application can use any of the `SocketIO <http://socket.io>`_ 
+client-side application can use any of the `SocketIO <http://socket.io>`_
 official clients libraries in Javascript, C++, Java and Swift, or any
 compatible client to establish a permanent connection to the server.
 
@@ -52,7 +52,7 @@ development server is used.
 If using multiple processes, a message queue service is used by the processes
 to coordinate operations such as broadcasting. The supported queues are
 `Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_, and any
-other message queues supported by the 
+other message queues supported by the
 `Kombu <http://kombu.readthedocs.org/en/latest/>`_ package.
 
 On the client-side, the official Socket.IO Javascript client library can be
@@ -345,13 +345,13 @@ create class-based namespaces::
     from flask_socketio import Namespace, emit
 
     class MyCustomNamespace(Namespace):
-        def on_connect():
+        def on_connect(self):
             pass
 
-        def on_disconnect():
+        def on_disconnect(self):
             pass
 
-        def on_my_event(data):
+        def on_my_event(self, data):
             emit('my_response', data)
 
     socketio.on_namespace(MyCustomNamespace('/test'))
@@ -364,7 +364,7 @@ the namespace class, then the event is ignored. All event names used in
 class-based namespaces must used characters that are legal in method names.
 
 As a convenience to methods defined in a class-based namespace, the namespace
-instance includes versions of several of the methods in the 
+instance includes versions of several of the methods in the
 :class:`flask_socketio.SocketIO` class that default to the proper namespace
 when the ``namespace`` argument is not given.
 
@@ -642,7 +642,7 @@ be installed:
 
 - For Redis, the package ``redis`` must be installed (``pip install redis``).
 - For RabbitMQ, the package ``kombu`` must be installed (``pip install kombu``).
-- For other message queues supported by Kombu, see the `Kombu documentation 
+- For other message queues supported by Kombu, see the `Kombu documentation
   <http://docs.celeryproject.org/projects/kombu/en/latest/introduction.html#transport-comparison>`_
   to find out what dependencies are needed.
 - If eventlet or gevent are used, then monkey patching the Python standard
