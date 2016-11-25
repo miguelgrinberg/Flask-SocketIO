@@ -1,6 +1,7 @@
 import uuid
 
 from socketio import packet
+from socketio.pubsub_manager import PubSubManager
 from werkzeug.test import EnvironBuilder
 
 
@@ -43,6 +44,10 @@ class SocketIOTestClient(object):
         self.socketio = socketio
         socketio.server._send_packet = _mock_send_packet
         socketio.server.environ[self.sid] = {}
+        if isinstance(socketio.server.manager, PubSubManager):
+            raise RuntimeError('Test client cannot be used with a message '
+                               'queue. Disable the queue on your test '
+                               'configuration.')
         socketio.server.manager.initialize(socketio.server)
         self.connect(namespace)
 
