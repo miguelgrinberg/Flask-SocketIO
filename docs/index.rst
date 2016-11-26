@@ -584,37 +584,62 @@ Using nginx as a WebSocket Reverse Proxy
 
 It is possible to use nginx as a front-end reverse proxy that passes requests
 to the application. However, only releases of nginx 1.4 and newer support
-proxying of the WebSocket protocol. Below is an example nginx configuration
-that proxies HTTP and WebSocket requests::
+proxying of the WebSocket protocol. Below is a basic nginx configuration that
+proxies HTTP and WebSocket requests::
 
     server {
         listen 80;
-        server_name localhost;
-        access_log /var/log/nginx/example.log;
+        server_name _;
 
         location / {
+            include proxy_params;
             proxy_pass http://127.0.0.1:5000;
-            proxy_redirect off;
-
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         }
 
         location /socket.io {
-            proxy_pass http://127.0.0.1:5000/socket.io;
-            proxy_redirect off;
-            proxy_buffering off;
-
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-
+            include proxy_params;
             proxy_http_version 1.1;
+            proxy_buffering off;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "Upgrade";
+            proxy_pass http://127.0.0.1:5000/socket.io;
         }
     }
+
+The next example adds the support for load balancing multiple Socket.IO
+servers::
+
+    upstream socketio_nodes {
+        ip_hash;
+    
+        server 127.0.0.1:5000;
+        server 127.0.0.1:5001;
+        server 127.0.0.1:5002;
+        # to scale the app, just add more nodes here!
+    }
+
+    server {
+        listen 80;
+        server_name _;
+
+        location / {
+            include proxy_params;
+            proxy_pass http://127.0.0.1:5000;
+        }
+
+        location /socket.io {
+            include proxy_params;
+            proxy_http_version 1.1;
+            proxy_buffering off;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_pass http://socketio_nodes/socket.io;
+        }
+    }
+
+While the above examples can work as an initial configuration, be aware that a
+production install of nginx will need a more complete configuration covering
+other deployment aspects such as serving static file assets and SSL support.
 
 Using Multiple Workers
 ~~~~~~~~~~~~~~~~~~~~~~
