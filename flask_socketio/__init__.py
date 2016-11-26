@@ -324,14 +324,18 @@ class SocketIO(object):
                          those provided by the client. Callback functions can
                          only be used when addressing an individual client.
         """
-        skip_sid = flask.request.sid \
-            if not kwargs.get('include_self', True) else kwargs.get('skip_sid')
-        self.server.emit(event, *args, namespace=kwargs.get('namespace', '/'),
-                         room=kwargs.get('room'), skip_sid=skip_sid,
-                         callback=kwargs.get('callback'))
+        namespace = kwargs.pop('namespace', '/')
+        room = kwargs.pop('room', None)
+        include_self = kwargs.pop('include_self', True)
+        skip_sid = kwargs.pop('skip_sid', None)
+        if not include_self and not skip_sid:
+            skip_sid = flask.request.sid
+        callback = kwargs.pop('callback', None)
+        self.server.emit(event, *args, namespace=namespace, room=room,
+                         skip_sid=skip_sid, callback=callback, **kwargs)
 
     def send(self, data, json=False, namespace=None, room=None,
-             callback=None, include_self=True, skip_sid=None):
+             callback=None, include_self=True, skip_sid=None, **kwargs):
         """Send a server-generated SocketIO message.
 
         This function sends a simple SocketIO message to one or more connected
@@ -361,10 +365,10 @@ class SocketIO(object):
         skip_sid = flask.request.sid if not include_self else skip_sid
         if json:
             self.emit('json', data, namespace=namespace, room=room,
-                      skip_sid=skip_sid, callback=callback)
+                      skip_sid=skip_sid, callback=callback, **kwargs)
         else:
             self.emit('message', data, namespace=namespace, room=room,
-                      skip_sid=skip_sid, callback=callback)
+                      skip_sid=skip_sid, callback=callback, **kwargs)
 
     def close_room(self, room, namespace=None):
         """Close a room.
