@@ -314,9 +314,10 @@ class SocketIO(object):
         :param room: Send the message to all the users in the given room. If
                      this parameter is not included, the event is sent to
                      all connected users.
-        :param include_self: ``True`` to include the sender when broadcasting
-                             or addressing a room, or ``False`` to send to
-                             everyone but the sender.
+        :param skip_sid: The session id of a client to ignore when broadcasting
+                         or addressing a room. This is typically set to the
+                         originator of the message, so that everyone except
+                         that client receive the message.
         :param callback: If given, this function will be called to acknowledge
                          that the client has received the message. The
                          arguments that will be passed to the function are
@@ -324,13 +325,13 @@ class SocketIO(object):
                          only be used when addressing an individual client.
         """
         skip_sid = flask.request.sid \
-            if not kwargs.get('include_self', True) else None
+            if not kwargs.get('include_self', True) else kwargs.get('skip_sid')
         self.server.emit(event, *args, namespace=kwargs.get('namespace', '/'),
                          room=kwargs.get('room'), skip_sid=skip_sid,
                          callback=kwargs.get('callback'))
 
     def send(self, data, json=False, namespace=None, room=None,
-             callback=None, include_self=True):
+             callback=None, include_self=True, skip_sid=None):
         """Send a server-generated SocketIO message.
 
         This function sends a simple SocketIO message to one or more connected
@@ -347,16 +348,17 @@ class SocketIO(object):
         :param room: Send the message only to the users in the given room. If
                      this parameter is not included, the message is sent to
                      all connected users.
-        :param include_self: ``True`` to include the sender when broadcasting
-                             or addressing a room, or ``False`` to send to
-                             everyone but the sender.
+        :param skip_sid: The session id of a client to ignore when broadcasting
+                         or addressing a room. This is typically set to the
+                         originator of the message, so that everyone except
+                         that client receive the message.
         :param callback: If given, this function will be called to acknowledge
                          that the client has received the message. The
                          arguments that will be passed to the function are
                          those provided by the client. Callback functions can
                          only be used when addressing an individual client.
         """
-        skip_sid = flask.request.sid if not include_self else None
+        skip_sid = flask.request.sid if not include_self else skip_sid
         if json:
             self.emit('json', data, namespace=namespace, room=room,
                       skip_sid=skip_sid, callback=callback)
