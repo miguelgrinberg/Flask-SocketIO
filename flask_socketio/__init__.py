@@ -127,8 +127,16 @@ class SocketIO(object):
         self.namespace_handlers = []
         self.exception_handlers = {}
         self.default_exception_handler = None
-        if app is not None or len(kwargs) > 0:
+        # We can call init_app when:
+        # - we were given the Flask app instance (standard initialization)
+        # - we were not given the app, but we were given a message_queue
+        #   (standard initialization for auxiliary process)
+        # In all other cases we collect the arguments and assume the client
+        # will call init_app from an app factory function.
+        if app is not None or 'message_queue' in kwargs:
             self.init_app(app, **kwargs)
+        else:
+            self.server_options.update(kwargs)
 
     def init_app(self, app, **kwargs):
         if app is not None:
