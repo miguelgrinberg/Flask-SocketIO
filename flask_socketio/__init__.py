@@ -36,6 +36,7 @@ class _SocketIOMiddleware(socketio.Middleware):
                                                   socketio_path)
 
     def __call__(self, environ, start_response):
+        environ = environ.copy()
         environ['flask.app'] = self.flask_app
         return super(_SocketIOMiddleware, self).__call__(environ,
                                                          start_response)
