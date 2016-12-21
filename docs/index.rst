@@ -672,7 +672,10 @@ be installed:
   to find out what dependencies are needed.
 - If eventlet or gevent are used, then monkey patching the Python standard
   library is normally required to force the message queue package to use
-  coroutine friendly functions and classes.
+  coroutine friendly functions and classes like so::
+  
+    import eventlet
+    eventlet.monkey_patch()
 
 To start multiple Flask-SocketIO servers, you must first ensure you have the
 message queue service running. To start a Socket.IO server and have it connect to
