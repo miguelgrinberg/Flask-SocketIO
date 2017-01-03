@@ -153,6 +153,8 @@ class SocketIO(object):
             if url:
                 if url.startswith('redis://'):
                     queue_class = socketio.RedisManager
+                elif url.startswith('zmq'):
+                    queue_class = socketio.ZmqManager
                 else:
                     queue_class = socketio.KombuManager
                 queue = queue_class(url, channel=channel,
