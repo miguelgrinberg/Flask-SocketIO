@@ -454,7 +454,7 @@ regular HTTP request. The following list describes what works and what doesn't:
 Authentication
 --------------
 
-A common need of applications is to validate the identify of their users. The
+A common need of applications is to validate the identity of their users. The
 traditional mechanisms based on web forms and HTTP requests cannot be used in
 a SocketIO connection, since there is no place to send HTTP requests and
 responses. If necessary, an application can implement a customized login form
