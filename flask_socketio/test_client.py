@@ -48,7 +48,7 @@ class SocketIOTestClient(object):
             raise RuntimeError('Test client cannot be used with a message '
                                'queue. Disable the queue on your test '
                                'configuration.')
-        socketio.server.manager.initialize(socketio.server)
+        socketio.server.manager.initialize()
         self.connect(namespace)
 
     def connect(self, namespace=None):
