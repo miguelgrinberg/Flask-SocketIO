@@ -227,7 +227,7 @@ class SocketIO(object):
                 self.server.on(message, _handler, namespace=namespace)
             else:
                 self.handlers.append((message, _handler, namespace))
-            return _handler
+            return handler
         return decorator
 
     def on_error(self, namespace=None):

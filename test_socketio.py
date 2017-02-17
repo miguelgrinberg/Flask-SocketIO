@@ -70,6 +70,7 @@ def on_custom_event(data):
 
 
 @socketio.on('other custom event')
+@socketio.on('and another custom event')
 def get_request_event(data):
     global request_event_data
     request_event_data = request.event
@@ -316,6 +317,10 @@ class TestSocketIO(unittest.TestCase):
         request_event_data = None
         client.emit('other custom event', 'foo')
         expected_data = {'message': 'other custom event', 'args': ('foo',)}
+        self.assertEqual(request_event_data, expected_data)
+        client.emit('and another custom event', 'bar')
+        expected_data = {'message': 'and another custom event',
+                         'args': ('bar',)}
         self.assertEqual(request_event_data, expected_data)
 
     def test_emit_namespace(self):
