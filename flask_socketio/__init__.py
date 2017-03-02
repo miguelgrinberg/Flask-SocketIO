@@ -690,7 +690,7 @@ def send(message, **kwargs):
                          include_self=include_self, callback=callback)
 
 
-def join_room(room):
+def join_room(room, sid=None):
     """Join a room.
 
     This function puts the user in a room, under the current namespace. The
@@ -705,13 +705,15 @@ def join_room(room):
             send(username + ' has entered the room.', room=room)
 
     :param room: The name of the room to join.
+    :param sid: The session id of the client. If not provided, the client is
+                obtained from the request context.
     """
     socketio = flask.current_app.extensions['socketio']
-    socketio.server.enter_room(flask.request.sid, room,
-                               namespace=flask.request.namespace)
+    sid = sid or flask.request.sid
+    socketio.server.enter_room(sid, room, namespace=flask.request.namespace)
 
 
-def leave_room(room):
+def leave_room(room, sid=None):
     """Leave a room.
 
     This function removes the user from a room, under the current namespace.
@@ -726,10 +728,12 @@ def leave_room(room):
             send(username + ' has left the room.', room=room)
 
     :param room: The name of the room to leave.
+    :param sid: The session id of the client. If not provided, the client is
+                obtained from the request context.
     """
     socketio = flask.current_app.extensions['socketio']
-    socketio.server.leave_room(flask.request.sid, room,
-                               namespace=flask.request.namespace)
+    sid = sid or flask.request.sid
+    socketio.server.leave_room(sid, room, namespace=flask.request.namespace)
 
 
 def close_room(room):
@@ -745,16 +749,19 @@ def close_room(room):
     socketio.server.close_room(room, namespace=flask.request.namespace)
 
 
-def rooms():
+def rooms(sid=None):
     """Return a list of the rooms the client is in.
 
     This function returns all the rooms the client has entered, including its
     own room, assigned by the Socket.IO server. This is a function that can
     only be called from a SocketIO event handler.
+
+    :param sid: The session id of the client. If not provided, the client is
+                obtained from the request context.
     """
     socketio = flask.current_app.extensions['socketio']
-    return socketio.server.rooms(flask.request.sid,
-                                 namespace=flask.request.namespace)
+    sid = sid or flask.request.sid
+    return socketio.server.rooms(sid, namespace=flask.request.namespace)
 
 
 def disconnect(silent=False):
