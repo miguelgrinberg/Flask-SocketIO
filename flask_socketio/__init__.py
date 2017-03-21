@@ -690,7 +690,7 @@ def send(message, **kwargs):
                          include_self=include_self, callback=callback)
 
 
-def join_room(room, sid=None):
+def join_room(room, sid=None, namespace=None):
     """Join a room.
 
     This function puts the user in a room, under the current namespace. The
@@ -710,15 +710,15 @@ def join_room(room, sid=None):
     """
     socketio = flask.current_app.extensions['socketio']
     sid = sid or flask.request.sid
-    socketio.server.enter_room(sid, room, namespace=flask.request.namespace)
+    namespace = namespace or flask.request.namespace
+    socketio.server.enter_room(sid, room, namespace=namespace)
 
 
-def leave_room(room, sid=None):
+def leave_room(room, sid=None, namespace=None):
     """Leave a room.
 
     This function removes the user from a room, under the current namespace.
-    The user and the namespace are obtained from the event context. This is
-    a function that can only be called from a SocketIO event handler. Example::
+    The user and the namespace are obtained from the event context. Example::
 
         @socketio.on('leave')
         def on_leave(data):
@@ -733,35 +733,36 @@ def leave_room(room, sid=None):
     """
     socketio = flask.current_app.extensions['socketio']
     sid = sid or flask.request.sid
-    socketio.server.leave_room(sid, room, namespace=flask.request.namespace)
+    namespace = namespace or flask.request.namespace
+    socketio.server.leave_room(sid, room, namespace=namespace)
 
 
-def close_room(room):
+def close_room(room, namespace=None):
     """Close a room.
 
     This function removes any users that are in the given room and then deletes
-    the room from the server. This is a function that can only be called from
-    a SocketIO event handler.
+    the room from the server.
 
     :param room: The name of the room to close.
     """
     socketio = flask.current_app.extensions['socketio']
-    socketio.server.close_room(room, namespace=flask.request.namespace)
+    namespace = namespace or flask.request.namespace
+    socketio.server.close_room(room, namespace=namespace)
 
 
-def rooms(sid=None):
+def rooms(sid=None, namespace=None):
     """Return a list of the rooms the client is in.
 
     This function returns all the rooms the client has entered, including its
-    own room, assigned by the Socket.IO server. This is a function that can
-    only be called from a SocketIO event handler.
+    own room, assigned by the Socket.IO server.
 
     :param sid: The session id of the client. If not provided, the client is
                 obtained from the request context.
     """
     socketio = flask.current_app.extensions['socketio']
     sid = sid or flask.request.sid
-    return socketio.server.rooms(sid, namespace=flask.request.namespace)
+    namespace = namespace or flask.request.namespace
+    return socketio.server.rooms(sid, namespace=namespace)
 
 
 def disconnect(silent=False):
