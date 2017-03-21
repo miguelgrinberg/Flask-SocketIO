@@ -707,6 +707,8 @@ def join_room(room, sid=None, namespace=None):
     :param room: The name of the room to join.
     :param sid: The session id of the client. If not provided, the client is
                 obtained from the request context.
+    :param namespace: The namespace for the room. If not provided, the
+                      namespace is obtained from the request context.
     """
     socketio = flask.current_app.extensions['socketio']
     sid = sid or flask.request.sid
@@ -730,6 +732,8 @@ def leave_room(room, sid=None, namespace=None):
     :param room: The name of the room to leave.
     :param sid: The session id of the client. If not provided, the client is
                 obtained from the request context.
+    :param namespace: The namespace for the room. If not provided, the
+                      namespace is obtained from the request context.
     """
     socketio = flask.current_app.extensions['socketio']
     sid = sid or flask.request.sid
@@ -744,6 +748,8 @@ def close_room(room, namespace=None):
     the room from the server.
 
     :param room: The name of the room to close.
+    :param namespace: The namespace for the room. If not provided, the
+                      namespace is obtained from the request context.
     """
     socketio = flask.current_app.extensions['socketio']
     namespace = namespace or flask.request.namespace
@@ -758,6 +764,8 @@ def rooms(sid=None, namespace=None):
 
     :param sid: The session id of the client. If not provided, the client is
                 obtained from the request context.
+    :param namespace: The namespace for the room. If not provided, the
+                      namespace is obtained from the request context.
     """
     socketio = flask.current_app.extensions['socketio']
     sid = sid or flask.request.sid
