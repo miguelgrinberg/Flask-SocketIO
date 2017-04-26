@@ -473,7 +473,11 @@ class SocketIO(object):
             def run_server():
                 import eventlet
                 import eventlet.wsgi
-                eventlet_socket = eventlet.listen((host, port))
+                import eventlet.green
+                addresses = eventlet.green.socket.getaddrinfo(host, port)
+                if not addresses:
+                    raise RuntimeError('Could not resolve host to a valid address')
+                eventlet_socket = eventlet.listen(addresses[0][4], addresses[0][0])
 
                 # If provided an SSL argument, use an SSL socket
                 ssl_args = ['keyfile', 'certfile', 'server_side', 'cert_reqs',
