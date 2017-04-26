@@ -180,7 +180,7 @@ class SocketIO(object):
 
             self.server_options['json'] = FlaskSafeJSON
 
-        resource = kwargs.pop('path', kwargs.pop('resource')) \
+        resource = kwargs.pop('path', None) or kwargs.pop('resource', None) \
             or self.server_options.get('path', self.server_options.get(
                 'resource')) or 'socket.io'
         if resource.startswith('/'):
