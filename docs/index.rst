@@ -171,7 +171,7 @@ client as arguments in the callback function::
 
 In the above example, the client callback function will be invoked with
 two arguments, ``'one'`` and ``2``. If a handler function does not return any
-vallues, the client callback function will be invoked without arguments.
+values, the client callback function will be invoked without arguments.
 
 Sending Messages
 ----------------
