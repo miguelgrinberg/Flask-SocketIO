@@ -473,8 +473,8 @@ class SocketIO(object):
             def run_server():
                 import eventlet
                 import eventlet.wsgi
-                import socket
-                addresses = socket.getaddrinfo(host, port)
+                import eventlet.green
+                addresses = eventlet.green.socket.getaddrinfo(host, port)
                 if not addresses:
                     raise RuntimeError('Could not resolve host to a valid address')
                 eventlet_socket = eventlet.listen(addresses[0][4], addresses[0][0])
