@@ -15,7 +15,7 @@ if gevent_socketio_found:
 
 import socketio
 import flask
-from flask import json as flask_json
+from flask import _request_ctx_stack, json as flask_json
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 
@@ -583,10 +583,11 @@ class SocketIO(object):
             return '', 400
         app = self.server.environ[sid]['flask.app']
         with app.request_context(self.server.environ[sid]):
-            if 'saved_session' in self.server.environ[sid]:
-                self._copy_session(
-                    self.server.environ[sid]['saved_session'],
-                    flask.session)
+            if 'saved_session' not in self.server.environ[sid]:
+                self.server.environ[sid]['saved_session'] = \
+                    dict(flask.session)
+            _request_ctx_stack.top.session = \
+                self.server.environ[sid]['saved_session']
             flask.request.sid = sid
             flask.request.namespace = namespace
             flask.request.event = {'message': message, 'args': args}
@@ -602,11 +603,6 @@ class SocketIO(object):
                     raise
                 type, value, traceback = sys.exc_info()
                 return err_handler(value)
-            if flask.session.modified and sid in self.server.environ:
-                self.server.environ[sid]['saved_session'] = {}
-                self._copy_session(
-                    flask.session,
-                    self.server.environ[sid]['saved_session'])
             return ret
 
     def _copy_session(self, src, dest):

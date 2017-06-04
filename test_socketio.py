@@ -366,10 +366,11 @@ class TestSocketIO(unittest.TestCase):
         client = socketio.test_client(app)
         client.get_received()
         client.send('echo this message back')
-        self.assertNotIn('saved_session', socketio.server.environ[client.sid])
+        self.assertEqual(socketio.server.environ[client.sid]['saved_session'],
+                         {})
         client.send('test session')
-        session = socketio.server.environ[client.sid]['saved_session']
-        self.assertEqual(session['a'], 'b')
+        self.assertEqual(socketio.server.environ[client.sid]['saved_session'],
+                         {'a': 'b'})
 
     def test_room(self):
         client1 = socketio.test_client(app)
