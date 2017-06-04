@@ -605,10 +605,6 @@ class SocketIO(object):
                 return err_handler(value)
             return ret
 
-    def _copy_session(self, src, dest):
-        for k in src:
-            dest[k] = src[k]
-
 
 def emit(event, *args, **kwargs):
     """Emit a SocketIO event.
