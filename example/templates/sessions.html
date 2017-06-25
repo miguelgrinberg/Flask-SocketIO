@@ -1,0 +1,82 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
+    </head>
+    <body>
+        <div class="pure-g">
+            <div class="pure-u-1-4"></div>
+            <div class="pure-u-1-2">
+                <h1>Flask-SocketIO Sessions example</h1>
+
+                <div class="pure-form">
+                    <h2>HTTP</h2>
+                    <p>Current session: <b><span id="http-session"></span></b></p>
+                    <p>Set session to: <input type=text id='http-session-set'> <button class="pure-button pure-button-primary" id="submit-http">Submit</button></p>
+
+                    <h2>Socket.IO</h2>
+                    <p><button class="pure-button pure-button-primary" id="connect">Connect</button></p>
+                    <div id="socketio" style="display: none">
+                        <p>Current session: <b><span id="socketio-session"></span></b></p>
+                        <p>Set session to: <input type=text id='socketio-session-set'> <button class="pure-button pure-button-primary" id="submit-socketio">Submit</button></p>
+                    </div>
+                </div>
+            </div>
+            <div class="pure-u-1-4"></div>
+        </div>
+
+        <script>
+            // HTTP handlers
+            window.setInterval(function() {
+                $.ajax({
+                    type: 'GET',
+                    url: '/session',
+                    success: function(data) {
+                        $('#http-session').text(data['session']);
+                    }
+                });
+            }, 1000);
+
+            $('#submit-http').click(function() {
+                $.ajax({
+                    type: 'POST',
+                    url: '/session',
+                    data: JSON.stringify({session: $('#http-session-set').val()}),
+                    contentType: 'application/json'
+                });
+            });
+
+            // Socket.IO handlers
+            var socket = null;
+
+            $('#connect').click(function() {
+                if (!socket) {
+                    socket = io.connect(location.href);
+                    socket.on('refresh-session', function(value) {
+                        $('#socketio-session').text(value);
+                    });
+
+                    $('#connect').text('Disconnect');
+                    $('#socketio').show();
+                }
+                else {
+                    socket.disconnect();
+                    socket = null;
+                    $('#connect').text('Connect');
+                    $('#socketio').hide();
+                }
+            });
+
+            window.setInterval(function() {
+                if (socket)
+                    socket.emit('get-session');
+            }, 1000);
+
+            $('#submit-socketio').click(function() {
+                socket.emit('set-session', $('#socketio-session-set').val());
+            });
+        </script>
+    </body>
+</html>

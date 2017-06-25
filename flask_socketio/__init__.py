@@ -49,6 +49,14 @@ class SocketIO(object):
                 isn't known at the time this class is instantiated, then call
                 ``socketio.init_app(app)`` once the application instance is
                 available.
+    :param manage_session: If set to ``True``, this extension manages the user
+                           session for Socket.IO events. If set to ``False``,
+                           Flask's own session management is used. When using
+                           Flask's cookie based sessions it is recommended that
+                           you leave this set to the default of ``True``. When
+                           using server-side sessions, a ``False`` setting
+                           enables sharing the user session between HTTP routes
+                           and Socket.IO events.
     :param message_queue: A connection URL for a message queue service the
                           server can use for multi-process communication. A
                           message queue is not required when using a single
@@ -128,6 +136,7 @@ class SocketIO(object):
         self.namespace_handlers = []
         self.exception_handlers = {}
         self.default_exception_handler = None
+        self.manage_session = True
         # We can call init_app when:
         # - we were given the Flask app instance (standard initialization)
         # - we were not given the app, but we were given a message_queue
@@ -145,10 +154,12 @@ class SocketIO(object):
                 app.extensions = {}  # pragma: no cover
             app.extensions['socketio'] = self
         self.server_options.update(kwargs)
+        self.manage_session = self.server_options.pop('manage_session',
+                                                      self.manage_session)
 
         if 'client_manager' not in self.server_options:
-            url = kwargs.pop('message_queue', None)
-            channel = kwargs.pop('channel', 'flask-socketio')
+            url = self.server_options.pop('message_queue', None)
+            channel = self.server_options.pop('channel', 'flask-socketio')
             write_only = app is None
             if url:
                 if url.startswith('redis://'):
@@ -180,9 +191,8 @@ class SocketIO(object):
 
             self.server_options['json'] = FlaskSafeJSON
 
-        resource = kwargs.pop('path', None) or kwargs.pop('resource', None) \
-            or self.server_options.get('path', self.server_options.get(
-                'resource')) or 'socket.io'
+        resource = self.server_options.pop('path', None) or \
+            self.server_options.pop('resource', None) or 'socket.io'
         if resource.startswith('/'):
             resource = resource[1:]
         self.server = socketio.Server(**self.server_options)
@@ -583,11 +593,21 @@ class SocketIO(object):
             return '', 400
         app = self.server.environ[sid]['flask.app']
         with app.request_context(self.server.environ[sid]):
-            if 'saved_session' not in self.server.environ[sid]:
-                self.server.environ[sid]['saved_session'] = \
-                    dict(flask.session)
-            _request_ctx_stack.top.session = \
-                self.server.environ[sid]['saved_session']
+            if self.manage_session:
+                # manage a separate session for this client's Socket.IO events
+                # created as a copy of the regular user session
+                if 'saved_session' not in self.server.environ[sid]:
+                    self.server.environ[sid]['saved_session'] = \
+                        dict(flask.session)
+                session_obj = self.server.environ[sid]['saved_session']
+            else:
+                # let Flask handle the user session
+                # for cookie based sessions, this effectively freezes the
+                # session to its state at connection time
+                # for server-side sessions, this allows HTTP and Socket.IO to
+                # share the session, with both having read/write access to it
+                session_obj = flask.session._get_current_object()
+            _request_ctx_stack.top.session = session_obj
             flask.request.sid = sid
             flask.request.namespace = namespace
             flask.request.event = {'message': message, 'args': args}
@@ -603,6 +623,11 @@ class SocketIO(object):
                     raise
                 type, value, traceback = sys.exc_info()
                 return err_handler(value)
+            if not self.manage_session:
+                # when Flask is managing the user session, it needs to save it
+                if not hasattr(session_obj, 'modified') or session_obj.modified:
+                    resp = app.response_class()
+                    app.session_interface.save_session(app, session_obj, resp)
             return ret
 
 
