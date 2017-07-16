@@ -658,6 +658,13 @@ def emit(event, *args, **kwargs):
     :param include_self: ``True`` to include the sender when broadcasting or
                          addressing a room, or ``False`` to send to everyone
                          but the sender.
+    :param ignore_queue: Only used when a message queue is configured. If
+                         set to ``True``, the event is emitted to the
+                         clients directly, without going through the queue.
+                         This is more efficient, but only works when a
+                         single server process is used, or when there is a
+                         single addresee. It is recommended to always leave
+                         this parameter with its default value of ``False``.
     """
     if 'namespace' in kwargs:
         namespace = kwargs['namespace']
@@ -698,6 +705,13 @@ def send(message, **kwargs):
     :param include_self: ``True`` to include the sender when broadcasting or
                          addressing a room, or ``False`` to send to everyone
                          but the sender.
+    :param ignore_queue: Only used when a message queue is configured. If
+                         set to ``True``, the event is emitted to the
+                         clients directly, without going through the queue.
+                         This is more efficient, but only works when a
+                         single server process is used, or when there is a
+                         single addresee. It is recommended to always leave
+                         this parameter with its default value of ``False``.
     """
     if 'namespace' in kwargs:
         namespace = kwargs['namespace']
@@ -709,10 +723,12 @@ def send(message, **kwargs):
     if room is None and not broadcast:
         room = flask.request.sid
     include_self = kwargs.get('include_self', True)
+    ignore_queue = kwargs.get('ignore_queue', False)
 
     socketio = flask.current_app.extensions['socketio']
     return socketio.send(message, namespace=namespace, room=room,
-                         include_self=include_self, callback=callback)
+                         include_self=include_self, callback=callback,
+                         ignore_queue=ignore_queue)
 
 
 def join_room(room, sid=None, namespace=None):
