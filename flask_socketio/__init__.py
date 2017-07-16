@@ -669,10 +669,12 @@ def emit(event, *args, **kwargs):
     if room is None and not broadcast:
         room = flask.request.sid
     include_self = kwargs.get('include_self', True)
+    ignore_queue = kwargs.get('ignore_queue', False)
 
     socketio = flask.current_app.extensions['socketio']
     return socketio.emit(event, *args, namespace=namespace, room=room,
-                         include_self=include_self, callback=callback)
+                         include_self=include_self, callback=callback,
+                         ignore_queue=ignore_queue)
 
 
 def send(message, **kwargs):
