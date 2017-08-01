@@ -526,7 +526,7 @@ class SocketIO(object):
                     log=log, **kwargs)
             else:
                 self.wsgi_server = pywsgi.WSGIServer((host, port), app,
-                                                     log=log)
+                                                     log=log, **kwargs)
 
             if use_reloader:
                 # monkey patching is required by the reloader
