@@ -1,3 +1,4 @@
+import json
 import unittest
 import coverage
 
@@ -17,6 +18,9 @@ disconnected = None
 @socketio.on('connect')
 def on_connect():
     send('connected')
+    send(json.dumps(dict(request.args)))
+    send(json.dumps({h: request.headers[h] for h in request.headers.keys()
+                     if h not in ['Host', 'Content-Type', 'Content-Length']}))
 
 
 @socketio.on('disconnect')
@@ -28,6 +32,9 @@ def on_disconnect():
 @socketio.on('connect', namespace='/test')
 def on_connect_test():
     send('connected-test')
+    send(json.dumps(dict(request.args)))
+    send(json.dumps({h: request.headers[h] for h in request.headers.keys()
+                     if h not in ['Host', 'Content-Type', 'Content-Length']}))
 
 
 @socketio.on('disconnect', namespace='/test')
@@ -188,6 +195,10 @@ def raise_error_default(data):
 class MyNamespace(Namespace):
     def on_connect(self):
         send('connected-ns')
+        send(json.dumps(dict(request.args)))
+        send(json.dumps(
+            {h: request.headers[h] for h in request.headers.keys()
+             if h not in ['Host', 'Content-Type', 'Content-Length']}))
 
     def on_disconnect(self):
         global disconnected
@@ -238,15 +249,42 @@ class TestSocketIO(unittest.TestCase):
     def test_connect(self):
         client = socketio.test_client(app)
         received = client.get_received()
-        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected')
+        self.assertEqual(received[1]['args'], '{}')
+        self.assertEqual(received[2]['args'], '{}')
+        client.disconnect()
+
+    def test_connect_query_string_and_headers(self):
+        client = socketio.test_client(
+            app, query_string='?foo=bar&foo=baz',
+            headers={'Authorization': 'Bearer foobar'})
+        received = client.get_received()
+        self.assertEqual(len(received), 3)
+        self.assertEqual(received[0]['args'], 'connected')
+        self.assertEqual(received[1]['args'], '{"foo": ["bar", "baz"]}')
+        self.assertEqual(received[2]['args'],
+                         '{"Authorization": "Bearer foobar"}')
         client.disconnect()
 
     def test_connect_namespace(self):
         client = socketio.test_client(app, namespace='/test')
         received = client.get_received('/test')
-        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected-test')
+        self.assertEqual(received[1]['args'], '{}')
+        self.assertEqual(received[2]['args'], '{}')
+        client.disconnect(namespace='/test')
+
+    def test_connect_namespace_query_string_and_headers(self):
+        client = socketio.test_client(
+            app, namespace='/test', query_string='foo=bar',
+            headers={'My-Custom-Header': 'Value'})
+        received = client.get_received('/test')
+        self.assertEqual(len(received), 3)
+        self.assertEqual(received[0]['args'], 'connected-test')
+        self.assertEqual(received[1]['args'], '{"foo": ["bar"]}')
+        self.assertEqual(received[2]['args'], '{"My-Custom-Header": "Value"}')
         client.disconnect(namespace='/test')
 
     def test_disconnect(self):
@@ -507,8 +545,22 @@ class TestSocketIO(unittest.TestCase):
     def test_connect_class_based(self):
         client = socketio.test_client(app, namespace='/ns')
         received = client.get_received('/ns')
-        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected-ns')
+        self.assertEqual(received[1]['args'], '{}')
+        self.assertEqual(received[2]['args'], '{}')
+        client.disconnect('/ns')
+
+    def test_connect_class_based_query_string_and_headers(self):
+        client = socketio.test_client(
+            app, namespace='/ns', query_string='foo=bar',
+            headers={'Authorization': 'Basic foobar'})
+        received = client.get_received('/ns')
+        self.assertEqual(len(received), 3)
+        self.assertEqual(received[0]['args'], 'connected-ns')
+        self.assertEqual(received[1]['args'], '{"foo": ["bar"]}')
+        self.assertEqual(received[2]['args'],
+                         '{"Authorization": "Basic foobar"}')
         client.disconnect('/ns')
 
     def test_disconnect_class_based(self):

@@ -14,11 +14,14 @@ class SocketIOTestClient(object):
     :param socketio: The application's ``SocketIO`` instance.
     :param namespace: The namespace for the client. If not provided, the client
                       connects to the server on the global namespace.
+    :param query_string: A string with custom query string arguments.
+    :param headers: A dictionary with custom HTTP headers.
     """
     queue = {}
     ack = None
 
-    def __init__(self, app, socketio, namespace=None):
+    def __init__(self, app, socketio, namespace=None, query_string=None,
+                 headers=None):
         def _mock_send_packet(sid, pkt):
             if pkt.packet_type == packet.EVENT or \
                     pkt.packet_type == packet.BINARY_EVENT:
@@ -49,21 +52,29 @@ class SocketIOTestClient(object):
                                'queue. Disable the queue on your test '
                                'configuration.')
         socketio.server.manager.initialize()
-        self.connect(namespace)
+        self.connect(namespace=namespace, query_string=query_string,
+                     headers=headers)
 
-    def connect(self, namespace=None):
+    def connect(self, namespace=None, query_string=None, headers=None):
         """Connect the client.
 
         :param namespace: The namespace for the client. If not provided, the
                           client connects to the server on the global
                           namespace.
+        :param query_string: A string with custom query string arguments.
+        :param headers: A dictionary with custom HTTP headers.
 
         Note that it is usually not necessary to explicitly call this method,
         since a connection is automatically established when an instance of
         this class is created. An example where it this method would be useful
         is when the application accepts multiple namespace connections.
         """
-        environ = EnvironBuilder('/socket.io').get_environ()
+        url = '/socket.io'
+        if query_string:
+            if query_string[0] != '?':
+                query_string = '?' + query_string
+            url += query_string
+        environ = EnvironBuilder(url, headers=headers).get_environ()
         environ['flask.app'] = self.app
         self.socketio.server._handle_eio_connect(self.sid, environ)
         if namespace is not None and namespace != '/':
