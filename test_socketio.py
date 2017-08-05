@@ -5,7 +5,7 @@ import coverage
 cov = coverage.coverage(branch=True)
 cov.start()
 
-from flask import Flask, session, request
+from flask import Flask, session, request, json as flask_json
 from flask_socketio import SocketIO, send, emit, join_room, leave_room, \
     Namespace
 
@@ -605,6 +605,23 @@ class TestSocketIO(unittest.TestCase):
         expected_data = {'message': 'other_custom_event', 'args': ('foo',)}
         self.assertEqual(request_event_data, expected_data)
 
+    def test_delayed_init(self):
+        app = Flask(__name__)
+        socketio = SocketIO(allow_upgrades=False, json=flask_json)
+
+        @socketio.on('connect')
+        def on_connect():
+            send({'connected': 'foo'}, json=True)
+
+        socketio.init_app(app, cookie='foo')
+        self.assertFalse(socketio.server.eio.allow_upgrades)
+        self.assertEqual(socketio.server.eio.cookie, 'foo')
+
+        client = socketio.test_client(app)
+        received = client.get_received()
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args'], {'connected': 'foo'})
+        
 
 if __name__ == '__main__':
     unittest.main()
