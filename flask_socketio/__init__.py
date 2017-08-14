@@ -81,7 +81,8 @@ class SocketIO(object):
                            cases, this argument does not need to be set
                            explicitly.
     :param logger: To enable logging set to ``True`` or pass a logger object to
-                   use. To disable logging set to ``False``.
+                   use. To disable logging set to ``False``. The default is
+                   ``False``.
     :param binary: ``True`` to support binary payloads, ``False`` to treat all
                    payloads as text. On Python 2, if this is set to ``True``,
                    ``unicode`` values are treated as text, and ``str`` and
@@ -106,26 +107,32 @@ class SocketIO(object):
                        first async mode that has all its dependencies installed
                        is then one that is chosen.
     :param ping_timeout: The time in seconds that the client waits for the
-                         server to respond before disconnecting.
+                         server to respond before disconnecting. The default is
+                         60 seconds.
     :param ping_interval: The interval in seconds at which the client pings
-                          the server.
+                          the server. The default is 25 seconds.
     :param max_http_buffer_size: The maximum size of a message when using the
-                                 polling transport.
-    :param allow_upgrades: Whether to allow transport upgrades or not.
+                                 polling transport. The default is 100,000,000
+                                 bytes.
+    :param allow_upgrades: Whether to allow transport upgrades or not. The
+                           default is ``True``.
     :param http_compression: Whether to compress packages when using the
-                             polling transport.
+                             polling transport. The default is ``True``.
     :param compression_threshold: Only compress messages when their byte size
-                                  is greater than this value.
+                                  is greater than this value. The default is
+                                  1024 bytes.
     :param cookie: Name of the HTTP cookie that contains the client session
                    id. If set to ``None``, a cookie is not sent to the client.
+                   The default is ``'io'``.
     :param cors_allowed_origins: List of origins that are allowed to connect
                                  to this server. All origins are allowed by
                                  default.
     :param cors_credentials: Whether credentials (cookies, authentication) are
-                             allowed in requests to this server.
+                             allowed in requests to this server. The default is
+                             ``True``.
     :param engineio_logger: To enable Engine.IO logging set to ``True`` or pass
                             a logger object to use. To disable logging set to
-                            ``False``.
+                            ``False``. The default is ``False``.
     """
 
     def __init__(self, app=None, **kwargs):
