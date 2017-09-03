@@ -53,6 +53,7 @@ def run(info, host, port, reload, debugger, eager_loading):
             # so we invoke Flask's original run command
             run_index = sys.argv.index('run')
             sys.argv = sys.argv[run_index:]
+            sys.argv += ['--no-reload'] if '--no-reload' not in sys.argv else []
             return run_command()
         socketio = app.extensions['socketio']
         socketio.run(app, host=host, port=port, debug=debugger,
