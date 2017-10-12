@@ -13,6 +13,7 @@ You can install this package as usual with pip:
     pip install flask-socketio
 
 Example
+(Receiving information from JavaScript and sending data back)
 -------
 
     from flask import Flask, render_template
@@ -28,10 +29,25 @@ Example
     
     @socketio.on('my event')
     def test_message(message):
+        print(message['data'])
         emit('my response', {'data': 'got it!'})
     
     if __name__ == '__main__':
         socketio.run(app)
+        
+Example
+(Sending information from JavaScript)
+-------
+        
+    $(document).ready(function(){
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        $('form#emit').submit(function(event) {
+            var message = $('#message').val();
+            socket.emit('my event', {data: message});
+        });
+    });
+        
 
 Resources
 ---------
