@@ -169,7 +169,7 @@ class SocketIO(object):
             channel = self.server_options.pop('channel', 'flask-socketio')
             write_only = app is None
             if url:
-                if url.startswith('redis://'):
+                if url.startswith(('redis://', "rediss://")):
                     queue_class = socketio.RedisManager
                 elif url.startswith('zmq'):
                     queue_class = socketio.ZmqManager
