@@ -1,4 +1,5 @@
 import sys
+from functools import wraps
 
 # make sure gevent-socketio is not installed, as it conflicts with
 # python-socketio
@@ -238,6 +239,7 @@ class SocketIO(object):
         namespace = namespace or '/'
 
         def decorator(handler):
+            @wraps(handler)
             def _handler(sid, *args):
                 return self._handle_event(handler, message, namespace, sid,
                                           *args)
