@@ -20,7 +20,7 @@ def on_connect():
     send('connected')
     send(json.dumps(dict(request.args)))
     send(json.dumps({h: request.headers[h] for h in request.headers.keys()
-                     if h not in ['Host', 'Content-Type', 'Content-Length']}))
+                     if h not in ['Host', 'Content-Type', 'Content-Length']}, sort_keys=True))
     send(json.dumps(request.cookies))
 
 
@@ -267,7 +267,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[0]['args'], 'connected')
         self.assertEqual(received[1]['args'], '{"foo": ["bar", "baz"]}')
         self.assertEqual(received[2]['args'],
-                         '{"Cookie": "cookie1=foo;cookie2=bar", "Authorization": "Bearer foobar"}')
+                         '{"Authorization": "Bearer foobar", "Cookie": "cookie1=foo;cookie2=bar"}')
         self.assertEqual(received[3]['args'],
                          '{"cookie1": "foo", "cookie2": "bar"}')
         client.disconnect()
