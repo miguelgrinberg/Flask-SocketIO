@@ -90,7 +90,7 @@ class SocketIOTestClient(object):
         """ Transform cookies into a header format
         """
         if isinstance(self._cookies, dict):
-            return ';'.join(['%s=%s' % (name, value) for name, value in self._cookies.items()])
+            return ';'.join(['%s=%s' % (name, value) for name, value in sorted(self._cookies.items())])
         else:
             raise NotImplementedError('only supporting cookies in a dictionary format')
 
