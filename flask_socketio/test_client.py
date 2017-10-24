@@ -21,7 +21,7 @@ class SocketIOTestClient(object):
     ack = None
 
     def __init__(self, app, socketio, namespace=None, query_string=None,
-                 headers=None):
+                 headers=None, cookies=None):
         def _mock_send_packet(sid, pkt):
             if pkt.packet_type == packet.EVENT or \
                     pkt.packet_type == packet.BINARY_EVENT:
@@ -45,6 +45,7 @@ class SocketIOTestClient(object):
         self.queue[self.sid] = []
         self.callback_counter = 0
         self.socketio = socketio
+        self._cookies = cookies
         socketio.server._send_packet = _mock_send_packet
         socketio.server.environ[self.sid] = {}
         if isinstance(socketio.server.manager, PubSubManager):
@@ -76,12 +77,22 @@ class SocketIOTestClient(object):
             url += query_string
         environ = EnvironBuilder(url, headers=headers).get_environ()
         environ['flask.app'] = self.app
+        if self._cookies:
+            environ['HTTP_COOKIE'] = self.get_cookie_header()
         self.socketio.server._handle_eio_connect(self.sid, environ)
         if namespace is not None and namespace != '/':
             pkt = packet.Packet(packet.CONNECT, namespace=namespace)
             with self.app.app_context():
                 self.socketio.server._handle_eio_message(self.sid,
                                                          pkt.encode())
+
+    def get_cookie_header(self):
+        """ Transform cookies into a header format
+        """
+        if isinstance(self._cookies, dict):
+            return ';'.join(['%s=%s' % (name, value) for name, value in self._cookies.items()])
+        else:
+            raise NotImplementedError('only supporting cookies in a dictionary format')
 
     def disconnect(self, namespace=None):
         """Disconnect the client.
