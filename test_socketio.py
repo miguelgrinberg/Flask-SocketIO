@@ -21,6 +21,7 @@ def on_connect():
     send(json.dumps(dict(request.args)))
     send(json.dumps({h: request.headers[h] for h in request.headers.keys()
                      if h not in ['Host', 'Content-Type', 'Content-Length']}))
+    send(json.dumps(request.cookies))
 
 
 @socketio.on('disconnect')
@@ -249,22 +250,26 @@ class TestSocketIO(unittest.TestCase):
     def test_connect(self):
         client = socketio.test_client(app)
         received = client.get_received()
-        self.assertEqual(len(received), 3)
+        self.assertEqual(len(received), 4)
         self.assertEqual(received[0]['args'], 'connected')
         self.assertEqual(received[1]['args'], '{}')
         self.assertEqual(received[2]['args'], '{}')
+        self.assertEqual(received[3]['args'], '{}')
         client.disconnect()
 
-    def test_connect_query_string_and_headers(self):
+    def test_connect_query_string_and_headers_and_cookies(self):
         client = socketio.test_client(
             app, query_string='?foo=bar&foo=baz',
-            headers={'Authorization': 'Bearer foobar'})
+            headers={'Authorization': 'Bearer foobar'},
+            cookies={'cookie1': 'foo', 'cookie2': 'bar'})
         received = client.get_received()
-        self.assertEqual(len(received), 3)
+        self.assertEqual(len(received), 4)
         self.assertEqual(received[0]['args'], 'connected')
         self.assertEqual(received[1]['args'], '{"foo": ["bar", "baz"]}')
         self.assertEqual(received[2]['args'],
-                         '{"Authorization": "Bearer foobar"}')
+                         '{"Cookie": "cookie1=foo;cookie2=bar", "Authorization": "Bearer foobar"}')
+        self.assertEqual(received[3]['args'],
+                         '{"cookie1": "foo", "cookie2": "bar"}')
         client.disconnect()
 
     def test_connect_namespace(self):
