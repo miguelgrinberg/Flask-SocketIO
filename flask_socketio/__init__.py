@@ -592,10 +592,10 @@ class SocketIO(object):
         """
         return self.server.sleep(seconds)
 
-    def test_client(self, app, namespace=None, query_string=None, headers=None):
+    def test_client(self, app, namespace=None, query_string=None, headers=None, cookies=None):
         """Return a simple SocketIO client that can be used for unit tests."""
         return SocketIOTestClient(app, self, namespace=namespace,
-                                  query_string=query_string, headers=headers)
+                                  query_string=query_string, headers=headers, cookies=cookies)
 
     def _handle_event(self, handler, message, namespace, sid, *args):
         if sid not in self.server.environ:
