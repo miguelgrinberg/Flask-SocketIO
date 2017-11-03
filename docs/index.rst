@@ -161,8 +161,8 @@ can be used::
     socketio.on_event('my event', my_function_handler, namespace='/test')
 
 Clients may request an acknowledgement callback that confirms receipt of a
-message. Any values returned from the handler function will be passed to the
-client as arguments in the callback function::
+message they sent. Any values returned from the handler function will be
+passed to the client as arguments in the callback function::
 
     @socketio.on('my event')
     def handle_my_custom_event(json):
@@ -228,21 +228,11 @@ received by the client::
     def handle_my_custom_event(json):
         emit('my response', json, callback=ack)
 
-When using callbacks the Javascript client receives a callback function to
+When using callbacks, the Javascript client receives a callback function to
 invoke upon receipt of the message. After the client application invokes the
 callback function the server invokes the corresponding server-side callback.
-If the client-side callback returns any values, these are provided as
-arguments to the server-side callback.
-
-The client application can also request an acknoledgement callback for an
-event sent to the server. If the server wants to provide arguments for this
-callback, it must return them from the event handler function::
-
-    @socketio.on('my event')
-    def handle_my_custom_event(json):
-        # ... handle the event
-
-        return 'foo', 'bar', 123  # client callback will receive these 3 arguments
+If the client-side callback is invoked with arguments, these are provided as
+arguments to the server-side callback as well.
 
 Broadcasting
 ------------
