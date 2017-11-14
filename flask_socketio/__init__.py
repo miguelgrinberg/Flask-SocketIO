@@ -374,7 +374,7 @@ class SocketIO(object):
         used outside of a SocketIO event context, so it is appropriate to use
         when the server is the originator of an event.
 
-        :param message: The message to send, either a string or a JSON blob.
+        :param data: The message to send, either a string or a JSON blob.
         :param json: ``True`` if ``message`` is a JSON blob, ``False``
                      otherwise.
         :param namespace: The namespace under which the message is to be sent.
