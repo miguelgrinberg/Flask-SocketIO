@@ -701,6 +701,8 @@ def send(message, **kwargs):
     can only be called from a SocketIO event handler.
 
     :param message: The message to send, either a string or a JSON blob.
+    :param json: ``True`` if ``message`` is a JSON blob, ``False``
+                     otherwise.
     :param namespace: The namespace under which the message is to be sent.
                       Defaults to the namespace used by the originating event.
                       An empty string can be used to use the global namespace.
@@ -721,6 +723,7 @@ def send(message, **kwargs):
                          single addresee. It is recommended to always leave
                          this parameter with its default value of ``False``.
     """
+    json = kwargs.get('json', False)
     if 'namespace' in kwargs:
         namespace = kwargs['namespace']
     else:
@@ -734,7 +737,7 @@ def send(message, **kwargs):
     ignore_queue = kwargs.get('ignore_queue', False)
 
     socketio = flask.current_app.extensions['socketio']
-    return socketio.send(message, namespace=namespace, room=room,
+    return socketio.send(message, json=json, namespace=namespace, room=room,
                          include_self=include_self, callback=callback,
                          ignore_queue=ignore_queue)
 
