@@ -31,11 +31,10 @@ choices:
 - `gevent <http://www.gevent.org/>`_ is supported in a number of different
   configurations. The long-polling transport is fully supported with the
   gevent package, but unlike eventlet, gevent does not have native WebSocket
-  support. To add support for WebSocket there are currently two options. The
-  `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_
-  package adds WebSocket support to gevent, but unfortunately this package is
-  current only available for Python 2. The other alternative is to use the
-  `uWSGI <https://uwsgi-docs.readthedocs.io/en/latest/>`_ web server, which
+  support. To add support for WebSocket there are currently two options. 
+  Installing the `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_
+  package adds WebSocket support to gevent or one can use the `uWSGI
+  <https://uwsgi-docs.readthedocs.io/en/latest/>`_ web server, which
   comes with WebSocket functionality. The use of gevent is also a performant
   option, but slightly lower than eventlet.
 - The Flask development server based on Werkzeug can be used as well, with the
