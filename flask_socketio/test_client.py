@@ -115,10 +115,15 @@ class SocketIOTestClient(object):
             self.callback_counter += 1
             id = self.callback_counter
         pkt = packet.Packet(packet.EVENT, data=[event] + list(args),
-                            namespace=namespace, id=id, binary=False)
+                            namespace=namespace, id=id)
         self.ack = None
         with self.app.app_context():
-            self.socketio.server._handle_eio_message(self.sid, pkt.encode())
+            encoded_pkt = pkt.encode()
+            if isinstance(encoded_pkt, list):
+                for epkt in encoded_pkt:
+                    self.socketio.server._handle_eio_message(self.sid, epkt)
+            else:
+                self.socketio.server._handle_eio_message(self.sid, encoded_pkt)
         if self.ack is not None:
             return self.ack['args'][0] if len(self.ack['args']) == 1 \
                 else self.ack['args']

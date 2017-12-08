@@ -348,6 +348,16 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[0]['name'], 'my custom response')
         self.assertEqual(received[0]['args'][0]['a'], 'b')
 
+    def test_emit_binary(self):
+        client = socketio.test_client(app)
+        client.get_received()
+        client.emit('my custom event', {u'a': b'\x01\x02\x03'})
+        received = client.get_received()
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my custom response')
+        self.assertEqual(received[0]['args'][0]['a'], b'\x01\x02\x03')
+
     def test_request_event_data(self):
         client = socketio.test_client(app)
         client.get_received()
