@@ -167,17 +167,17 @@ class SocketIO(object):
         if 'client_manager' not in self.server_options:
             url = self.server_options.pop('message_queue', None)
             channel = self.server_options.pop('channel', 'flask-socketio')
+            connection = self.server_options.pop('connection', None)
             write_only = app is None
-            if url:
-                if url.startswith(('redis://', "rediss://", "unix://")):
+            if connection or url:
+                if connection or url.startswith(('redis://', "rediss://")):
                     queue_class = socketio.RedisManager
                 elif url.startswith('zmq'):
                     queue_class = socketio.ZmqManager
                 else:
                     queue_class = socketio.KombuManager
-                queue = queue_class(url, channel=channel,
-                                    write_only=write_only,
-                                    **kwargs)
+                queue = queue_class(url, connection=connection, channel=channel,
+                                    write_only=write_only)
                 self.server_options['client_manager'] = queue
 
         if 'json' in self.server_options and \
