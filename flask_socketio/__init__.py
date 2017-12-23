@@ -66,6 +66,8 @@ class SocketIO(object):
                     multiple clusters of SocketIO processes need to use the
                     same message queue without interfering with each other, then
                     each cluster should use a different channel.
+    :param connection:  An existing redis connection. to be used for message
+                        queue. If missing a url will be used instead.
     :param path: The path where the Socket.IO server is exposed. Defaults to
                  ``'socket.io'``. Leave this as is unless you know what you are
                  doing.
