@@ -16,6 +16,7 @@ if gevent_socketio_found:
 import socketio
 import flask
 from flask import _request_ctx_stack, json as flask_json
+from flask.sessions import SessionMixin
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 
@@ -40,6 +41,13 @@ class _SocketIOMiddleware(socketio.Middleware):
         environ['flask.app'] = self.flask_app
         return super(_SocketIOMiddleware, self).__call__(environ,
                                                          start_response)
+
+
+class _ManagedSession(SessionMixin, dict):
+    """This class is used for user sessions that are managed by
+    Flask-SocketIO. It is simple dict, expanded with the Flask session
+    attributes."""
+    pass
 
 
 class SocketIO(object):
@@ -606,7 +614,7 @@ class SocketIO(object):
                 # created as a copy of the regular user session
                 if 'saved_session' not in self.server.environ[sid]:
                     self.server.environ[sid]['saved_session'] = \
-                        dict(flask.session)
+                        _ManagedSession(flask.session)
                 session_obj = self.server.environ[sid]['saved_session']
             else:
                 # let Flask handle the user session
