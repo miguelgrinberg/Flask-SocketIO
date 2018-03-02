@@ -452,7 +452,7 @@ button is pressed by the user.
 
 However, in most cases it is more convenient to perform the traditional
 authentication process before the SocketIO connection is established. The
-user's identify can then be recorded in the user session or in a cookie, and
+user's identity can then be recorded in the user session or in a cookie, and
 later when the SocketIO connection is established that information will be
 accessible to SocketIO event handlers.
 
