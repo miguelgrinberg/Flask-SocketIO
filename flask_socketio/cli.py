@@ -19,8 +19,11 @@ import click
 @click.option('--eager-loading/--lazy-loader', default=None,
               help='Enable or disable eager loading.  By default eager '
               'loading is enabled if the reloader is disabled.')
+@click.option('--with-threads/--without-threads', is_flag=True,
+              help='These options are only supported for compatibility with '
+              'the original Flask local development server and are ignored.')
 @pass_script_info
-def run(info, host, port, reload, debugger, eager_loading):
+def run(info, host, port, reload, debugger, eager_loading, with_threads):
     """Runs a local development server for the Flask-SocketIO application.
 
     The reloader and debugger are by default enabled if the debug flag of
