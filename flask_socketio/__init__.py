@@ -833,7 +833,7 @@ def rooms(sid=None, namespace=None):
     return socketio.server.rooms(sid, namespace=namespace)
 
 
-def disconnect(sid=None, silent=False):
+def disconnect(sid=None, namespace=None, silent=False):
     """Disconnect the client.
 
     This function terminates the connection with the client. As a result of
@@ -847,8 +847,11 @@ def disconnect(sid=None, silent=False):
 
     :param sid: The session id of the client. If not provided, the client is
                 obtained from the request context.
+    :param namespace: The namespace for the room. If not provided, the
+                      namespace is obtained from the request context.
     :param silent: this option is deprecated.
     """
     socketio = flask.current_app.extensions['socketio']
-    return socketio.server.disconnect(sid or flask.request.sid,
-                                      namespace=flask.request.namespace)
+    sid = sid or flask.request.sid
+    namespace = namespace or flask.request.namespace
+    return socketio.server.disconnect(sid, namespace=namespace)
