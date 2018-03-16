@@ -1,0 +1,13 @@
+Flask
+Flask-Login
+Flask-Session
+itsdangerous
+Jinja2
+MarkupSafe
+six
+Werkzeug
+
+# socket.io
+flask-socketio
+gevent
+gevent-websocket

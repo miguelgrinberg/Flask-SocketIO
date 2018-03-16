@@ -1,0 +1,143 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.slim.js"></script>
+    </head>
+    <body>
+        <div class="pure-g">
+            <div class="pure-u-1-4"></div>
+            <div class="pure-u-1-2">
+                <h1>Flask-SocketIO Sessions example</h1>
+
+                <div class="pure-form">
+                    <h2>HTTP</h2>
+                    <div class="pure-g">
+                        <div class="pure-u-1-6"><h3>Session</h3></div>
+                        <div class="pure-u-5-6">
+                            <p>Current session: <b><span id="http-session"></span></b></p>
+                            <p>
+                                <input type=text id='http-session-set' placeholder="Set session to...">
+                                <button class="pure-button pure-button-primary" id="submit-http">Submit</button>
+                            </p>
+                        </div>
+                        <div class="pure-u-1-6"><h3>User</h3></div>
+                        <div class="pure-u-5-6">
+                            <p>Current user: <b><span id="http-user"></span></b></p>
+                            <p>
+                                <input type=text id='http-user-set' placeholder="User to login...">
+                                <button class="pure-button pure-button-primary" id="login-http">Login</button>
+                                <button class="pure-button pure-button-primary" id="logout-http">Logout</button>
+                            </p>
+                        </div>
+                    </div>
+                    <hr>
+                    <h2>Socket.IO</h2>
+                    <p><button class="pure-button pure-button-primary" id="connect">Connect</button></p>
+                    <div id="socketio" style="display: none">
+                        <div class="pure-g">
+                            <div class="pure-u-1-6"><h3>Session</h3></div>
+                            <div class="pure-u-5-6">
+                                <p>Current session: <b><span id="socketio-session"></span></b></p>
+                                <p>
+                                    <input type=text id='socketio-session-set' placeholder="Set session to...">
+                                    <button class="pure-button pure-button-primary" id="submit-socketio">Submit</button>
+                                </p>
+                            </div>
+                            <div class="pure-u-1-6"><h3>User</h3></div>
+                            <div class="pure-u-5-6">
+                                <p>Current user: <b><span id="socketio-user"></span></b></p>
+                                <p>
+                                    <input type=text id='socketio-user-set' placeholder="User to login...">
+                                    <button class="pure-button pure-button-primary" id="login-socketio">Login</button>
+                                    <button class="pure-button pure-button-primary" id="logout-socketio">Logout</button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pure-u-1-4"></div>
+        </div>
+
+        <script>
+            // HTTP handlers
+            window.setInterval(function() {
+                $.ajax({
+                    type: 'GET',
+                    url: '/session',
+                    success: function(data) {
+                        $('#http-session').text(data['session']);
+                        $('#http-user').text(data['user']);
+                    }
+                });
+            }, 1000);
+
+            $('#submit-http').click(function() {
+                $.ajax({
+                    type: 'POST',
+                    url: '/session',
+                    data: JSON.stringify({session: $('#http-session-set').val()}),
+                    contentType: 'application/json'
+                });
+            });
+            $('#login-http').click(function() {
+                $.ajax({
+                    type: 'POST',
+                    url: '/session',
+                    data: JSON.stringify({user: $('#http-user-set').val()}),
+                    contentType: 'application/json'
+                });
+            });
+            $('#logout-http').click(function() {
+                $.ajax({
+                    type: 'POST',
+                    url: '/session',
+                    data: JSON.stringify({user: null}),
+                    contentType: 'application/json'
+                });
+            });
+
+
+            // Socket.IO handlers
+            var socket = null;
+
+            $('#connect').click(function() {
+                if (!socket) {
+                    socket = io.connect(location.href);
+                    socket.on('refresh-session', function(data) {
+                        $('#socketio-session').text(data['session']);
+                        $('#socketio-user').text(data['user']);
+                    });
+
+                    $('#connect').text('Disconnect');
+                    $('#socketio').show();
+                }
+                else {
+                    socket.disconnect();
+                    socket = null;
+                    $('#socketio').hide();
+                    $('#connect').text('Connect');
+                    $('#socketio-session').text('');
+                    $('#socketio-user').text('');
+                }
+            });
+
+            window.setInterval(function() {
+                if (socket)
+                    socket.emit('get-session');
+            }, 1000);
+
+            $('#submit-socketio').click(function() {
+                socket.emit('set-session', {session: $('#socketio-session-set').val()});
+            });
+            $('#login-socketio').click(function() {
+                socket.emit('set-session', {user: $('#socketio-user-set').val()});
+            });
+            $('#logout-socketio').click(function() {
+                socket.emit('set-session', {user: null});
+            });
+        </script>
+    </body>
+</html>
