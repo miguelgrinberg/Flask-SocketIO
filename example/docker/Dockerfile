@@ -23,7 +23,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 
-COPY requirements.txt /requirements.txt
+COPY docker/requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt  && \
     pip freeze
 
@@ -50,8 +50,6 @@ COPY . /var/www/app
 
 ENTRYPOINT ["python", "-u"]
 CMD ["/var/www/app/app.py"]
-#CMD ["tail", "-f", "/var/www/app/app.py"]
-#ENTRYPOINT ["tail",  "-f", "/var/www/app/app.py"]
 
 #################################################################
 

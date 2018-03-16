@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := default
 
 build:
-	docker build -t socketio .
+	docker build -t socketio -f Dockerfile ..
 
 start:
 	docker run -d -p 5000:5000 --name socketio socketio
