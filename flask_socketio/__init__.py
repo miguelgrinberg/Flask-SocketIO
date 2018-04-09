@@ -843,7 +843,8 @@ def disconnect(sid=None, namespace=None, silent=False):
         def receive_message(msg):
             if is_banned(session['username']):
                 disconnect()
-            # ...
+            else:
+                # ...
 
     :param sid: The session id of the client. If not provided, the client is
                 obtained from the request context.
