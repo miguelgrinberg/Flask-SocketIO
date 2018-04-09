@@ -31,7 +31,7 @@ choices:
 - `gevent <http://www.gevent.org/>`_ is supported in a number of different
   configurations. The long-polling transport is fully supported with the
   gevent package, but unlike eventlet, gevent does not have native WebSocket
-  support. To add support for WebSocket there are currently two options. 
+  support. To add support for WebSocket there are currently two options.
   Installing the `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_
   package adds WebSocket support to gevent or one can use the `uWSGI
   <https://uwsgi-docs.readthedocs.io/en/latest/>`_ web server, which
@@ -545,10 +545,6 @@ modified command is::
 In all these commands, ``module`` is the Python module or package that defines
 the application instance, and ``app`` is the application instance itself.
 
-Gunicorn release 18.0 is the recommended release to use with Flask-SocketIO.
-The 19.x releases are known to have incompatibilities in certain deployment
-scenarios that include WebSocket.
-
 Due to the limited load balancing algorithm used by gunicorn, it is not possible
 to use more than one worker process when using this web server. For that reason,
 all the examples above include the ``-w 1`` option.
@@ -600,7 +596,7 @@ servers::
 
     upstream socketio_nodes {
         ip_hash;
-    
+
         server 127.0.0.1:5000;
         server 127.0.0.1:5001;
         server 127.0.0.1:5002;
