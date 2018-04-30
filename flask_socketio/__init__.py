@@ -43,7 +43,7 @@ class _SocketIOMiddleware(socketio.Middleware):
                                                          start_response)
 
 
-class _ManagedSession(SessionMixin, dict):
+class _ManagedSession(dict, SessionMixin):
     """This class is used for user sessions that are managed by
     Flask-SocketIO. It is simple dict, expanded with the Flask session
     attributes."""
