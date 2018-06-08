@@ -217,7 +217,7 @@ To send an event with multiple arguments, send a tuple::
     def handle_my_custom_event(json):
         emit('my response', ('foo', 'bar', json), namespace='/chat')
 
-SocketIO supports acknowledgement callbacks that confirm that a message was
+SocketIO supports acknowledgment callbacks that confirm that a message was
 received by the client::
 
     def ack():
@@ -350,7 +350,7 @@ dispatched to a method named as the event name with the ``on_`` prefix. For
 example, event ``my_event`` will be handled by a method named ``on_my_event``.
 If an event is received for which there is no corresponding method defined in
 the namespace class, then the event is ignored. All event names used in
-class-based namespaces must used characters that are legal in method names.
+class-based namespaces must use characters that are legal in method names.
 
 As a convenience to methods defined in a class-based namespace, the namespace
 instance includes versions of several of the methods in the
@@ -677,7 +677,7 @@ Emitting from an External Process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For many types of applications, it is necessary to emit events from a process
-that is not the SocketIO server, for a example a Celery worker. If the
+that is not the SocketIO server, for an example a Celery worker. If the
 SocketIO server or servers are configured to listen on a message queue as
 shown in the previous section, then any other process can create its own
 ``SocketIO`` instance and use it to emit events in the same way the server
@@ -706,7 +706,7 @@ standard library is not monkey patched.
 It is important to note that an external process that wants to connect to
 a SocketIO server does not need to use eventlet or gevent like the main
 server. Having a server use a coroutine framework, while an external process
-does not is not a problem. For example, Celery workers do not need to be
+is not a problem. For example, Celery workers do not need to be
 configured to use eventlet or gevent just because the main server does. But if
 your external process does use a coroutine framework for whatever reason, then
 monkey patching is likely required, so that the message queue accesses
