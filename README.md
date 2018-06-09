@@ -38,5 +38,5 @@ Resources
 
 - [Tutorial](http://blog.miguelgrinberg.com/post/easy-websockets-with-flask-and-gevent)
 - [Documentation](http://flask-socketio.readthedocs.io/en/latest/)
-- [PyPI](https://pypi.python.org/pypi/Flask-SocketIO)
+- [PyPI](https://pypi.org/project/Flask-SocketIO)
 
