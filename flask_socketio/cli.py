@@ -48,10 +48,6 @@ def run(info, host, port, reload, debugger, eager_loading, with_threads):
             print(' * Serving Flask-SocketIO app "%s"' % info.app_import_path)
         if debug is not None:
             print(' * Forcing debug mode %s' % (debug and 'on' or 'off'))
-    else:
-        # if this is the child process of the reloader, then make sure we don't
-        # start the reloader once again
-        reload = False
 
     def run_server():
         app = info.load_app()
