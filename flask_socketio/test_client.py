@@ -18,7 +18,7 @@ class SocketIOTestClient(object):
     :param headers: A dictionary with custom HTTP headers.
     """
     queue = {}
-    ack = None
+    acks = {}
 
     def __init__(self, app, socketio, namespace=None, query_string=None,
                  headers=None):
@@ -37,12 +37,13 @@ class SocketIOTestClient(object):
                                             'namespace': pkt.namespace or '/'})
             elif pkt.packet_type == packet.ACK or \
                     pkt.packet_type == packet.BINARY_ACK:
-                self.ack = {'args': pkt.data,
-                            'namespace': pkt.namespace or '/'}
+                self.acks[sid] = {'args': pkt.data,
+                                  'namespace': pkt.namespace or '/'}
 
         self.app = app
         self.sid = uuid.uuid4().hex
         self.queue[self.sid] = []
+        self.acks[self.sid] = None
         self.callback_counter = 0
         self.socketio = socketio
         socketio.server._send_packet = _mock_send_packet
@@ -116,7 +117,6 @@ class SocketIOTestClient(object):
             id = self.callback_counter
         pkt = packet.Packet(packet.EVENT, data=[event] + list(args),
                             namespace=namespace, id=id)
-        self.ack = None
         with self.app.app_context():
             encoded_pkt = pkt.encode()
             if isinstance(encoded_pkt, list):
@@ -124,9 +124,10 @@ class SocketIOTestClient(object):
                     self.socketio.server._handle_eio_message(self.sid, epkt)
             else:
                 self.socketio.server._handle_eio_message(self.sid, encoded_pkt)
-        if self.ack is not None:
-            return self.ack['args'][0] if len(self.ack['args']) == 1 \
-                else self.ack['args']
+        ack = self.acks.pop(self.sid, None)
+        if ack is not None:
+            return ack['args'][0] if len(ack['args']) == 1 \
+                else ack['args']
 
     def send(self, data, json=False, callback=False, namespace=None):
         """Send a text or JSON message to the server.

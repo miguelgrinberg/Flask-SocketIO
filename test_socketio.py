@@ -492,6 +492,8 @@ class TestSocketIO(unittest.TestCase):
 
     def test_ack(self):
         client1 = socketio.test_client(app)
+        client2 = socketio.test_client(app)
+        client3 = socketio.test_client(app)
         ack = client1.send('echo this message back', callback=True)
         self.assertEqual(ack, 'echo this message back')
         ack = client1.send('test noackargs', callback=True)
@@ -499,34 +501,32 @@ class TestSocketIO(unittest.TestCase):
         # callbacks with no arguments. Here we check for [] (the correct, 1.5
         # and up response) and None (the wrong pre-1.5 response).
         self.assertTrue(ack == [] or ack is None)
-        client2 = socketio.test_client(app)
         ack2 = client2.send({'a': 'b'}, json=True, callback=True)
         self.assertEqual(ack2, {'a': 'b'})
-        client3 = socketio.test_client(app)
         ack3 = client3.emit('my custom event', {'a': 'b'}, callback=True)
         self.assertEqual(ack3, {'a': 'b'})
 
     def test_noack(self):
         client1 = socketio.test_client(app)
+        client2 = socketio.test_client(app)
+        client3 = socketio.test_client(app)
         no_ack_dict = {'noackargs': True}
         noack = client1.send("test noackargs", callback=False)
         self.assertIsNone(noack)
-        client2 = socketio.test_client(app)
         noack2 = client2.send(no_ack_dict, json=True, callback=False)
         self.assertIsNone(noack2)
-        client3 = socketio.test_client(app)
         noack3 = client3.emit('my custom event', no_ack_dict)
         self.assertIsNone(noack3)
 
     def test_error_handling_ack(self):
         client1 = socketio.test_client(app)
+        client2 = socketio.test_client(app, namespace='/test')
+        client3 = socketio.test_client(app, namespace='/unused_namespace')
         errorack = client1.emit("error testing", "", callback=True)
         self.assertIsNotNone(errorack)
-        client2 = socketio.test_client(app, namespace='/test')
         errorack_namespace = client2.emit("error testing", "",
                                           namespace='/test', callback=True)
         self.assertIsNotNone(errorack_namespace)
-        client3 = socketio.test_client(app, namespace='/unused_namespace')
         errorack_default = client3.emit("error testing", "",
                                         namespace='/unused_namespace',
                                         callback=True)
@@ -631,7 +631,7 @@ class TestSocketIO(unittest.TestCase):
         received = client.get_received()
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]['args'], {'connected': 'foo'})
-        
+
 
 if __name__ == '__main__':
     unittest.main()
