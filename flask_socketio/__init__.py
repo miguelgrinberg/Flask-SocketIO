@@ -331,6 +331,11 @@ class SocketIO(object):
         else:
             self.namespace_handlers.append(namespace_handler)
 
+        # if the namespace handler has an on_error method then register it
+        error_handler = getattr(namespace_handler, 'on_error', None)
+        if error_handler is not None:
+            self.on_error(namespace_handler.namespace)(error_handler)
+
     def emit(self, event, *args, **kwargs):
         """Emit a server generated SocketIO event.
 

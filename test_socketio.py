@@ -226,6 +226,18 @@ class MyNamespace(Namespace):
         request_event_data = request.event
         emit('my custom response', data)
 
+    def on_error_testing(self, data):
+        raise AssertionError()
+
+    def on_error(self, value):
+        if isinstance(value, AssertionError):
+            global error_testing_namespace_class_based
+            error_testing_namespace_class_based = True
+        else:
+            raise value
+        return value
+
+
 
 socketio.on_namespace(MyNamespace('/ns'))
 
@@ -614,6 +626,14 @@ class TestSocketIO(unittest.TestCase):
         client.emit('other_custom_event', 'foo', namespace='/ns')
         expected_data = {'message': 'other_custom_event', 'args': ('foo',)}
         self.assertEqual(request_event_data, expected_data)
+
+    def test_error_handling_class_based(self):
+        client = socketio.test_client(app, namespace='/ns')
+        client.get_received('/ns')
+        global error_testing_namespace_class_based
+        error_testing_namespace_class_based = False
+        client.emit('error_testing', 'testing', namespace='/ns')
+        self.assertTrue(error_testing_namespace_class_based)
 
     def test_delayed_init(self):
         app = Flask(__name__)
