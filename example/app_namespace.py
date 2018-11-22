@@ -84,8 +84,7 @@ class MyNamespace(Namespace):
         global thread
         with thread_lock:
             if thread is None:
-                thread = socketio.start_background_task(
-                    target=background_thread)
+                thread = socketio.start_background_task(background_thread)
         emit('my_response', {'data': 'Connected', 'count': 0})
 
     def on_disconnect(self):

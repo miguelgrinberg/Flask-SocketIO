@@ -6,7 +6,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room, \
 
 # Set this variable to "threading", "eventlet" or "gevent" to test the
 # different async modes, or leave it set to None for the application to choose
-# the best option based on installed packages.
+# the best option gased on installed packages.
 async_mode = None
 
 app = Flask(__name__)
@@ -100,7 +100,7 @@ def test_connect():
     global thread
     with thread_lock:
         if thread is None:
-            thread = socketio.start_background_task(target=background_thread)
+            thread = socketio.start_background_task(background_thread)
     emit('my_response', {'data': 'Connected', 'count': 0})
 
 
