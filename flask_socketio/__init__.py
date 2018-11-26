@@ -26,7 +26,7 @@ from .test_client import SocketIOTestClient
 __version__ = '3.0.2'
 
 
-class _SocketIOMiddleware(socketio.Middleware):
+class _SocketIOMiddleware(socketio.WSGIApp):
     """This WSGI middleware simply exposes the Flask application in the WSGI
     environment before executing the request.
     """
@@ -34,7 +34,7 @@ class _SocketIOMiddleware(socketio.Middleware):
         self.flask_app = flask_app
         super(_SocketIOMiddleware, self).__init__(socketio_app,
                                                   flask_app.wsgi_app,
-                                                  socketio_path)
+                                                  socketio_path=socketio_path)
 
     def __call__(self, environ, start_response):
         environ = environ.copy()
