@@ -18,7 +18,7 @@ disconnected = None
 @socketio.on('connect')
 def on_connect():
     send('connected')
-    send(json.dumps(dict(request.args)))
+    send(json.dumps(request.args.to_dict(flat=False)))
     send(json.dumps({h: request.headers[h] for h in request.headers.keys()
                      if h not in ['Host', 'Content-Type', 'Content-Length']}))
 
@@ -32,7 +32,7 @@ def on_disconnect():
 @socketio.on('connect', namespace='/test')
 def on_connect_test():
     send('connected-test')
-    send(json.dumps(dict(request.args)))
+    send(json.dumps(request.args.to_dict(flat=False)))
     send(json.dumps({h: request.headers[h] for h in request.headers.keys()
                      if h not in ['Host', 'Content-Type', 'Content-Length']}))
 
@@ -195,7 +195,7 @@ def raise_error_default(data):
 class MyNamespace(Namespace):
     def on_connect(self):
         send('connected-ns')
-        send(json.dumps(dict(request.args)))
+        send(json.dumps(request.args.to_dict(flat=False)))
         send(json.dumps(
             {h: request.headers[h] for h in request.headers.keys()
              if h not in ['Host', 'Content-Type', 'Content-Length']}))
