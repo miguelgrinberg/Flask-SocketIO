@@ -20,7 +20,7 @@ thread_lock = Lock()
 def background_thread():
     """Example of how to send server generated events to clients."""
     count = 0
-    while True:
+    while False:
         socketio.sleep(10)
         count += 1
         socketio.emit('my_response',
@@ -55,32 +55,46 @@ def json_example():
 @app.route('/json-ttn', methods=['POST']) #GET requests will be blocked
 def json_ttn():
     print("############################################")
+    # 1. WYCIĄGAMY POLA Z BODY POSTa (SĄ ZAKOPANE WEWNĄTRZ DRZEWA, W OBJEKCIE payload_fields)
     req_data = request.get_json()
     _login = req_data['payload_fields']['SensorId']
     _password = req_data['payload_fields']['Value']
     _value = req_data['payload_fields']['SensorPassword']
 
+    # 2. Z WYCIĄGNIĘTYCH PÓL BUDUJEMY NOWEGO, PROSTSZEGO JSONA (ZROZUMIAŁEGO DLA LORASTORE)
+    # 3. WYSYŁAMY PROSTEGO JSONA DO LORASTORE, SPRAWDZAMY ODPOWIEDZ (TUTAJ SIĘ SYPIE!!!!)
 
+    import urllib.request
+    import json  
+    print("############################################")
+    _body =  { "SensorId": _login, "Value":_value, "SensorPassword":_password}
+    _myurl = "https://lorastore20181206101456.azurewebsites.net/api/Measurements"
+    _req = urllib.request.Request(_myurl)
+    _req.add_header('Content-Type', 'application/json; charset=utf-8')
+    jsondata = json.dumps(_body)
+    jsondataasbytes = jsondata.encode('utf-8')   # needs to be bytes
+    _req.add_header('Content-Length', len(jsondataasbytes))
+    print (jsondataasbytes)
+    _response = urllib.request.urlopen(_req, jsondataasbytes)
+    # print(_response.msg)
+    print(_response.status)
+    # print(_response.read() )
+    print("END!!!!!")
+
+
+    # 4. BUDUJEMY STRINGA DLA WEBSOCKETA
+    socketRespond = '''
+           SensorId: {}
+           Value: {}
+           SensorPassword: {}'''.format(_login,_value,_password)
+
+    # 5. WYSYŁAMY WEBSOCKETA Z INFORMACJĄ CO ZOSTAŁO PRZESŁANE DO LORASTORE, ORAZ KOD ODPOWIEDZI (CZY LORASTORE PRZYJĘŁA POPRAWNIE DANE)
+    import json  
     socketio.emit('my_response',
-                {'data': 'Server generated event', 'count': 4242},
-                namespace='/test')    
-    # import urllib.request
-    # import json  
-    # print("############################################")
-    # _body =  { "SensorId": _login, "Value":_value, "SensorPassword":_password}
-    # _myurl = "https://lorastore20181206101456.azurewebsites.net/api/Measurements"
-    # _req = urllib.request.Request(_myurl)
-    # _req.add_header('Content-Type', 'application/json; charset=utf-8')
-    # jsondata = json.dumps(_body)
-    # jsondataasbytes = jsondata.encode('utf-8')   # needs to be bytes
-    # _req.add_header('Content-Length', len(jsondataasbytes))
-    # print (jsondataasbytes)
-    # _response = urllib.request.urlopen(_req, jsondataasbytes)
-    # # print(_response.msg)
-    # print(_response.status)
-    # # print(_response.read() )
-    # print("END!!!!!")
+                {'data': socketRespond, 'count': 4242},
+                namespace='/test')  
 
+    # 6. ZWRACAMY INFORMACJĘ DO NADAWCY POSTA - W TYM PRZYPADKU TO SERWERY TTN, WIĘC MAŁO ISTOTNE DLA NAS CO ZWRÓCI
     return '''
            SensorId: {}
            Value: {}
