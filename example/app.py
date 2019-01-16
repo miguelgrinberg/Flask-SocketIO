@@ -43,6 +43,7 @@ def json_example():
     example = req_data['examples'][0] #an index is needed because of the array
     boolean_test = req_data['boolean_test']
 
+
     return '''
            The language value is: {}
            The framework value is: {}
@@ -59,6 +60,10 @@ def json_ttn():
     _password = req_data['payload_fields']['Value']
     _value = req_data['payload_fields']['SensorPassword']
 
+
+    socketio.emit('my_response',
+                {'data': 'Server generated event', 'count': 4242},
+                namespace='/test')    
     # import urllib.request
     # import json  
     # print("############################################")
