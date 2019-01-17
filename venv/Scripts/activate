@@ -40,7 +40,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="$(if [ "$OSTYPE" "==" "cygwin" ]; then cygpath -u 'C:\Users\sosnu\lora-python\Flask-SocketIO\venv'; else echo '/C/Users/sosnu/lora-python/Flask-SocketIO/venv'; fi;)"
+VIRTUAL_ENV="$(if [ "$OSTYPE" "==" "cygwin" ]; then cygpath -u 'C:\Users\sosnu\lora-python\Flask-SocketIO\example\venv'; else echo '/C/Users/sosnu/lora-python/Flask-SocketIO/example/venv'; fi;)"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

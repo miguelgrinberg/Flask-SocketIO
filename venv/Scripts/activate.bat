@@ -1,5 +1,5 @@
 @echo off
-set "VIRTUAL_ENV=C:\Users\sosnu\lora-python\Flask-SocketIO\venv"
+set "VIRTUAL_ENV=C:\Users\sosnu\lora-python\Flask-SocketIO\example\venv"
 
 if defined _OLD_VIRTUAL_PROMPT (
     set "PROMPT=%_OLD_VIRTUAL_PROMPT%"

@@ -1,0 +1,28 @@
+Metadata-Version: 2.1
+Name: Flask-SocketIO
+Version: 3.1.2
+Summary: Socket.IO integration for Flask applications
+Home-page: http://github.com/miguelgrinberg/Flask-SocketIO/
+Author: Miguel Grinberg
+Author-email: miguelgrinberg50@gmail.com
+License: MIT
+Platform: any
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: Flask (>=0.9)
+Requires-Dist: python-socketio (>=2.1.0)
+
+
+Flask-SocketIO
+--------------
+
+Socket.IO integration for Flask applications.
+
+

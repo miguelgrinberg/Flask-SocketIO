@@ -1,0 +1,44 @@
+Metadata-Version: 2.1
+Name: python-socketio
+Version: 3.1.1
+Summary: Socket.IO server
+Home-page: http://github.com/miguelgrinberg/python-socketio/
+Author: Miguel Grinberg
+Author-email: miguelgrinberg50@gmail.com
+License: MIT
+Platform: any
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: six (>=1.9.0)
+Requires-Dist: python-engineio (>=3.2.0)
+Provides-Extra: asyncio_client
+Requires-Dist: python-engineio[asyncio_client] (>=3.2.0) ; extra == 'asyncio_client'
+Provides-Extra: client
+Requires-Dist: python-engineio[client] (>=3.2.0) ; extra == 'client'
+
+python-socketio
+===============
+
+.. image:: https://travis-ci.org/miguelgrinberg/python-socketio.svg?branch=master
+    :target: https://travis-ci.org/miguelgrinberg/python-socketio
+
+Python implementation of the `Socket.IO`_ realtime client and server.
+
+Resources
+---------
+
+-  `Documentation`_
+-  `PyPI`_
+
+.. _Socket.IO: https://github.com/socketio/socket.io
+.. _Documentation: http://python-socketio.readthedocs.io/en/latest/
+.. _PyPI: https://pypi.python.org/pypi/python-socketio
+
+

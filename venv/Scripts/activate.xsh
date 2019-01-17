@@ -25,7 +25,7 @@ def _deactivate(args):
 _deactivate(["nondestructive"])
 aliases["deactivate"] = _deactivate
 
-$VIRTUAL_ENV = r"C:\Users\sosnu\lora-python\Flask-SocketIO\venv"
+$VIRTUAL_ENV = r"C:\Users\sosnu\lora-python\Flask-SocketIO\example\venv"
 
 $_OLD_VIRTUAL_PATH = $PATH
 $PATH = $PATH[:]

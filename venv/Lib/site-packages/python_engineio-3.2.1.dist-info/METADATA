@@ -1,0 +1,45 @@
+Metadata-Version: 2.1
+Name: python-engineio
+Version: 3.2.1
+Summary: Engine.IO server
+Home-page: http://github.com/miguelgrinberg/python-engineio/
+Author: Miguel Grinberg
+Author-email: miguelgrinberg50@gmail.com
+License: MIT
+Platform: any
+Classifier: Environment :: Web Environment
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: six (>=1.9.0)
+Provides-Extra: asyncio_client
+Requires-Dist: aiohttp (>=3.4) ; extra == 'asyncio_client'
+Requires-Dist: websockets (>=7.0) ; extra == 'asyncio_client'
+Provides-Extra: client
+Requires-Dist: urllib3 (>=1.24) ; extra == 'client'
+Requires-Dist: websocket-client (>=0.54.0) ; extra == 'client'
+
+python-engineio
+===============
+
+.. image:: https://travis-ci.org/miguelgrinberg/python-engineio.svg?branch=master
+    :target: https://travis-ci.org/miguelgrinberg/python-engineio
+
+Python implementation of the `Engine.IO`_ realtime client and server.
+
+Resources
+---------
+
+-  `Documentation`_
+-  `PyPI`_
+
+.. _Engine.IO: https://github.com/socketio/engine.io
+.. _Documentation: https://python-engineio.readthedocs.io/en/latest/
+.. _PyPI: https://pypi.python.org/pypi/python-engineio
+
+
