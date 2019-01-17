@@ -1,3 +1,0 @@
-[flask.commands]
-run = flask_socketio.cli:run
-
