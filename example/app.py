@@ -57,17 +57,23 @@ def json_ttn():
     print("############################################")
     # 1. WYCIĄGAMY POLA Z BODY POSTa (SĄ ZAKOPANE WEWNĄTRZ DRZEWA, W OBJEKCIE payload_fields)
     req_data = request.get_json()
-    _login = req_data['payload_fields']['SensorId']
-    _password = req_data['payload_fields']['Value']
-    _value = req_data['payload_fields']['SensorPassword']
+    print(req_data)
+    _login = req_data['payload_fields']['sensorID']
+    _password = req_data['payload_fields']['sensorPassword']
+    _value = req_data['payload_fields']['Value']
 
     # 2. Z WYCIĄGNIĘTYCH PÓL BUDUJEMY NOWEGO, PROSTSZEGO JSONA (ZROZUMIAŁEGO DLA LORASTORE)
     # 3. WYSYŁAMY PROSTEGO JSONA DO LORASTORE, SPRAWDZAMY ODPOWIEDZ (TUTAJ SIĘ SYPIE!!!!)
+    # print(_login)
+    # print(_value)
+    # print(_password)
 
     import urllib.request
     import json  
     print("############################################")
-    _body =  { "SensorId": _login, "Value":_value, "SensorPassword":_password}
+    _body =  { 'SensorId': _login, 'Value':_value, 'SensorPassword':_password}
+    print("BODY")
+    print(_body)
     _myurl = "https://lorastore20181206101456.azurewebsites.net/api/Measurements"
     _req = urllib.request.Request(_myurl)
     _req.add_header('Content-Type', 'application/json; charset=utf-8')
@@ -76,9 +82,9 @@ def json_ttn():
     _req.add_header('Content-Length', len(jsondataasbytes))
     print (jsondataasbytes)
     _response = urllib.request.urlopen(_req, jsondataasbytes)
-    # print(_response.msg)
+    print(_response.msg)
     print(_response.status)
-    # print(_response.read() )
+    print(_response.read() )
     print("END!!!!!")
 
 
