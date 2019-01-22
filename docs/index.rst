@@ -85,11 +85,13 @@ Werkzeug development server is still used and configured properly inside
 available, else the gevent web server is used. If eventlet and gevent are not
 installed, the Werkzeug development web server is used.
 
-The command line interface based on click introduced in Flask 0.11 is also
-supported. This extension provides a new version of the  ``flask run`` command
-that is appropriate for starting the Socket.IO server. Example usage::
-
-    $ FLASK_APP=my_app.py flask run
+The ``flask run`` command introduced in Flask 0.11 can be used to start a
+Flask-SocketIO development server based on Werkzeug, but this method of starting
+the Flask-SocketIO server is not recommended due to lack of WebSocket support.
+Previous versions of this package included a customized version of the
+``flask run`` command that allowed the use of WebSocket on eventlet and gevent
+production servers, but this functionality has been discontinued in favor of the
+``socketio.run(app)`` startup method shown above.
 
 The application must serve a page to the client that loads the Socket.IO
 library and establishes a connection::

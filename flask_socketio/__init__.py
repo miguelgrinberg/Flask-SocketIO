@@ -1,3 +1,4 @@
+import os
 import sys
 
 # make sure gevent-socketio is not installed, as it conflicts with
@@ -210,6 +211,17 @@ class SocketIO(object):
             self.server_options.pop('resource', None) or 'socket.io'
         if resource.startswith('/'):
             resource = resource[1:]
+        if os.environ.get('FLASK_RUN_FROM_CLI'):
+            if self.server_options.get('async_mode') is None:
+                app.logger.warning(
+                    'Flask-SocketIO is Running under Werkzeug, WebSocket is '
+                    'not available.')
+                self.server_options['async_mode'] = 'threading'
+            elif self.server_options['async_mode'] != 'threading':
+                raise RuntimeError(
+                    'The "flask run" command does not support {}, please '
+                    'start your server with "socketio.run(app)".'.format(
+                        self.server_options['async_mode']))
         self.server = socketio.Server(**self.server_options)
         self.async_mode = self.server.async_mode
         for handler in self.handlers:
