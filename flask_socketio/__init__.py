@@ -217,11 +217,6 @@ class SocketIO(object):
                     'Flask-SocketIO is Running under Werkzeug, WebSocket is '
                     'not available.')
                 self.server_options['async_mode'] = 'threading'
-            elif self.server_options['async_mode'] != 'threading':
-                raise RuntimeError(
-                    'The "flask run" command does not support {}, please '
-                    'start your server with "socketio.run(app)".'.format(
-                        self.server_options['async_mode']))
         self.server = socketio.Server(**self.server_options)
         self.async_mode = self.server.async_mode
         for handler in self.handlers:
