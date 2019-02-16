@@ -254,12 +254,14 @@ class TestSocketIO(unittest.TestCase):
 
     def test_connect(self):
         client = socketio.test_client(app)
+        self.assertTrue(client.is_connected())
         received = client.get_received()
         self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected')
         self.assertEqual(received[1]['args'], '{}')
         self.assertEqual(received[2]['args'], '{}')
         client.disconnect()
+        self.assertFalse(client.is_connected())
 
     def test_connect_query_string_and_headers(self):
         client = socketio.test_client(
@@ -275,12 +277,14 @@ class TestSocketIO(unittest.TestCase):
 
     def test_connect_namespace(self):
         client = socketio.test_client(app, namespace='/test')
+        self.assertTrue(client.is_connected('/test'))
         received = client.get_received('/test')
         self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected-test')
         self.assertEqual(received[1]['args'], '{}')
         self.assertEqual(received[2]['args'], '{}')
         client.disconnect(namespace='/test')
+        self.assertFalse(client.is_connected('/test'))
 
     def test_connect_namespace_query_string_and_headers(self):
         client = socketio.test_client(

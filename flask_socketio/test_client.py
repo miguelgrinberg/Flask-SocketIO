@@ -53,6 +53,7 @@ class SocketIOTestClient(object):
         self.acks[self.sid] = None
         self.callback_counter = 0
         self.socketio = socketio
+        self.connected = {}
         socketio.server._send_packet = _mock_send_packet
         socketio.server.environ[self.sid] = {}
         if isinstance(socketio.server.manager, PubSubManager):
@@ -62,6 +63,14 @@ class SocketIOTestClient(object):
         socketio.server.manager.initialize()
         self.connect(namespace=namespace, query_string=query_string,
                      headers=headers)
+
+    def is_connected(self, namespace=None):
+        """Check if a namespace is connected.
+
+        :param namespace: The namespace to check. The global namespace is
+                         assumed if this argument is not provided.
+        """
+        return self.connected.get(namespace or '/', False)
 
     def connect(self, namespace=None, query_string=None, headers=None):
         """Connect the client.
@@ -87,12 +96,17 @@ class SocketIOTestClient(object):
         if self.flask_test_client:
             # inject cookies from Flask
             self.flask_test_client.cookie_jar.inject_wsgi(environ)
-        self.socketio.server._handle_eio_connect(self.sid, environ)
+        self.connected['/'] = True
+        if self.socketio.server._handle_eio_connect(
+                self.sid, environ) is False:
+            del self.connected['/']
         if namespace is not None and namespace != '/':
+            self.connected[namespace] = True
             pkt = packet.Packet(packet.CONNECT, namespace=namespace)
             with self.app.app_context():
-                self.socketio.server._handle_eio_message(self.sid,
-                                                         pkt.encode())
+                if self.socketio.server._handle_eio_message(
+                        self.sid, pkt.encode()) is False:
+                    del self.connected[namespace]
 
     def disconnect(self, namespace=None):
         """Disconnect the client.
@@ -100,9 +114,12 @@ class SocketIOTestClient(object):
         :param namespace: The namespace to disconnect. The global namespace is
                          assumed if this argument is not provided.
         """
+        if not self.is_connected(namespace):
+            raise RuntimeError('not connected')
         pkt = packet.Packet(packet.DISCONNECT, namespace=namespace)
         with self.app.app_context():
             self.socketio.server._handle_eio_message(self.sid, pkt.encode())
+        del self.connected[namespace or '/']
 
     def emit(self, event, *args, **kwargs):
         """Emit an event to the server.
@@ -120,6 +137,8 @@ class SocketIOTestClient(object):
                           assumed if this argument is not provided.
         """
         namespace = kwargs.pop('namespace', None)
+        if not self.is_connected(namespace):
+            raise RuntimeError('not connected')
         callback = kwargs.pop('callback', False)
         id = None
         if callback:
@@ -172,6 +191,8 @@ class SocketIOTestClient(object):
                           namespace is assumed if this argument is not
                           provided.
         """
+        if not self.is_connected(namespace):
+            raise RuntimeError('not connected')
         namespace = namespace or '/'
         r = [pkt for pkt in self.queue[self.sid]
              if pkt['namespace'] == namespace]
