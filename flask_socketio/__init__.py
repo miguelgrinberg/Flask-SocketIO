@@ -24,7 +24,7 @@ from werkzeug.serving import run_with_reloader
 from .namespace import Namespace
 from .test_client import SocketIOTestClient
 
-__version__ = '3.2.2'
+__version__ = '3.3.0'
 
 
 class _SocketIOMiddleware(socketio.WSGIApp):
