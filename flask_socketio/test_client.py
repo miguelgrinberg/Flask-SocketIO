@@ -16,12 +16,18 @@ class SocketIOTestClient(object):
                       connects to the server on the global namespace.
     :param query_string: A string with custom query string arguments.
     :param headers: A dictionary with custom HTTP headers.
+    :param flask_test_client: The instance of the Flask test client
+                              currently in use. Passing the Flask test
+                              client is optional, but is necessary if you
+                              want the Flask user session and any other
+                              cookies set in HTTP routes accessible from
+                              Socket.IO events.
     """
     queue = {}
     acks = {}
 
     def __init__(self, app, socketio, namespace=None, query_string=None,
-                 headers=None):
+                 headers=None, flask_test_client=None):
         def _mock_send_packet(sid, pkt):
             if pkt.packet_type == packet.EVENT or \
                     pkt.packet_type == packet.BINARY_EVENT:
@@ -41,6 +47,7 @@ class SocketIOTestClient(object):
                                   'namespace': pkt.namespace or '/'}
 
         self.app = app
+        self.flask_test_client = flask_test_client
         self.sid = uuid.uuid4().hex
         self.queue[self.sid] = []
         self.acks[self.sid] = None
@@ -77,6 +84,9 @@ class SocketIOTestClient(object):
             url += query_string
         environ = EnvironBuilder(url, headers=headers).get_environ()
         environ['flask.app'] = self.app
+        if self.flask_test_client:
+            # inject cookies from Flask
+            self.flask_test_client.cookie_jar.inject_wsgi(environ)
         self.socketio.server._handle_eio_connect(self.sid, environ)
         if namespace is not None and namespace != '/':
             pkt = packet.Packet(packet.CONNECT, namespace=namespace)

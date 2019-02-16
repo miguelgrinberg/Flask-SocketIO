@@ -606,10 +606,28 @@ class SocketIO(object):
         """
         return self.server.sleep(seconds)
 
-    def test_client(self, app, namespace=None, query_string=None, headers=None):
-        """Return a simple SocketIO client that can be used for unit tests."""
+    def test_client(self, app, namespace=None, query_string=None,
+                    headers=None, flask_test_client=None):
+        """The Socket.IO test client is useful for testing a Flask-SocketIO
+        server. It works in a similar way to the Flask Test Client, but
+        adapted to the Socket.IO server.
+
+        :param app: The Flask application instance.
+        :param namespace: The namespace for the client. If not provided, the
+                          client connects to the server on the global
+                          namespace.
+        :param query_string: A string with custom query string arguments.
+        :param headers: A dictionary with custom HTTP headers.
+        :param flask_test_client: The instance of the Flask test client
+                                  currently in use. Passing the Flask test
+                                  client is optional, but is necessary if you
+                                  want the Flask user session and any other
+                                  cookies set in HTTP routes accessible from
+                                  Socket.IO events.
+        """
         return SocketIOTestClient(app, self, namespace=namespace,
-                                  query_string=query_string, headers=headers)
+                                  query_string=query_string, headers=headers,
+                                  flask_test_client=flask_test_client)
 
     def _handle_event(self, handler, message, namespace, sid, *args):
         if sid not in self.server.environ:

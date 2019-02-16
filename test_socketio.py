@@ -230,6 +230,12 @@ class MyNamespace(Namespace):
 socketio.on_namespace(MyNamespace('/ns'))
 
 
+@app.route('/session')
+def session_route():
+    session['foo'] = 'bar'
+    return ''
+
+
 class TestSocketIO(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -411,14 +417,16 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(len(client3.get_received()), 0)
 
     def test_session(self):
-        client = socketio.test_client(app)
+        flask_client = app.test_client()
+        flask_client.get('/session')
+        client = socketio.test_client(app, flask_test_client=flask_client)
         client.get_received()
         client.send('echo this message back')
         self.assertEqual(socketio.server.environ[client.sid]['saved_session'],
-                         {})
+                         {'foo': 'bar'})
         client.send('test session')
         self.assertEqual(socketio.server.environ[client.sid]['saved_session'],
-                         {'a': 'b'})
+                         {'a': 'b', 'foo': 'bar'})
 
     def test_room(self):
         client1 = socketio.test_client(app)
