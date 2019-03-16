@@ -41,4 +41,5 @@ Resources
 - [Tutorial](http://blog.miguelgrinberg.com/post/easy-websockets-with-flask-and-gevent)
 - [Documentation](http://flask-socketio.readthedocs.io/en/latest/)
 - [PyPI](https://pypi.python.org/pypi/Flask-SocketIO)
+- Questions? See the [questions](https://stackoverflow.com/questions/tagged/flask-socketio) others have asked on Stack Overflow, or [ask](https://stackoverflow.com/questions/ask?tags=python+flask-socketio+python-socketio) your own question.
 
