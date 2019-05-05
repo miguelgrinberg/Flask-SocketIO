@@ -7,7 +7,7 @@ cov.start()
 
 from flask import Flask, session, request, json as flask_json
 from flask_socketio import SocketIO, send, emit, join_room, leave_room, \
-    Namespace
+    Namespace, disconnect
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
@@ -215,6 +215,9 @@ class MyNamespace(Namespace):
         send(data, json=True, broadcast=True)
         if not data.get('noackargs'):
             return data
+
+    def on_exit(self, data):
+        disconnect()
 
     def on_my_custom_event(self, data):
         emit('my custom response', data)
@@ -607,6 +610,14 @@ class TestSocketIO(unittest.TestCase):
         received = client.get_received('/ns')
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]['args']['a'], 'b')
+
+    def test_server_disconnected(self):
+        client = socketio.test_client(app, namespace='/ns')
+        client.get_received('/ns')
+        client.emit('exit', {}, namespace='/ns')
+        self.assertFalse(client.is_connected('/ns'))
+        with self.assertRaises(RuntimeError):
+            client.emit('hello', {}, namespace='/ns')
 
     def test_emit_class_based(self):
         client = socketio.test_client(app, namespace='/ns')
