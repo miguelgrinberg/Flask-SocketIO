@@ -45,6 +45,8 @@ class SocketIOTestClient(object):
                     pkt.packet_type == packet.BINARY_ACK:
                 self.acks[sid] = {'args': pkt.data,
                                   'namespace': pkt.namespace or '/'}
+            elif pkt.packet_type == packet.DISCONNECT:
+                self.connected[pkt.namespace or '/'] = False
 
         self.app = app
         self.flask_test_client = flask_test_client
