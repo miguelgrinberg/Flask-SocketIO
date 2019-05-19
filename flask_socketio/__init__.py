@@ -363,7 +363,8 @@ class SocketIO(object):
         :param skip_sid: The session id of a client to ignore when broadcasting
                          or addressing a room. This is typically set to the
                          originator of the message, so that everyone except
-                         that client receive the message.
+                         that client receive the message. To skip multiple sids
+                         pass a list.
         :param callback: If given, this function will be called to acknowledge
                          that the client has received the message. The
                          arguments that will be passed to the function are
@@ -401,7 +402,8 @@ class SocketIO(object):
         :param skip_sid: The session id of a client to ignore when broadcasting
                          or addressing a room. This is typically set to the
                          originator of the message, so that everyone except
-                         that client receive the message.
+                         that client receive the message. To skip multiple sids
+                         pass a list.
         :param callback: If given, this function will be called to acknowledge
                          that the client has received the message. The
                          arguments that will be passed to the function are
