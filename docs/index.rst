@@ -586,6 +586,11 @@ proxies HTTP and WebSocket requests::
             proxy_pass http://127.0.0.1:5000;
         }
 
+        locaton /static {
+            alias <path-to-your-application>/static;
+            expires 30d;
+        }
+
         location /socket.io {
             include proxy_params;
             proxy_http_version 1.1;
@@ -615,6 +620,11 @@ servers::
         location / {
             include proxy_params;
             proxy_pass http://127.0.0.1:5000;
+        }
+
+        locaton /static {
+            alias <path-to-your-application>/static;
+            expires 30d;
         }
 
         location /socket.io {
