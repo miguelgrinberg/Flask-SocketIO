@@ -142,7 +142,9 @@ Custom named events can also support multiple arguments::
 
 
 Named events are the most flexible, as they eliminate the need to include
-additional metadata to describe the message type.
+additional metadata to describe the message type. The names ``message``,
+``json``, ``connect`` and ``disconnect`` are reserved and cannot be used for
+named events.
 
 Flask-SocketIO also supports SocketIO namespaces, which allow the client to
 multiplex several independent connections on the same physical socket::
