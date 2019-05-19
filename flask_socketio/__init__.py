@@ -103,6 +103,20 @@ class SocketIO(object):
                  functions that are compatible with the standard library
                  versions. To use the same json encoder and decoder as a Flask
                  application, use ``flask.json``.
+    :param async_handlers: If set to ``True``, event handlers for a client are
+                           executed in separate threads. To run handlers for a
+                           client synchronously, set to ``False``. The default
+                           is ``True``.
+    :param always_connect: When set to ``False``, new connections are
+                           provisory until the connect handler returns
+                           something other than ``False``, at which point they
+                           are accepted. When set to ``True``, connections are
+                           immediately accepted, and then if the connect
+                           handler returns ``False`` a disconnect is issued.
+                           Set to ``True`` if you need to emit events from the
+                           connect handler and your client is confused when it
+                           receives events before the connection acceptance.
+                           In any other case use the default of ``False``.
 
     The Engine.IO server configuration supports the following settings:
 
@@ -139,6 +153,10 @@ class SocketIO(object):
     :param cors_credentials: Whether credentials (cookies, authentication) are
                              allowed in requests to this server. The default is
                              ``True``.
+    :param monitor_clients: If set to ``True``, a background task will ensure
+                            inactive clients are closed. Set to ``False`` to
+                            disable the monitoring task (not recommended). The
+                            default is ``True``.
     :param engineio_logger: To enable Engine.IO logging set to ``True`` or pass
                             a logger object to use. To disable logging set to
                             ``False``. The default is ``False``.

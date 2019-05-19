@@ -26,7 +26,7 @@ setup(
     platforms='any',
     install_requires=[
         'Flask>=0.9',
-        'python-socketio>=2.1.0,<4'
+        'python-socketio>=2.1.0'
     ],
     tests_require=[
         'coverage'

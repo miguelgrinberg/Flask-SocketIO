@@ -58,6 +58,8 @@ class SocketIOTestClient(object):
         self.connected = {}
         socketio.server._send_packet = _mock_send_packet
         socketio.server.environ[self.sid] = {}
+        socketio.server.async_handlers = False      # easier to test when
+        socketio.server.eio.async_handlers = False  # events are sync
         if isinstance(socketio.server.manager, PubSubManager):
             raise RuntimeError('Test client cannot be used with a message '
                                'queue. Disable the queue on your test '
