@@ -1,0 +1,10 @@
+{
+	"name": "Flask-SocketIO",
+	"dockerFile": "Dockerfile",
+	"appPort": 5000,
+	"context": "..",
+	"postCreateCommand": "pip install -e .",
+	"extensions": [
+		"ms-python.python"
+	]
+}
