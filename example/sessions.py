@@ -1,8 +1,10 @@
+#!/usr/bin/env python
 from flask import Flask, render_template, session, request, jsonify
 from flask_login import LoginManager, UserMixin, current_user, login_user, \
     logout_user
 from flask_session import Session
 from flask_socketio import SocketIO, emit
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'top-secret!'
@@ -67,4 +69,8 @@ def set_session(data):
 
 
 if __name__ == '__main__':
-    socketio.run(app)
+    if os.environ.get("DOCKER") == "1":
+        host = "0.0.0.0"
+    else:
+        host = "127.0.0.1"
+    socketio.run(app, host=host, debug=True)
