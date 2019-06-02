@@ -24,7 +24,7 @@ from werkzeug.serving import run_with_reloader
 from .namespace import Namespace
 from .test_client import SocketIOTestClient
 
-__version__ = '4.0.1dev'
+__version__ = '4.0.2dev'
 
 
 class _SocketIOMiddleware(socketio.WSGIApp):
@@ -166,6 +166,7 @@ class SocketIO(object):
         self.server = None
         self.server_options = {}
         self.wsgi_server = None
+        self.handler_map = []
         self.handlers = []
         self.namespace_handlers = []
         self.exception_handlers = {}
@@ -272,6 +273,8 @@ class SocketIO(object):
         namespace = namespace or '/'
 
         def decorator(handler):
+            self.handler_map.append((message, handler))
+
             def _handler(sid, *args):
                 return self._handle_event(handler, message, namespace, sid,
                                           *args)
