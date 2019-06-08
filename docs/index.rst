@@ -314,16 +314,25 @@ Connection Events
 Flask-SocketIO also dispatches connection and disconnection events. The
 following example shows how to register handlers for them::
 
-    @socketio.on('connect', namespace='/chat')
+    @socketio.on('connect')
     def test_connect():
         emit('my response', {'data': 'Connected'})
 
-    @socketio.on('disconnect', namespace='/chat')
+    @socketio.on('disconnect')
     def test_disconnect():
         print('Client disconnected')
 
-The connection event handler can optionally return ``False`` to reject the
-connection. This is so that the client can be authenticated at this point.
+The connection event handler can return ``False`` to reject the connection, or
+it can also raise `ConectionRefusedError`. This is so that the client can be
+authenticated at this point. When using the exception, any arguments passed to
+the exception are returned to the client in the error packet. Examples::
+
+    from flask_socketio import ConnectionRefusedError
+
+    @socketio.on('connect')
+    def connect():
+        if not self.authenticate(request.args):
+            raise ConnectionRefusedError('unauthorized!')
 
 Note that connection and disconnection events are sent individually on each
 namespace used.

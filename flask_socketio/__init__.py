@@ -15,10 +15,11 @@ if gevent_socketio_found:
           'install the latest version of python-socketio in its place.')
     sys.exit(1)
 
-import socketio
 import flask
 from flask import _request_ctx_stack, json as flask_json
 from flask.sessions import SessionMixin
+import socketio
+from socketio.exceptions import ConnectionRefusedError
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 
