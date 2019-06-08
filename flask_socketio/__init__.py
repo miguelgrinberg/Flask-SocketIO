@@ -1,3 +1,4 @@
+from functools import wraps
 import os
 import sys
 
@@ -272,6 +273,7 @@ class SocketIO(object):
         namespace = namespace or '/'
 
         def decorator(handler):
+            @wraps(handler)
             def _handler(sid, *args):
                 return self._handle_event(handler, message, namespace, sid,
                                           *args)
