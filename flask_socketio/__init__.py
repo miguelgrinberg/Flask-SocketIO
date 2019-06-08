@@ -398,6 +398,16 @@ class SocketIO(object):
         if not include_self and not skip_sid:
             skip_sid = flask.request.sid
         callback = kwargs.pop('callback', None)
+        if callback:
+            # wrap the callback so that it sets app app and request contexts
+            sid = flask.request.sid
+            original_callback = callback
+
+            def _callback_wrapper(*args):
+                return self._handle_event(original_callback, None, namespace,
+                                          sid, *args)
+
+            callback = _callback_wrapper
         self.server.emit(event, *args, namespace=namespace, room=room,
                          skip_sid=skip_sid, callback=callback, **kwargs)
 
