@@ -574,7 +574,8 @@ class SocketIO(object):
             if use_reloader:
                 # monkey patching is required by the reloader
                 from gevent import monkey
-                monkey.patch_all()
+                monkey.patch_thread()
+                monkey.patch_time()
 
                 def run_server():
                     self.wsgi_server.serve_forever()
