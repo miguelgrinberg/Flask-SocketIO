@@ -1,5 +1,13 @@
 # Flask-SocketIO change log
 
+**Release 4.1.0** - 2019-06-09
+
+- Add ConnectionRefusedError exception from python-socketio [#989](https://github.com/miguelgrinberg/flask-socketio/issues/989) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/3f9fda8f0de551567834400ff72a95c10c7d42b4))
+- Invoke Socket.IO callbacks with app and request context [#262](https://github.com/miguelgrinberg/flask-socketio/issues/262) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/75a75d47cb20fca8a8b2b2818a7602d43b4cea1f))
+- Copy handler's name and docstring to handler wrapper [#573](https://github.com/miguelgrinberg/flask-socketio/issues/573) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/4e0329b59e653edc19b31f05823b47bd63c0bc72))
+- Less aggressive monkey patching for gevent [#413](https://github.com/miguelgrinberg/flask-socketio/issues/413) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/55d02d97708bd91b7d8f761ab57aba8d946039ff))
+- Updates jquery and socket.io in example application [#988](https://github.com/miguelgrinberg/flask-socketio/issues/988) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/67da0d6627149c27da4ddc9b675aacf946dc3588)) (thanks **sillyfrog**!)
+
 **Release 4.0.0** - 2019-05-19
 
 - move to the latest python-socketio 4.x releases ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/686abcaf69c27f6fb6084d0948832ffff8177755))
