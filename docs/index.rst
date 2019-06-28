@@ -269,6 +269,14 @@ functions as the context-aware ``send()`` and ``emit()``. Also note that in the
 above usage there is no client context, so ``broadcast=True`` is assumed and
 does not need to be specified.
 
+.. note::
+    Server originated events, that are broadcasted to clients on background 
+    threads are **NOT** supported out-of-the-box.
+
+    In order to support it, the underlying asynchronous framework service 
+    need to be *monkey patched*, see :ref:`using-multiple-workers` and 
+    :ref:`emitting-from-an-external-process`.
+
 Rooms
 -----
 
@@ -650,6 +658,8 @@ While the above examples can work as an initial configuration, be aware that a
 production install of nginx will need a more complete configuration covering
 other deployment aspects such as serving static file assets and SSL support.
 
+.. _using-multiple-workers:
+
 Using Multiple Workers
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -686,11 +696,13 @@ be installed:
 For eventlet, monkey patching is done with::
 
    import eventlet
+   
    eventlet.monkey_patch()
 
 For gevent, you can monkey patch the standard library with::
 
     from gevent import monkey
+    
     monkey.patch_all()
 
 In both cases it is recommended that you apply the monkey patching at the top
@@ -709,6 +721,8 @@ server, the ``'redis://'`` URL can be used. Likewise, for a default RabbitMQ
 queue the ``'amqp://'`` URL can be used. The Kombu package has a `documentation
 section <http://docs.celeryproject.org/projects/kombu/en/latest/userguide/connections.html?highlight=urls#urls>`_
 that describes the format of the URLs for all the supported queues.
+
+.. _emitting-from-an-external-process:
 
 Emitting from an External Process
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
