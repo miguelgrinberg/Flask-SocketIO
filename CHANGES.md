@@ -1,5 +1,10 @@
 # Flask-SocketIO change log
 
+**Release 4.1.1** - 2019-07-29
+
+- Fix typo in "Using nginx" section [#1007](https://github.com/miguelgrinberg/flask-socketio/issues/1007) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/9e152b24ec30dd712886c4da3ec6a3aded855a00)) (thanks **Steffen Schneider**!)
+- updated python-socketio min version requirement to 4.0.0 [#1006](https://github.com/miguelgrinberg/flask-socketio/issues/1006) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/40a34c119a6b7f7e00d2a476d26e985cbd10ec19)) (thanks **Shantanu Hazari**!)
+
 **Release 4.1.0** - 2019-06-09
 
 - Add ConnectionRefusedError exception from python-socketio [#989](https://github.com/miguelgrinberg/flask-socketio/issues/989) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/3f9fda8f0de551567834400ff72a95c10c7d42b4))
