@@ -1,5 +1,10 @@
 # Flask-SocketIO change log
 
+**Release 4.2.0** - 2019-07-29
+
+- Address potential websocket cross-origin attacks [#128](https://github.com/miguelgrinberg/python-engineio/issues/128) ([commit](https://github.com/miguelgrinberg/python-engineio/commit/7548f704a0a3000b7ac8a6c88796c4ae58aa9c37))
+- Documentation for the Same Origin security policy ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/42d4e02055f5936f1322982bf44a845987d75144))
+
 **Release 4.1.1** - 2019-07-29
 
 - Fix typo in "Using nginx" section [#1007](https://github.com/miguelgrinberg/flask-socketio/issues/1007) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/9e152b24ec30dd712886c4da3ec6a3aded855a00)) (thanks **Steffen Schneider**!)
