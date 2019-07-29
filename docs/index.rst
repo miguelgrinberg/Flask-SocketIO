@@ -816,6 +816,26 @@ On the server side, there are a few points to consider:
 - Any uses of internal gevent-socketio objects must be removed, as this
   package is not a dependency anymore.
 
+Cross-Origin Controls
+---------------------
+
+For security reasons, this server enforces a same-origin policy by default. In
+practical terms, this means the following:
+
+- If an incoming HTTP or WebSocket request includes the ``Origin`` header,
+  this header must match the scheme and host of the connection URL. In case
+  of a mismatch, a 400 status code response is returned and the connection is
+  rejected.
+- No restrictions are imposed on incoming requests that do not include the
+  ``Origin`` header.
+
+If necessary, the ``cors_allowed_origins`` option can be used to allow other
+origins. This argument can be set to a string to set a single allowed origin, or
+to a list to allow multiple origins. A special value of ``'*'`` can be used to
+instruct the server to allow all origins, but this should be done with care, as
+this could make the server vulnerable to Cross-Site Request Forgery (CSRF)
+attacks.
+
 API Reference
 -------------
 
