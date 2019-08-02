@@ -149,9 +149,11 @@ class SocketIO(object):
     :param cookie: Name of the HTTP cookie that contains the client session
                    id. If set to ``None``, a cookie is not sent to the client.
                    The default is ``'io'``.
-    :param cors_allowed_origins: List of origins that are allowed to connect
-                                 to this server. All origins are allowed by
-                                 default.
+    :param cors_allowed_origins: Origin or list of origins that are allowed to
+                                 connect to this server. Only the same origin
+                                 is allowed by default. Set this argument to
+                                 ``'*'`` to allow all origins, or to ``[]`` to
+                                 disable CORS handling.
     :param cors_credentials: Whether credentials (cookies, authentication) are
                              allowed in requests to this server. The default is
                              ``True``.
