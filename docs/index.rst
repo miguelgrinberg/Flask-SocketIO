@@ -50,7 +50,8 @@ development server is used.
 
 If using multiple processes, a message queue service is used by the processes
 to coordinate operations such as broadcasting. The supported queues are
-`Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_, and any
+`Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_,
+`Kafka <http://kafka/apache.org/>`_, and any
 other message queues supported by the
 `Kombu <http://kombu.readthedocs.org/en/latest/>`_ package.
 
@@ -676,6 +677,7 @@ be installed:
 
 - For Redis, the package ``redis`` must be installed (``pip install redis``).
 - For RabbitMQ, the package ``kombu`` must be installed (``pip install kombu``).
+- For Kafka, the package ``kafka-python`` must be installed (``pip install kafka-python``).
 - For other message queues supported by Kombu, see the `Kombu documentation
   <http://docs.celeryproject.org/projects/kombu/en/latest/introduction.html#transport-comparison>`_
   to find out what dependencies are needed.
@@ -706,7 +708,8 @@ constructor::
 The value of the ``message_queue`` argument is the connection URL of the
 queue service that is used. For a redis queue running on the same host as the
 server, the ``'redis://'`` URL can be used. Likewise, for a default RabbitMQ
-queue the ``'amqp://'`` URL can be used. The Kombu package has a `documentation
+queue the ``'amqp://'`` URL can be used. For Kafka, use a ``kafka://`` URL.
+The Kombu package has a `documentation
 section <http://docs.celeryproject.org/projects/kombu/en/latest/userguide/connections.html?highlight=urls#urls>`_
 that describes the format of the URLs for all the supported queues.
 
