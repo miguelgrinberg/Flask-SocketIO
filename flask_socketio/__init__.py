@@ -202,6 +202,8 @@ class SocketIO(object):
             if url:
                 if url.startswith(('redis://', "rediss://")):
                     queue_class = socketio.RedisManager
+                elif url.startswith(('kafka://')):
+                    queue_class = socketio.KafkaManager
                 elif url.startswith('zmq'):
                     queue_class = socketio.ZmqManager
                 else:
