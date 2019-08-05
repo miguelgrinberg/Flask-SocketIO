@@ -1,5 +1,10 @@
 # Flask-SocketIO change log
 
+**Release 4.2.1** - 2019-08-05
+
+- Add support for Apache Kafka message queue [#700](https://github.com/miguelgrinberg/flask-socketio/issues/700) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/f20268a3ec14af3e8d6681c2ffd01e299dc4f6df)) (thanks **Vincent Mézino**!)
+- Update CORS documentation ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/d9cd34a86dedf96ca5232cf981b54b4c1c6e362d))
+
 **Release 4.2.0** - 2019-07-29
 
 - Address potential websocket cross-origin attacks [#128](https://github.com/miguelgrinberg/python-engineio/issues/128) ([commit](https://github.com/miguelgrinberg/python-engineio/commit/7548f704a0a3000b7ac8a6c88796c4ae58aa9c37))
