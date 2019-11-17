@@ -16,7 +16,7 @@ if gevent_socketio_found:
     sys.exit(1)
 
 import flask
-from flask import _request_ctx_stack, json as flask_json
+from flask import _request_ctx_stack, has_request_context, json as flask_json
 from flask.sessions import SessionMixin
 import socketio
 from socketio.exceptions import ConnectionRefusedError
@@ -405,14 +405,21 @@ class SocketIO(object):
         callback = kwargs.pop('callback', None)
         if callback:
             # wrap the callback so that it sets app app and request contexts
-            sid = flask.request.sid
+            sid = None
+            if has_request_context:
+                sid = getattr(flask.request, 'sid', None)
             original_callback = callback
 
             def _callback_wrapper(*args):
                 return self._handle_event(original_callback, None, namespace,
                                           sid, *args)
 
-            callback = _callback_wrapper
+            if sid:
+                # the callback wrapper above will install a request context
+                # before invoking the original callback
+                # we only use it if the emit was issued from a Socket.IO
+                # populated request context (i.e. request.sid is defined)
+                callback = _callback_wrapper
         self.server.emit(event, *args, namespace=namespace, room=room,
                          skip_sid=skip_sid, callback=callback, **kwargs)
 
