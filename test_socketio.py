@@ -17,6 +17,8 @@ disconnected = None
 
 @socketio.on('connect')
 def on_connect():
+    if request.args.get('fail'):
+        return False
     send('connected')
     send(json.dumps(request.args.to_dict(flat=False)))
     send(json.dumps({h: request.headers[h] for h in request.headers.keys()
@@ -299,6 +301,10 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[1]['args'], '{"foo": ["bar"]}')
         self.assertEqual(received[2]['args'], '{"My-Custom-Header": "Value"}')
         client.disconnect(namespace='/test')
+
+    def test_connect_rejected(self):
+        client = socketio.test_client(app, query_string='fail=1')
+        self.assertFalse(client.is_connected())
 
     def test_disconnect(self):
         global disconnected
