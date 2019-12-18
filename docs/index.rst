@@ -77,7 +77,8 @@ application::
     if __name__ == '__main__':
         socketio.run(app)
 
-The ``init_app()`` style of initialization is also supported. To start the
+The ``init_app()`` style of initialization is also supported, but this will 
+ignore all arguments passed to the SocketIO constructor. To start the
 web server simply execute your script. Note the way the web server is started.
 The ``socketio.run()`` function encapsulates the start up of the web server and
 replaces the ``app.run()`` standard Flask development server start up. When the
