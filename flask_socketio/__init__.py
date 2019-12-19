@@ -33,6 +33,7 @@ class _SocketIOMiddleware(socketio.WSGIApp):
     """This WSGI middleware simply exposes the Flask application in the WSGI
     environment before executing the request.
     """
+
     def __init__(self, socketio_app, flask_app, socketio_path='socket.io'):
         self.flask_app = flask_app
         super(_SocketIOMiddleware, self).__init__(socketio_app,
@@ -211,6 +212,10 @@ class SocketIO(object):
                 queue = queue_class(url, channel=channel,
                                     write_only=write_only)
                 self.server_options['client_manager'] = queue
+        elif app is not None and self.server_options['client_manager'].write_only:
+            # If using the .init_app() method with message_queue specified ONLY in the SocketIO constructor,
+            # this will switch the client back into read/write mode.
+            self.server_options['client_manager'].write_only = False
 
         if 'json' in self.server_options and \
                 self.server_options['json'] == flask_json:
@@ -232,7 +237,7 @@ class SocketIO(object):
             self.server_options['json'] = FlaskSafeJSON
 
         resource = self.server_options.pop('path', None) or \
-            self.server_options.pop('resource', None) or 'socket.io'
+                   self.server_options.pop('resource', None) or 'socket.io'
         if resource.startswith('/'):
             resource = resource[1:]
         if os.environ.get('FLASK_RUN_FROM_CLI'):
@@ -288,6 +293,7 @@ class SocketIO(object):
             else:
                 self.handlers.append((message, _handler, namespace))
             return handler
+
         return decorator
 
     def on_error(self, namespace=None):
@@ -312,6 +318,7 @@ class SocketIO(object):
                 raise ValueError('exception_handler must be callable')
             self.exception_handlers[namespace] = exception_handler
             return exception_handler
+
         return decorator
 
     def on_error_default(self, exception_handler):
