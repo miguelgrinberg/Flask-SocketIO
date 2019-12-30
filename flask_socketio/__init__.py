@@ -582,6 +582,9 @@ class SocketIO(object):
                 from geventwebsocket.handler import WebSocketHandler
                 websocket = True
             except ImportError:
+                app.logger.warning(
+                    'WebSocket transport not available. Install '
+                    'gevent-websocket for improved performance.')
                 websocket = False
 
             log = 'default'
