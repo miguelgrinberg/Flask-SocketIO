@@ -385,6 +385,9 @@ class SocketIO(object):
         :param room: Send the message to all the users in the given room. If
                      this parameter is not included, the event is sent to
                      all connected users.
+        :param include_self: ``True`` to include the sender when broadcasting
+                             or addressing a room, or ``False`` to send to
+                             everyone but the sender.
         :param skip_sid: The session id of a client to ignore when broadcasting
                          or addressing a room. This is typically set to the
                          originator of the message, so that everyone except
@@ -441,6 +444,9 @@ class SocketIO(object):
         :param room: Send the message only to the users in the given room. If
                      this parameter is not included, the message is sent to
                      all connected users.
+        :param include_self: ``True`` to include the sender when broadcasting
+                             or addressing a room, or ``False`` to send to
+                             everyone but the sender.
         :param skip_sid: The session id of a client to ignore when broadcasting
                          or addressing a room. This is typically set to the
                          originator of the message, so that everyone except
@@ -748,6 +754,11 @@ def emit(event, *args, **kwargs):
     :param include_self: ``True`` to include the sender when broadcasting or
                          addressing a room, or ``False`` to send to everyone
                          but the sender.
+    :param skip_sid: The session id of a client to ignore when broadcasting
+                     or addressing a room. This is typically set to the
+                     originator of the message, so that everyone except
+                     that client receive the message. To skip multiple sids
+                     pass a list.
     :param ignore_queue: Only used when a message queue is configured. If
                          set to ``True``, the event is emitted to the
                          clients directly, without going through the queue.
@@ -766,12 +777,13 @@ def emit(event, *args, **kwargs):
     if room is None and not broadcast:
         room = flask.request.sid
     include_self = kwargs.get('include_self', True)
+    skip_sid = kwargs.get('skip_sid')
     ignore_queue = kwargs.get('ignore_queue', False)
 
     socketio = flask.current_app.extensions['socketio']
     return socketio.emit(event, *args, namespace=namespace, room=room,
-                         include_self=include_self, callback=callback,
-                         ignore_queue=ignore_queue)
+                         include_self=include_self, skip_sid=skip_sid,
+                         callback=callback, ignore_queue=ignore_queue)
 
 
 def send(message, **kwargs):
@@ -797,6 +809,11 @@ def send(message, **kwargs):
     :param include_self: ``True`` to include the sender when broadcasting or
                          addressing a room, or ``False`` to send to everyone
                          but the sender.
+    :param skip_sid: The session id of a client to ignore when broadcasting
+                     or addressing a room. This is typically set to the
+                     originator of the message, so that everyone except
+                     that client receive the message. To skip multiple sids
+                     pass a list.
     :param ignore_queue: Only used when a message queue is configured. If
                          set to ``True``, the event is emitted to the
                          clients directly, without going through the queue.
@@ -816,12 +833,13 @@ def send(message, **kwargs):
     if room is None and not broadcast:
         room = flask.request.sid
     include_self = kwargs.get('include_self', True)
+    skip_sid = kwargs.get('skip_sid')
     ignore_queue = kwargs.get('ignore_queue', False)
 
     socketio = flask.current_app.extensions['socketio']
     return socketio.send(message, json=json, namespace=namespace, room=room,
-                         include_self=include_self, callback=callback,
-                         ignore_queue=ignore_queue)
+                         include_self=include_self, skip_sid=skip_sid,
+                         callback=callback, ignore_queue=ignore_queue)
 
 
 def join_room(room, sid=None, namespace=None):
