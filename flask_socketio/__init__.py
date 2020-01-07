@@ -756,22 +756,18 @@ def emit(event, *args, **kwargs):
                          single addresee. It is recommended to always leave
                          this parameter with its default value of ``False``.
     """
-    if 'namespace' in kwargs:
-        namespace = kwargs['namespace']
-    else:
-        namespace = flask.request.namespace
-    callback = kwargs.get('callback')
-    broadcast = kwargs.get('broadcast')
-    room = kwargs.get('room')
-    if room is None and not broadcast:
-        room = flask.request.sid
-    include_self = kwargs.get('include_self', True)
-    ignore_queue = kwargs.get('ignore_queue', False)
-
+    if 'json' not in kwargs:
+        kwargs['json'] = False
+    if 'namespace' not in kwargs:
+        kwargs['namespace'] = flask.request.namespace
+    if 'room' not in kwargs and not kwargs.get('broadcast'):
+        kwargs['room'] = flask.request.sid
+    if 'include_self' not in kwargs:
+        kwargs['include_self'] = True
+    if 'ignore_queue' not in kwargs:
+        kwargs['ignore_queue'] = False
     socketio = flask.current_app.extensions['socketio']
-    return socketio.emit(event, *args, namespace=namespace, room=room,
-                         include_self=include_self, callback=callback,
-                         ignore_queue=ignore_queue)
+    return socketio.emit(event, *args, **kwargs)
 
 
 def send(message, **kwargs):
@@ -805,23 +801,18 @@ def send(message, **kwargs):
                          single addresee. It is recommended to always leave
                          this parameter with its default value of ``False``.
     """
-    json = kwargs.get('json', False)
-    if 'namespace' in kwargs:
-        namespace = kwargs['namespace']
-    else:
-        namespace = flask.request.namespace
-    callback = kwargs.get('callback')
-    broadcast = kwargs.get('broadcast')
-    room = kwargs.get('room')
-    if room is None and not broadcast:
-        room = flask.request.sid
-    include_self = kwargs.get('include_self', True)
-    ignore_queue = kwargs.get('ignore_queue', False)
-
+    if 'json' not in kwargs:
+        kwargs['json'] = False
+    if 'namespace' not in kwargs:
+        kwargs['namespace'] = flask.request.namespace
+    if 'room' not in kwargs and not kwargs.get('broadcast'):
+        kwargs['room'] = flask.request.sid
+    if 'include_self' not in kwargs:
+        kwargs['include_self'] = True
+    if 'ignore_queue' not in kwargs:
+        kwargs['ignore_queue'] = False
     socketio = flask.current_app.extensions['socketio']
-    return socketio.send(message, json=json, namespace=namespace, room=room,
-                         include_self=include_self, callback=callback,
-                         ignore_queue=ignore_queue)
+    return socketio.send(message, *args, **kwargs)
 
 
 def join_room(room, sid=None, namespace=None):
