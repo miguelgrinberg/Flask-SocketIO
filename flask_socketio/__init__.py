@@ -240,10 +240,6 @@ class SocketIO(object):
             resource = resource[1:]
         if os.environ.get('FLASK_RUN_FROM_CLI'):
             if self.server_options.get('async_mode') is None:
-                if app is not None:
-                    app.logger.warning(
-                        'Flask-SocketIO is Running under Werkzeug, WebSocket '
-                        'is not available.')
                 self.server_options['async_mode'] = 'threading'
         self.server = socketio.Server(**self.server_options)
         self.async_mode = self.server.async_mode
