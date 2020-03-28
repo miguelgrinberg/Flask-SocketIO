@@ -763,7 +763,7 @@ def emit(event, *args, **kwargs):
                          clients directly, without going through the queue.
                          This is more efficient, but only works when a
                          single server process is used, or when there is a
-                         single addresee. It is recommended to always leave
+                         single addressee. It is recommended to always leave
                          this parameter with its default value of ``False``.
     """
     if 'namespace' in kwargs:
@@ -818,7 +818,7 @@ def send(message, **kwargs):
                          clients directly, without going through the queue.
                          This is more efficient, but only works when a
                          single server process is used, or when there is a
-                         single addresee. It is recommended to always leave
+                         single addressee. It is recommended to always leave
                          this parameter with its default value of ``False``.
     """
     json = kwargs.get('json', False)
