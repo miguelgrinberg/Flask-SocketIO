@@ -259,7 +259,10 @@ class TestSocketIO(unittest.TestCase):
 
     def test_connect(self):
         client = socketio.test_client(app)
+        client2 = socketio.test_client(app)
         self.assertTrue(client.is_connected())
+        self.assertTrue(client2.is_connected())
+        self.assertNotEqual(client.sid, client2.sid)
         received = client.get_received()
         self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected')
@@ -267,6 +270,9 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[2]['args'], '{}')
         client.disconnect()
         self.assertFalse(client.is_connected())
+        self.assertTrue(client2.is_connected())
+        client2.disconnect()
+        self.assertFalse(client2.is_connected())
 
     def test_connect_query_string_and_headers(self):
         client = socketio.test_client(
