@@ -1,5 +1,14 @@
 # Flask-SocketIO change log
 
+**Release 4.3.0** - 2020-04-20
+
+- Handle callbacks for emits outside of request context [#1054](https://github.com/miguelgrinberg/flask-socketio/issues/1054) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/1bd15e05b75aaf94dacd4f24af44601b76d300a9))
+- Improve test client unit test to use two concurrent clients ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/2c6b07d0419f2b6e03554c32e42a91cf963c6d6d))
+- Accept skip_sid argument in emit[#1147](https://github.com/miguelgrinberg/flask-socketio/issues/1147) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/c06e78e78de3d10f9009bf778ad188bf3f4945ed))
+- Fix is_connected() method in test client (Fixes https://github.com/miguelgrinberg/python-socketio/issues/385) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/a05ff51344654aef00b8dc0fce8028500d380b05))
+- Log warning when gevent is used but WebSocket is missing [#1140](https://github.com/miguelgrinberg/flask-socketio/issues/1140) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/15ad45a6b90362bc1b73b6a7b0fa6781c6b98b05)) (thanks **Eric Rodrigues Pires**!)
+- More accurate logging documentation ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/255d3d6b41b4f22736d2798a8f70264334eb3173))
+
 **Release 4.2.1** - 2019-08-05
 
 - Add support for Apache Kafka message queue [#700](https://github.com/miguelgrinberg/flask-socketio/issues/700) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/f20268a3ec14af3e8d6681c2ffd01e299dc4f6df)) (thanks **Vincent Mézino**!)
