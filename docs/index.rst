@@ -669,10 +669,17 @@ There are two requirements to use multiple Flask-SocketIO workers:
   algorithm does not support sticky sessions.
 
 - Since each of the servers owns only a subset of the client connections, a
-  message queue such as Redis or RabbitMQ is used by the servers to coordinate
+  message queue such as uWSGI, Redis or RabbitMQ is used by the servers to coordinate
   complex operations such as broadcasting and rooms.
 
-When working with a message queue, there are additional dependencies that need to
+When using uWSGI you can use internal message queue::
+
+   socketio = SocketIO(app, message_queue='uwsgi')
+
+By default the signal 0 is used, if you want to use another signal number use ``uwsgi:8``.
+Do not forget to start uWSGI with option ``--queue 1`` to enable internal queue.
+
+When working with others message queues, there are additional dependencies that need to
 be installed:
 
 - For Redis, the package ``redis`` must be installed (``pip install redis``).

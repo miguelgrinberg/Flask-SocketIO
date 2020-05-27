@@ -209,6 +209,8 @@ class SocketIO(object):
                     queue_class = socketio.KafkaManager
                 elif url.startswith('zmq'):
                     queue_class = socketio.ZmqManager
+                elif url.startswith('uwsgi'):
+                    queue_class = socketio.UWSGIManager
                 else:
                     queue_class = socketio.KombuManager
                 queue = queue_class(url, channel=channel,
