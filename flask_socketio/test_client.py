@@ -100,14 +100,16 @@ class SocketIOTestClient(object):
         if self.flask_test_client:
             # inject cookies from Flask
             self.flask_test_client.cookie_jar.inject_wsgi(environ)
-        self.connected['/'] = True
-        self.socketio.server._handle_eio_connect(self.sid, environ)
+        ret = self.socketio.server._handle_eio_connect(self.sid, environ)
+        if ret is None or ret is True:
+            self.connected['/'] = True
         if namespace is not None and namespace != '/':
-            self.connected[namespace] = True
             pkt = packet.Packet(packet.CONNECT, namespace=namespace)
             with self.app.app_context():
-                self.socketio.server._handle_eio_message(self.sid,
-                                                         pkt.encode())
+                ret = self.socketio.server._handle_eio_message(self.sid,
+                                                               pkt.encode())
+            if ret is None or ret is True:
+                self.connected[namespace] = True
 
     def disconnect(self, namespace=None):
         """Disconnect the client.
