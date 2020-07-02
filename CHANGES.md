@@ -1,5 +1,9 @@
 # Flask-SocketIO change log
 
+**Release 4.3.1** - 2020-07-02
+
+- fix is_connected in test client ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/0d2f041dc0e7cd976860c2d2c9fb163bd20f5460))
+
 **Release 4.3.0** - 2020-04-20
 
 - Handle callbacks for emits outside of request context [#1054](https://github.com/miguelgrinberg/flask-socketio/issues/1054) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/1bd15e05b75aaf94dacd4f24af44601b76d300a9))
