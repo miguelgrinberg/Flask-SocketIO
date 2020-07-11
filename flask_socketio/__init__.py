@@ -408,7 +408,7 @@ class SocketIO(object):
         if callback:
             # wrap the callback so that it sets app app and request contexts
             sid = None
-            if has_request_context:
+            if has_request_context():
                 sid = getattr(flask.request, 'sid', None)
             original_callback = callback
 
