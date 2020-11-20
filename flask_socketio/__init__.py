@@ -6,7 +6,7 @@ import sys
 # python-socketio
 gevent_socketio_found = True
 try:
-    from socketio import socketio_manage
+    from socketio import socketio_manage  # noqa: F401
 except ImportError:
     gevent_socketio_found = False
 if gevent_socketio_found:
@@ -19,7 +19,7 @@ import flask
 from flask import _request_ctx_stack, has_request_context, json as flask_json
 from flask.sessions import SessionMixin
 import socketio
-from socketio.exceptions import ConnectionRefusedError
+from socketio.exceptions import ConnectionRefusedError  # noqa: F401
 from werkzeug.debug import DebuggedApplication
 from werkzeug.serving import run_with_reloader
 
@@ -75,8 +75,8 @@ class SocketIO(object):
     :param channel: The channel name, when using a message queue. If a channel
                     isn't specified, a default channel will be used. If
                     multiple clusters of SocketIO processes need to use the
-                    same message queue without interfering with each other, then
-                    each cluster should use a different channel.
+                    same message queue without interfering with each other,
+                    then each cluster should use a different channel.
     :param path: The path where the Socket.IO server is exposed. Defaults to
                  ``'socket.io'``. Leave this as is unless you know what you are
                  doing.
@@ -249,8 +249,9 @@ class SocketIO(object):
             self.server.register_namespace(namespace_handler)
 
         if app is not None:
-            # here we attach the SocketIO middlware to the SocketIO object so it
-            # can be referenced later if debug middleware needs to be inserted
+            # here we attach the SocketIO middlware to the SocketIO object so
+            # it can be referenced later if debug middleware needs to be
+            # inserted
             self.sockio_mw = _SocketIOMiddleware(self.server, app,
                                                  socketio_path=resource)
             app.wsgi_app = self.sockio_mw
@@ -541,8 +542,8 @@ class SocketIO(object):
             #     o
             #  Flask-SocketIO WebSocket handler
             #
-            self.sockio_mw.wsgi_app = DebuggedApplication(self.sockio_mw.wsgi_app,
-                                                          evalex=True)
+            self.sockio_mw.wsgi_app = DebuggedApplication(
+                self.sockio_mw.wsgi_app, evalex=True)
 
         if self.server.eio.async_mode == 'threading':
             from werkzeug._internal import _log
@@ -558,8 +559,10 @@ class SocketIO(object):
                 import eventlet.green
                 addresses = eventlet.green.socket.getaddrinfo(host, port)
                 if not addresses:
-                    raise RuntimeError('Could not resolve host to a valid address')
-                eventlet_socket = eventlet.listen(addresses[0][4], addresses[0][0])
+                    raise RuntimeError(
+                        'Could not resolve host to a valid address')
+                eventlet_socket = eventlet.listen(addresses[0][4],
+                                                  addresses[0][0])
 
                 # If provided an SSL argument, use an SSL socket
                 ssl_args = ['keyfile', 'certfile', 'server_side', 'cert_reqs',
@@ -720,7 +723,8 @@ class SocketIO(object):
                 return err_handler(value)
             if not self.manage_session:
                 # when Flask is managing the user session, it needs to save it
-                if not hasattr(session_obj, 'modified') or session_obj.modified:
+                if not hasattr(session_obj, 'modified') or \
+                        session_obj.modified:
                     resp = app.response_class()
                     app.session_interface.save_session(app, session_obj, resp)
             return ret

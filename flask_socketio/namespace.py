@@ -44,4 +44,3 @@ class Namespace(_Namespace):
         """Close a room."""
         return self.socketio.close_room(room=room,
                                         namespace=namespace or self.namespace)
-

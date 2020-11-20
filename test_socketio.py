@@ -91,6 +91,7 @@ def get_request_event2(data):
     request_event_data = request.event
     emit('my custom response', data)
 
+
 socketio.on_event('yet another custom event', get_request_event2)
 
 
@@ -101,6 +102,7 @@ def on_custom_event_test(data):
 
 def on_custom_event_test2(data):
     emit('my custom namespace response', data, namespace='/test')
+
 
 socketio.on_event('yet another custom namespace event', on_custom_event_test2,
                   namespace='/test')
