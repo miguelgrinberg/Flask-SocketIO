@@ -22,9 +22,8 @@ You can install this package in the usual way using ``pip``::
 Requirements
 ------------
 
-Flask-SocketIO is compatible with both Python 2.7 and Python 3.3+. The
-asynchronous services that this package relies on can be selected among three
-choices:
+Flask-SocketIO is compatible with Python 3.6+. The asynchronous services that
+this package relies on can be selected among three choices:
 
 - `eventlet <http://eventlet.net/>`_ is the best performant option, with
   support for long-polling and WebSocket transports.
@@ -55,10 +54,11 @@ to coordinate operations such as broadcasting. The supported queues are
 other message queues supported by the
 `Kombu <http://kombu.readthedocs.org/en/latest/>`_ package.
 
-On the client-side, the official Socket.IO Javascript client library can be
-used to establish a connection to the server. There are also official clients
-written in Swift, Java and C++. Unofficial clients may also work, as long as
-they implement the
+On the client-side, the official Socket.IO Javascript client library versions
+1.x or 2.x can be used to establish a connection to the server (work to support
+the 3.x release is in progress). There are also official clients written in
+Swift, Java and C++. Unofficial clients may also work, as long as they
+implement the
 `Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_.
 
 Initialization
