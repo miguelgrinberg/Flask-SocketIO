@@ -1,5 +1,12 @@
 # Flask-SocketIO change log
 
+**Release 4.3.2** - 2020-11-30
+
+- Only use python-socketio 4.x versions as dependencies for now ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/59740d3eb50395f44cfb786b85215b4ec9b795e9))
+- Added troubleshooting section to the documentation ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/27b148b6b614c916f2b3417e6d160a6456335e66))
+- Fixed incorrect use of `has_request_context` [#1324](https://github.com/miguelgrinberg/flask-socketio/issues/1324): [#1325](https://github.com/miguelgrinberg/flask-socketio/issues/1325) - Added proper call to has_request_context function Co-authored-by: igor_kantorski <igor.kantorski@globedata.pl> ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/9a53243eae1a1289f670ce8f8941e9867a9de531)) (thanks **igoras1993**!)
+- Move builds to GitHub actions ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/46cfcbf61fe63e8243cfb0db1b6273356d419f47))
+
 **Release 4.3.1** - 2020-07-02
 
 - fix is_connected in test client ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/0d2f041dc0e7cd976860c2d2c9fb163bd20f5460))
