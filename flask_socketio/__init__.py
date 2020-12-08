@@ -686,18 +686,19 @@ class SocketIO(object):
                                   flask_test_client=flask_test_client)
 
     def _handle_event(self, handler, message, namespace, sid, *args):
-        if sid not in self.server.environ:
+        eio_sid = self.server.manager.eio_sid_from_sid(sid, namespace)
+        environ = self.server.get_environ(sid, namespace=namespace)
+        if not environ:
             # we don't have record of this client, ignore this event
             return '', 400
-        app = self.server.environ[sid]['flask.app']
-        with app.request_context(self.server.environ[sid]):
+        app = environ['flask.app']
+        with app.request_context(environ):
             if self.manage_session:
                 # manage a separate session for this client's Socket.IO events
                 # created as a copy of the regular user session
-                if 'saved_session' not in self.server.environ[sid]:
-                    self.server.environ[sid]['saved_session'] = \
-                        _ManagedSession(flask.session)
-                session_obj = self.server.environ[sid]['saved_session']
+                if 'saved_session' not in environ:
+                    environ['saved_session'] = _ManagedSession(flask.session)
+                session_obj = environ['saved_session']
             else:
                 # let Flask handle the user session
                 # for cookie based sessions, this effectively freezes the

@@ -264,7 +264,7 @@ class TestSocketIO(unittest.TestCase):
         client2 = socketio.test_client(app)
         self.assertTrue(client.is_connected())
         self.assertTrue(client2.is_connected())
-        self.assertNotEqual(client.sid, client2.sid)
+        self.assertNotEqual(client.eio_sid, client2.eio_sid)
         received = client.get_received()
         self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected')
@@ -443,11 +443,13 @@ class TestSocketIO(unittest.TestCase):
         client = socketio.test_client(app, flask_test_client=flask_client)
         client.get_received()
         client.send('echo this message back')
-        self.assertEqual(socketio.server.environ[client.sid]['saved_session'],
-                         {'foo': 'bar'})
+        self.assertEqual(
+            socketio.server.environ[client.eio_sid]['saved_session'],
+            {'foo': 'bar'})
         client.send('test session')
-        self.assertEqual(socketio.server.environ[client.sid]['saved_session'],
-                         {'a': 'b', 'foo': 'bar'})
+        self.assertEqual(
+            socketio.server.environ[client.eio_sid]['saved_session'],
+            {'a': 'b', 'foo': 'bar'})
 
     def test_room(self):
         client1 = socketio.test_client(app)

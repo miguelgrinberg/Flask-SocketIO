@@ -28,36 +28,38 @@ class SocketIOTestClient(object):
 
     def __init__(self, app, socketio, namespace=None, query_string=None,
                  headers=None, flask_test_client=None):
-        def _mock_send_packet(sid, pkt):
+        def _mock_send_packet(eio_sid, pkt):
             if pkt.packet_type == packet.EVENT or \
                     pkt.packet_type == packet.BINARY_EVENT:
-                if sid not in self.queue:
-                    self.queue[sid] = []
+                if eio_sid not in self.queue:
+                    self.queue[eio_sid] = []
                 if pkt.data[0] == 'message' or pkt.data[0] == 'json':
-                    self.queue[sid].append({'name': pkt.data[0],
-                                            'args': pkt.data[1],
-                                            'namespace': pkt.namespace or '/'})
+                    self.queue[eio_sid].append({
+                        'name': pkt.data[0],
+                        'args': pkt.data[1],
+                        'namespace': pkt.namespace or '/'})
                 else:
-                    self.queue[sid].append({'name': pkt.data[0],
-                                            'args': pkt.data[1:],
-                                            'namespace': pkt.namespace or '/'})
+                    self.queue[eio_sid].append({
+                        'name': pkt.data[0],
+                        'args': pkt.data[1:],
+                        'namespace': pkt.namespace or '/'})
             elif pkt.packet_type == packet.ACK or \
                     pkt.packet_type == packet.BINARY_ACK:
-                self.acks[sid] = {'args': pkt.data,
-                                  'namespace': pkt.namespace or '/'}
-            elif pkt.packet_type in [packet.DISCONNECT, packet.ERROR]:
+                self.acks[eio_sid] = {'args': pkt.data,
+                                      'namespace': pkt.namespace or '/'}
+            elif pkt.packet_type in [packet.DISCONNECT, packet.CONNECT_ERROR]:
                 self.connected[pkt.namespace or '/'] = False
 
         self.app = app
         self.flask_test_client = flask_test_client
-        self.sid = uuid.uuid4().hex
-        self.queue[self.sid] = []
-        self.acks[self.sid] = None
+        self.eio_sid = uuid.uuid4().hex
+        self.acks[self.eio_sid] = None
+        self.queue[self.eio_sid] = []
         self.callback_counter = 0
         self.socketio = socketio
         self.connected = {}
         socketio.server._send_packet = _mock_send_packet
-        socketio.server.environ[self.sid] = {}
+        socketio.server.environ[self.eio_sid] = {}
         socketio.server.async_handlers = False      # easier to test when
         socketio.server.eio.async_handlers = False  # events are sync
         if isinstance(socketio.server.manager, PubSubManager):
@@ -91,6 +93,7 @@ class SocketIOTestClient(object):
         is when the application accepts multiple namespace connections.
         """
         url = '/socket.io'
+        namespace = namespace or '/'
         if query_string:
             if query_string[0] != '?':
                 query_string = '?' + query_string
@@ -100,16 +103,15 @@ class SocketIOTestClient(object):
         if self.flask_test_client:
             # inject cookies from Flask
             self.flask_test_client.cookie_jar.inject_wsgi(environ)
-        ret = self.socketio.server._handle_eio_connect(self.sid, environ)
-        if ret is None or ret is True:
-            self.connected['/'] = True
-        if namespace is not None and namespace != '/':
-            pkt = packet.Packet(packet.CONNECT, namespace=namespace)
-            with self.app.app_context():
-                ret = self.socketio.server._handle_eio_message(self.sid,
-                                                               pkt.encode())
-            if ret is None or ret is True:
-                self.connected[namespace] = True
+        self.socketio.server._handle_eio_connect(self.eio_sid, environ)
+        pkt = packet.Packet(packet.CONNECT, namespace=namespace)
+        with self.app.app_context():
+            ret = self.socketio.server._handle_eio_message(self.eio_sid,
+                                                           pkt.encode())
+        sid = self.socketio.server.manager.sid_from_eio_sid(self.eio_sid,
+                                                            namespace)
+        if sid:
+            self.connected[namespace] = True
 
     def disconnect(self, namespace=None):
         """Disconnect the client.
@@ -121,7 +123,8 @@ class SocketIOTestClient(object):
             raise RuntimeError('not connected')
         pkt = packet.Packet(packet.DISCONNECT, namespace=namespace)
         with self.app.app_context():
-            self.socketio.server._handle_eio_message(self.sid, pkt.encode())
+            self.socketio.server._handle_eio_message(self.eio_sid,
+                                                     pkt.encode())
         del self.connected[namespace or '/']
 
     def emit(self, event, *args, **kwargs):
@@ -153,10 +156,12 @@ class SocketIOTestClient(object):
             encoded_pkt = pkt.encode()
             if isinstance(encoded_pkt, list):
                 for epkt in encoded_pkt:
-                    self.socketio.server._handle_eio_message(self.sid, epkt)
+                    self.socketio.server._handle_eio_message(self.eio_sid,
+                                                             epkt)
             else:
-                self.socketio.server._handle_eio_message(self.sid, encoded_pkt)
-        ack = self.acks.pop(self.sid, None)
+                self.socketio.server._handle_eio_message(self.eio_sid,
+                                                         encoded_pkt)
+        ack = self.acks.pop(self.eio_sid, None)
         if ack is not None:
             return ack['args'][0] if len(ack['args']) == 1 \
                 else ack['args']
@@ -197,8 +202,8 @@ class SocketIOTestClient(object):
         if not self.is_connected(namespace):
             raise RuntimeError('not connected')
         namespace = namespace or '/'
-        r = [pkt for pkt in self.queue[self.sid]
+        r = [pkt for pkt in self.queue[self.eio_sid]
              if pkt['namespace'] == namespace]
-        self.queue[self.sid] = [pkt for pkt in self.queue[self.sid]
-                                if pkt not in r]
+        self.queue[self.eio_sid] = [
+            pkt for pkt in self.queue[self.eio_sid] if pkt not in r]
         return r
