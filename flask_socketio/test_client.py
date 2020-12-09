@@ -29,6 +29,8 @@ class SocketIOTestClient(object):
     def __init__(self, app, socketio, namespace=None, query_string=None,
                  headers=None, flask_test_client=None):
         def _mock_send_packet(sid, pkt):
+            if pkt.packet_type == packet.EVENT:
+                pkt.decode(pkt.encode())
             if pkt.packet_type == packet.EVENT or \
                     pkt.packet_type == packet.BINARY_EVENT:
                 if sid not in self.queue:
