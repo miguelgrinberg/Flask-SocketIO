@@ -417,9 +417,9 @@ class SocketIO(object):
         :param args: A dictionary with the JSON data to send as payload.
         :param namespace: The namespace under which the message is to be sent.
                           Defaults to the global namespace.
-        :param room: Send the message to all the users in the given room. If
-                     this parameter is not included, the event is sent to
-                     all connected users.
+        :param to: Send the message to all the users in the given room. If
+                   this parameter is not included, the event is sent to all
+                   connected users.
         :param include_self: ``True`` to include the sender when broadcasting
                              or addressing a room, or ``False`` to send to
                              everyone but the sender.
@@ -476,9 +476,9 @@ class SocketIO(object):
                      otherwise.
         :param namespace: The namespace under which the message is to be sent.
                           Defaults to the global namespace.
-        :param room: Send the message only to the users in the given room. If
-                     this parameter is not included, the message is sent to
-                     all connected users.
+        :param to: Send the message only to the users in the given room. If
+                   this parameter is not included, the message is sent to all
+                   connected users.
         :param include_self: ``True`` to include the sender when broadcasting
                              or addressing a room, or ``False`` to send to
                              everyone but the sender.
@@ -721,7 +721,6 @@ class SocketIO(object):
                                   flask_test_client=flask_test_client)
 
     def _handle_event(self, handler, message, namespace, sid, *args):
-        eio_sid = self.server.manager.eio_sid_from_sid(sid, namespace)
         environ = self.server.get_environ(sid, namespace=namespace)
         if not environ:
             # we don't have record of this client, ignore this event
@@ -788,8 +787,9 @@ def emit(event, *args, **kwargs):
                      acknowledgement.
     :param broadcast: ``True`` to send the message to all clients, or ``False``
                       to only reply to the sender of the originating event.
-    :param room: Send the message to all the users in the given room. If this
-                 argument is set, then broadcast is implied to be ``True``.
+    :param to: Send the message to all the users in the given room. If this
+               argument is not set and ``broadcast`` is ``False``, then the
+               message is sent only to the originating user.
     :param include_self: ``True`` to include the sender when broadcasting or
                          addressing a room, or ``False`` to send to everyone
                          but the sender.
@@ -844,7 +844,9 @@ def send(message, **kwargs):
     :param broadcast: ``True`` to send the message to all connected clients, or
                       ``False`` to only reply to the sender of the originating
                       event.
-    :param room: Send the message to all the users in the given room.
+    :param to: Send the message to all the users in the given room. If this
+               argument is not set and ``broadcast`` is ``False``, then the
+               message is sent only to the originating user.
     :param include_self: ``True`` to include the sender when broadcasting or
                          addressing a room, or ``False`` to send to everyone
                          but the sender.

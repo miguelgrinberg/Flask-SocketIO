@@ -65,12 +65,12 @@ def leave(message):
           'count': session['receive_count']})
 
 
-@socketio.event
-def close_room(message):
+@socketio.on('close_room')
+def on_close_room(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response', {'data': 'Room ' + message['room'] + ' is closing.',
                          'count': session['receive_count']},
-         room=message['room'])
+         to=message['room'])
     close_room(message['room'])
 
 
@@ -79,7 +79,7 @@ def my_room_event(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response',
          {'data': message['data'], 'count': session['receive_count']},
-         room=message['room'])
+         to=message['room'])
 
 
 @socketio.event
