@@ -32,22 +32,22 @@ def index():
     return render_template('index.html', async_mode=socketio.async_mode)
 
 
-@socketio.on('my_event')
-def test_message(message):
+@socketio.event
+def my_event(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response',
          {'data': message['data'], 'count': session['receive_count']})
 
 
-@socketio.on('my_broadcast_event')
-def test_broadcast_message(message):
+@socketio.event
+def my_broadcast_event(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response',
          {'data': message['data'], 'count': session['receive_count']},
          broadcast=True)
 
 
-@socketio.on('join')
+@socketio.event
 def join(message):
     join_room(message['room'])
     session['receive_count'] = session.get('receive_count', 0) + 1
@@ -56,7 +56,7 @@ def join(message):
           'count': session['receive_count']})
 
 
-@socketio.on('leave')
+@socketio.event
 def leave(message):
     leave_room(message['room'])
     session['receive_count'] = session.get('receive_count', 0) + 1
@@ -65,8 +65,8 @@ def leave(message):
           'count': session['receive_count']})
 
 
-@socketio.on('close_room')
-def close(message):
+@socketio.event
+def close_room(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response', {'data': 'Room ' + message['room'] + ' is closing.',
                          'count': session['receive_count']},
@@ -74,15 +74,15 @@ def close(message):
     close_room(message['room'])
 
 
-@socketio.on('my_room_event')
-def send_room_message(message):
+@socketio.event
+def my_room_event(message):
     session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response',
          {'data': message['data'], 'count': session['receive_count']},
          room=message['room'])
 
 
-@socketio.on('disconnect_request')
+@socketio.event
 def disconnect_request():
     @copy_current_request_context
     def can_disconnect():
@@ -97,13 +97,13 @@ def disconnect_request():
          callback=can_disconnect)
 
 
-@socketio.on('my_ping')
-def ping_pong():
+@socketio.event
+def my_ping():
     emit('my_pong')
 
 
-@socketio.on('connect')
-def test_connect():
+@socketio.event
+def connect():
     global thread
     with thread_lock:
         if thread is None:

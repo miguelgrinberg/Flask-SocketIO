@@ -355,6 +355,41 @@ class SocketIO(object):
         """
         self.on(message, namespace=namespace)(handler)
 
+    def event(self, *args, **kwargs):
+        """Decorator to register an event handler.
+
+        This is a simplified version of the ``on()`` method that takes the
+        event name from the decorated function.
+
+        Example usage::
+
+            @socketio.event
+            def my_event(data):
+                print('Received data: ', data)
+
+        The above example is equivalent to::
+
+            @socketio.on('my_event')
+            def my_event(data):
+                print('Received data: ', data)
+
+        A custom namespace can be given as an argument to the decorator::
+
+            @socketio.event(namespace='/test')
+            def my_event(data):
+                print('Received data: ', data)
+        """
+        if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
+            # the decorator was invoked without arguments
+            # args[0] is the decorated function
+            return self.on(args[0].__name__)(args[0])
+        else:
+            # the decorator was invoked with arguments
+            def set_handler(handler):
+                return self.on(handler.__name__, *args, **kwargs)(handler)
+
+            return set_handler
+
     def on_namespace(self, namespace_handler):
         if not isinstance(namespace_handler, Namespace):
             raise ValueError('Not a namespace instance.')

@@ -31,8 +31,8 @@ def on_disconnect():
     disconnected = '/'
 
 
-@socketio.on('connect', namespace='/test')
-def on_connect_test():
+@socketio.event(namespace='/test')
+def connect():
     send('connected-test')
     send(json.dumps(request.args.to_dict(flat=False)))
     send(json.dumps({h: request.headers[h] for h in request.headers.keys()
@@ -45,8 +45,8 @@ def on_disconnect_test():
     disconnected = '/test'
 
 
-@socketio.on('message')
-def on_message(message):
+@socketio.event
+def message(message):
     send(message)
     if message == 'test session':
         session['a'] = 'b'
