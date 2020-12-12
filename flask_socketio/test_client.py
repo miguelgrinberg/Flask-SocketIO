@@ -106,8 +106,8 @@ class SocketIOTestClient(object):
         self.socketio.server._handle_eio_connect(self.eio_sid, environ)
         pkt = packet.Packet(packet.CONNECT, namespace=namespace)
         with self.app.app_context():
-            ret = self.socketio.server._handle_eio_message(self.eio_sid,
-                                                           pkt.encode())
+            self.socketio.server._handle_eio_message(self.eio_sid,
+                                                     pkt.encode())
         sid = self.socketio.server.manager.sid_from_eio_sid(self.eio_sid,
                                                             namespace)
         if sid:
