@@ -798,73 +798,6 @@ your external process does use a coroutine framework for whatever reason, then
 monkey patching is likely required, so that the message queue accesses
 coroutine friendly functions and classes.
 
-Upgrading to Flask-SocketIO 1.x and 2.x from the 0.x releases
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Older versions of Flask-SocketIO had a completely different set of
-requirements. Those old versions had a dependency on
-`gevent-socketio <https://gevent-socketio.readthedocs.org/en/latest/>`_ and
-`gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_, which
-are not required in release 1.0.
-
-In spite of the change in dependencies, there aren't many significant
-changes introduced in version 1.0. Below is a detailed list of
-the actual differences:
-
-- Release 1.0 drops support for Python 2.6, and adds support for Python 3.3,
-  Python 3.4, and pypy.
-- Releases 0.x required an old version of the Socket.IO Javascript client.
-  Starting with release 1.0, the current releases of Socket.IO and Engine.IO
-  are supported. Releases of the Socket.IO client prior to 1.0 are no
-  supported. The Swift and C++ official Socket.IO clients are now supported
-  as well.
-- The 0.x releases depended on gevent, gevent-socketio and gevent-websocket.
-  In release 1.0 gevent-socketio is not used anymore, and gevent is one of
-  three options for backend web server, with eventlet and any regular
-  multi-threaded WSGI server, including Flask's development web server.
-- The Socket.IO server options have changed in release 1.0. They can be
-  provided in the SocketIO constructor, or in the ``run()`` call. The options
-  provided in these two are merged before they are used.
-- The 0.x releases exposed the gevent-socketio connection as
-  ``request.namespace``. In release 1.0 this is not available anymore. The
-  request object defines ``request.namespace`` as the name of the namespace
-  being handled, and adds ``request.sid``, defined as the unique session ID
-  for the client connection, and ``request.event``, which contains the event
-  name and arguments.
-- To get the list of rooms a client was in the 0.x release required the
-  application to use a private structure of gevent-socketio, with the
-  expression ``request.namespace.rooms``. This is not available in release
-  1.0, which includes a proper ``rooms()`` function.
-- The recommended "trick" to send a message to an individual client was to
-  put each client in a separate room, then address messages to the desired
-  room. This was formalized in release 1.0, where clients are assigned a room
-  automatically when they connect.
-- The ``'connect'`` event for the global namespace did not fire on releases
-  prior to 1.0. This has been fixed and now this event fires as expected.
-- Support for client-side callbacks was introduced in release 1.0.
-
-To upgrade to the newer Flask-SocketIO releases, you need to upgrade your
-Socket.IO client to a client that is compatible with the Socket.IO 1.0
-protocol. For the JavaScript client, the 1.3.x and 1.4.x releases have been
-extensively tested and found compatible.
-
-On the server side, there are a few points to consider:
-
-- If you wish to continue using gevent, then uninstall gevent-socketio from
-  your virtual environment, as this package is not used anymore and may
-  collide with its replacement, python-socketio.
-- If you want to have slightly better performance and stability, then it is
-  recommended that you switch to eventlet. To do this, uninstall gevent,
-  gevent-socketio and gevent-websocket, and install eventlet.
-- If your application uses monkey patching and you switched to eventlet, call
-  `eventlet.monkey_patch()` instead of gevent's `monkey.patch_all()`. Also,
-  any calls to gevent must be replaced with equivalent calls to eventlet.
-- Any uses of `request.namespace` must be replaced with direct calls into the
-  Flask-SocketIO functions. For example, `request.namespace.rooms` must be
-  replaced with the `rooms()` function.
-- Any uses of internal gevent-socketio objects must be removed, as this
-  package is not a dependency anymore.
-
 Cross-Origin Controls
 ---------------------
 
@@ -884,6 +817,32 @@ to a list to allow multiple origins. A special value of ``'*'`` can be used to
 instruct the server to allow all origins, but this should be done with care, as
 this could make the server vulnerable to Cross-Site Request Forgery (CSRF)
 attacks.
+
+Upgrading to Flask-SocketIO 5.x from the 4.x releases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Socket.IO protocol recently introduced a series of backwards incompatible
+changes. The 5.x releases of Flask-SocketIO adopted these changes, and for
+that reason it can only be used with clients that have also been updated to
+the current version of the protocol. In particular, this means that the
+JavaScript client must be upgraded to a 3.x release, and if your client hasn't
+been upgraded to the latest version of the Socket.IO protocol, then you must
+use a Flask-SocketIO 4.x release.
+
+The following protocol changes are of importance, as they may affect existing
+applications:
+
+- The default namespace ``'/'`` is not automatically connected anymore, and is
+  now treated in the same way as other namespaces.
+- Each namespace connection has its own ``sid`` value, different from the others
+  and different from the Engine.IO ``sid``.
+- Flask-SocketIO now uses the same ping interval and timeout values as the
+  JavaScript reference implementation, which are 25 and 5 seconds respectively.
+- The ping/pong mechanism has been reversed. In the current version of the
+  protocol, the server issues a ping and the client responds with a pong.
+- The default allowed payload size for long--polling packets has been lowered
+  from 100MB to 1MB.
+- The `io` cookie is not sent to the client anymore by default.
 
 API Reference
 -------------
