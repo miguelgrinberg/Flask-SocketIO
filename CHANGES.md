@@ -1,5 +1,14 @@
 # Flask-SocketIO change log
 
+**Release 5.0.0** - 2020-12-13
+
+- Move to python-socketio 5.x and the 3.x JavaScript releases ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/0c674b89c094f1085ad05fd7b6d2c304b9cf5791))
+  - Also see [python-socketio change log](https://github.com/miguelgrinberg/python-socketio/blob/master/CHANGES.md)
+  - Also see [python-engineio change log](https://github.com/miguelgrinberg/python-engineio/blob/master/CHANGES.md)
+- add @socketio.event convenience decorator ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/62717a852983bbf5d89d9b8f898282712c9bbf24))
+- Rename `room`  argument to `to` ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/4c69c9a807a94120c4a07274e29ef9b9a41bfb86))
+- Documentation updates ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/e864441e7ac7263d77e9a2e18863ebc22dcbf6ec)) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/c91244a30e77104c6df827b55f9dfad8ae9c7788))
+
 **Release 4.3.2** - 2020-11-30
 
 - Only use python-socketio 4.x versions as dependencies for now ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/59740d3eb50395f44cfb786b85215b4ec9b795e9))
