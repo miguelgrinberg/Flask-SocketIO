@@ -29,6 +29,14 @@ class SocketIOTestClient(object):
     def __init__(self, app, socketio, namespace=None, query_string=None,
                  headers=None, flask_test_client=None):
         def _mock_send_packet(eio_sid, pkt):
+            # make sure the packet can be encoded and decoded
+            epkt = pkt.encode()
+            if not isinstance(epkt, list):
+                pkt = packet.Packet(encoded_packet=epkt)
+            else:
+                pkt = packet.Packet(encoded_packet=epkt[0])
+                for att in epkt[1:]:
+                    pkt.add_attachment(att)
             if pkt.packet_type == packet.EVENT or \
                     pkt.packet_type == packet.BINARY_EVENT:
                 if eio_sid not in self.queue:

@@ -151,6 +151,24 @@ def on_room_namespace_event(data):
     send('room message', room=room)
 
 
+@socketio.on('bad response')
+def on_bad_response():
+    emit('my custom response', {'foo': socketio})
+
+
+@socketio.on('bad callback')
+def on_bad_callback():
+    return {'foo': socketio}
+
+
+@socketio.on('changing response')
+def on_changing_response():
+    data = {'foo': 'bar'}
+    emit('my custom response', data)
+    data['foo'] = 'baz'
+    return data
+
+
 @socketio.on_error()
 def error_handler(value):
     if isinstance(value, AssertionError):
@@ -158,7 +176,7 @@ def error_handler(value):
         error_testing = True
     else:
         raise value
-    return value
+    return 'error'
 
 
 @socketio.on('error testing')
@@ -173,7 +191,7 @@ def error_handler_namespace(value):
         error_testing_namespace = True
     else:
         raise value
-    return value
+    return 'error/test'
 
 
 @socketio.on("error testing", namespace='/test')
@@ -188,7 +206,7 @@ def error_handler_default(value):
         error_testing_default = True
     else:
         raise value
-    return value
+    return 'error/default'
 
 
 @socketio.on("error testing", namespace='/unused_namespace')
@@ -554,14 +572,14 @@ class TestSocketIO(unittest.TestCase):
         client2 = socketio.test_client(app, namespace='/test')
         client3 = socketio.test_client(app, namespace='/unused_namespace')
         errorack = client1.emit("error testing", "", callback=True)
-        self.assertIsNotNone(errorack)
+        self.assertEqual(errorack, 'error')
         errorack_namespace = client2.emit("error testing", "",
                                           namespace='/test', callback=True)
-        self.assertIsNotNone(errorack_namespace)
+        self.assertEqual(errorack_namespace, 'error/test')
         errorack_default = client3.emit("error testing", "",
                                         namespace='/unused_namespace',
                                         callback=True)
-        self.assertIsNotNone(errorack_default)
+        self.assertEqual(errorack_default, 'error/default')
 
     def test_on_event(self):
         client = socketio.test_client(app)
@@ -670,6 +688,32 @@ class TestSocketIO(unittest.TestCase):
         received = client.get_received()
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]['args'], {'connected': 'foo'})
+
+    def test_encode_decode(self):
+        client = socketio.test_client(app)
+        client.get_received()
+        data = {'foo': 'bar', 'invalid': socketio}
+        self.assertRaises(TypeError, client.emit, 'my custom event', data,
+                          callback=True)
+        data = {'foo': 'bar'}
+        ack = client.emit('my custom event', data, callback=True)
+        data['foo'] = 'baz'
+        received = client.get_received()
+        self.assertEqual(ack, {'foo': 'bar'})
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args'][0], {'foo': 'bar'})
+
+    def test_encode_decode_2(self):
+        client = socketio.test_client(app)
+        self.assertRaises(TypeError, client.emit, 'bad response')
+        self.assertRaises(TypeError, client.emit, 'bad callback',
+                          callback=True)
+        client.get_received()
+        ack = client.emit('changing response', callback=True)
+        received = client.get_received()
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['args'][0], {'foo': 'bar'})
+        self.assertEqual(ack, {'foo': 'baz'})
 
 
 if __name__ == '__main__':
