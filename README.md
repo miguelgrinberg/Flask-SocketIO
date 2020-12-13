@@ -27,8 +27,8 @@ socketio = SocketIO(app)
 def index():
     return render_template('index.html')
 
-@socketio.on('my event')
-def test_message(message):
+@socketio.event
+def my_event(message):
     emit('my response', {'data': 'got it!'})
 
 if __name__ == '__main__':

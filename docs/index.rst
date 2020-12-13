@@ -54,12 +54,34 @@ to coordinate operations such as broadcasting. The supported queues are
 other message queues supported by the
 `Kombu <http://kombu.readthedocs.org/en/latest/>`_ package.
 
-On the client-side, the official Socket.IO Javascript client library versions
-1.x or 2.x can be used to establish a connection to the server (work to support
-the 3.x release is in progress). There are also official clients written in
-Swift, Java and C++. Unofficial clients may also work, as long as they
-implement the
+On the client-side, the official Socket.IO Javascript client library can be
+used to establish a connection to the server. There are also official clients
+written in Swift, Java and C++. Unofficial clients may also work, as long as
+they implement the
 `Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_.
+The `python-socketio <https://github.com/miguelgrinberg/python-socketio>`_
+package includes a Python client.
+
+Version compatibility
+---------------------
+
+The Socket.IO protocol has been through a number of revisions, and some of these
+introduced backward incompatible changes, which means that the client and the
+server must use compatible versions for everything to work.
+
+The version compatibility chart below maps versions of this package to versions
+of the JavaScript reference implementation and the versions of the Socket.IO and
+Engine.IO protocols.
+
++------------------------------+-----------------------------+-----------------------------+------------------------+-------------------------+
+| JavaScript Socket.IO version | Socket.IO protocol revision | Engine.IO protocol revision | Flask-SocketIO version | python-socketio version |
++==============================+=============================+=============================+========================+=========================+
+| 0.9.x                        | 1, 2                        | 1, 2                        | Not supported          | Not supported           |
++------------------------------+-----------------------------+-----------------------------+------------------------+-------------------------+
+| 1.x and 2.x                  | 3, 4                        | 3                           | 4.x                    | 4.x                     |
++------------------------------+-----------------------------+-----------------------------+------------------------+-------------------------+
+| 3.x                          | 5                           | 4                           | 5.x                    | 5.x                     |
++------------------------------+-----------------------------+-----------------------------+------------------------+-------------------------+
 
 Initialization
 --------------
@@ -118,8 +140,8 @@ The following example creates a server-side event handler for an unnamed
 event::
 
     @socketio.on('message')
-    def handle_message(message):
-        print('received message: ' + message)
+    def handle_message(data):
+        print('received message: ' + data)
 
 The above example uses string messages. Another type of unnamed events use
 JSON data::
@@ -137,10 +159,17 @@ these events can be string, bytes, int, or JSON::
 
 Custom named events can also support multiple arguments::
 
-    @socketio.on('my event')
+    @socketio.on('my_event')
     def handle_my_custom_event(arg1, arg2, arg3):
         print('received args: ' + arg1 + arg2 + arg3)
 
+When the name of the event is a valid Python identifier that does not collide
+with other defined symbols, the ``@socketio.event`` provides a more compact
+syntax that takes the event name from the decorated function::
+
+    @socketio.event
+    def my_custom_event(arg1, arg2, arg3):
+        print('received args: ' + arg1 + arg2 + arg3)
 
 Named events are the most flexible, as they eliminate the need to include
 additional metadata to describe the message type. The names ``message``,
