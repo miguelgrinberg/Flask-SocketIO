@@ -435,7 +435,7 @@ class SocketIO(object):
                          only be used when addressing an individual client.
         """
         namespace = kwargs.pop('namespace', '/')
-        room = kwargs.pop('room', None)
+        to = kwargs.pop('to', kwargs.pop('room', None))
         include_self = kwargs.pop('include_self', True)
         skip_sid = kwargs.pop('skip_sid', None)
         if not include_self and not skip_sid:
@@ -458,10 +458,10 @@ class SocketIO(object):
                 # we only use it if the emit was issued from a Socket.IO
                 # populated request context (i.e. request.sid is defined)
                 callback = _callback_wrapper
-        self.server.emit(event, *args, namespace=namespace, room=room,
+        self.server.emit(event, *args, namespace=namespace, to=to,
                          skip_sid=skip_sid, callback=callback, **kwargs)
 
-    def send(self, data, json=False, namespace=None, room=None,
+    def send(self, data, json=False, namespace=None, to=None,
              callback=None, include_self=True, skip_sid=None, **kwargs):
         """Send a server-generated SocketIO message.
 
@@ -495,10 +495,10 @@ class SocketIO(object):
         """
         skip_sid = flask.request.sid if not include_self else skip_sid
         if json:
-            self.emit('json', data, namespace=namespace, room=room,
+            self.emit('json', data, namespace=namespace, to=to,
                       skip_sid=skip_sid, callback=callback, **kwargs)
         else:
-            self.emit('message', data, namespace=namespace, room=room,
+            self.emit('message', data, namespace=namespace, to=to,
                       skip_sid=skip_sid, callback=callback, **kwargs)
 
     def close_room(self, room, namespace=None):
@@ -812,15 +812,15 @@ def emit(event, *args, **kwargs):
         namespace = flask.request.namespace
     callback = kwargs.get('callback')
     broadcast = kwargs.get('broadcast')
-    room = kwargs.get('room')
-    if room is None and not broadcast:
-        room = flask.request.sid
+    to = kwargs.pop('to', kwargs.pop('room', None))
+    if to is None and not broadcast:
+        to = flask.request.sid
     include_self = kwargs.get('include_self', True)
     skip_sid = kwargs.get('skip_sid')
     ignore_queue = kwargs.get('ignore_queue', False)
 
     socketio = flask.current_app.extensions['socketio']
-    return socketio.emit(event, *args, namespace=namespace, room=room,
+    return socketio.emit(event, *args, namespace=namespace, to=to,
                          include_self=include_self, skip_sid=skip_sid,
                          callback=callback, ignore_queue=ignore_queue)
 
@@ -870,15 +870,15 @@ def send(message, **kwargs):
         namespace = flask.request.namespace
     callback = kwargs.get('callback')
     broadcast = kwargs.get('broadcast')
-    room = kwargs.get('room')
-    if room is None and not broadcast:
-        room = flask.request.sid
+    to = kwargs.pop('to', kwargs.pop('room', None))
+    if to is None and not broadcast:
+        to = flask.request.sid
     include_self = kwargs.get('include_self', True)
     skip_sid = kwargs.get('skip_sid')
     ignore_queue = kwargs.get('ignore_queue', False)
 
     socketio = flask.current_app.extensions['socketio']
-    return socketio.send(message, json=json, namespace=namespace, room=room,
+    return socketio.send(message, json=json, namespace=namespace, to=to,
                          include_self=include_self, skip_sid=skip_sid,
                          callback=callback, ignore_queue=ignore_queue)
 
