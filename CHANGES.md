@@ -1,5 +1,11 @@
 # Flask-SocketIO change log
 
+**Release 5.0.1** - 2020-12-19
+
+- Fix handling of  argument [#1441](https://github.com/miguelgrinberg/flask-socketio/issues/1441) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/4ec274831551a3141a5838d9fd4c5e983f637a3a))
+- Add python-engineio to version compatibility table ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/2934b469da80c1f5df9f560f06cf11e61dd2f1bd))
+- Test client: pass packets through an encode/decode cycle [#1427](https://github.com/miguelgrinberg/flask-socketio/issues/1427) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/ffe66fee0e72737aa974337a3ceaab4553ab3325))
+
 **Release 5.0.0** - 2020-12-13
 
 - Move to python-socketio 5.x and the 3.x JavaScript releases ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/0c674b89c094f1085ad05fd7b6d2c304b9cf5791))
