@@ -95,12 +95,6 @@ class SocketIO(object):
                    use. To disable logging set to ``False``. The default is
                    ``False``. Note that fatal errors will be logged even when
                    ``logger`` is ``False``.
-    :param binary: ``True`` to support binary payloads, ``False`` to treat all
-                   payloads as text. On Python 2, if this is set to ``True``,
-                   ``unicode`` values are treated as text, and ``str`` and
-                   ``bytes`` values are treated as binary.  This option has no
-                   effect on Python 3, where text and binary payloads are
-                   always automatically discovered.
     :param json: An alternative json module to use for encoding and decoding
                  packets. Custom json modules must have ``dumps`` and ``loads``
                  functions that are compatible with the standard library
@@ -125,20 +119,22 @@ class SocketIO(object):
 
     :param async_mode: The asynchronous model to use. See the Deployment
                        section in the documentation for a description of the
-                       available options. Valid async modes are
-                       ``threading``, ``eventlet``, ``gevent`` and
-                       ``gevent_uwsgi``. If this argument is not given,
-                       ``eventlet`` is tried first, then ``gevent_uwsgi``,
-                       then ``gevent``, and finally ``threading``. The
-                       first async mode that has all its dependencies installed
-                       is then one that is chosen.
+                       available options. Valid async modes are ``threading``,
+                       ``eventlet``, ``gevent`` and ``gevent_uwsgi``. If this
+                       argument is not given, ``eventlet`` is tried first, then
+                       ``gevent_uwsgi``, then ``gevent``, and finally
+                       ``threading``. The first async mode that has all its
+                       dependencies installed is then one that is chosen.
+    :param ping_interval: The interval in seconds at which the server pings
+                          the client. The default is 25 seconds. For advanced
+                          control, a two element tuple can be given, where
+                          the first number is the ping interval and the second
+                          is a grace period added by the server.
     :param ping_timeout: The time in seconds that the client waits for the
-                         server to respond before disconnecting. The default is
-                         60 seconds.
-    :param ping_interval: The interval in seconds at which the client pings
-                          the server. The default is 25 seconds.
+                         server to respond before disconnecting. The default
+                         is 5 seconds.
     :param max_http_buffer_size: The maximum size of a message when using the
-                                 polling transport. The default is 100,000,000
+                                 polling transport. The default is 1,000,000
                                  bytes.
     :param allow_upgrades: Whether to allow transport upgrades or not. The
                            default is ``True``.
@@ -147,9 +143,14 @@ class SocketIO(object):
     :param compression_threshold: Only compress messages when their byte size
                                   is greater than this value. The default is
                                   1024 bytes.
-    :param cookie: Name of the HTTP cookie that contains the client session
-                   id. If set to ``None``, a cookie is not sent to the client.
-                   The default is ``'io'``.
+    :param cookie: If set to a string, it is the name of the HTTP cookie the
+                   server sends back tot he client containing the client
+                   session id. If set to a dictionary, the ``'name'`` key
+                   contains the cookie name and other keys define cookie
+                   attributes, where the value of each attribute can be a
+                   string, a callable with no arguments, or a boolean. If set
+                   to ``None`` (the default), a cookie is not sent to the
+                   client.
     :param cors_allowed_origins: Origin or list of origins that are allowed to
                                  connect to this server. Only the same origin
                                  is allowed by default. Set this argument to
