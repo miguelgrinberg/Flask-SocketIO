@@ -14,7 +14,7 @@ class Namespace(_Namespace):
 
         In the most common usage, this method is not overloaded by subclasses,
         as it performs the routing of events to methods. However, this
-        method can be overriden if special dispatching rules are needed, or if
+        method can be overridden if special dispatching rules are needed, or if
         having a single method that catches all events is desired.
         """
         handler_name = 'on_' + event

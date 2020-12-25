@@ -529,7 +529,7 @@ class SocketIO(object):
                              to disable it.
         :param extra_files: A list of additional files that the Flask
                             reloader should watch. Defaults to ``None``
-        :param log_output: If ``True``, the server logs all incomming
+        :param log_output: If ``True``, the server logs all incoming
                            connections. If ``False`` logging is disabled.
                            Defaults to ``True`` in debug mode, ``False``
                            in normal mode. Unused when the threading async
