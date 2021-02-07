@@ -50,7 +50,7 @@ development server is used.
 If using multiple processes, a message queue service is used by the processes
 to coordinate operations such as broadcasting. The supported queues are
 `Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_,
-`Kafka <http://kafka/apache.org/>`_, and any
+`Kafka <http://kafka.apache.org/>`_, and any
 other message queues supported by the
 `Kombu <http://kombu.readthedocs.org/en/latest/>`_ package.
 
