@@ -315,16 +315,16 @@ rooms through the ``join_room()`` and ``leave_room()`` functions::
         username = data['username']
         room = data['room']
         join_room(room)
-        send(username + ' has entered the room.', room=room)
+        send(username + ' has entered the room.', to=room)
 
     @socketio.on('leave')
     def on_leave(data):
         username = data['username']
         room = data['room']
         leave_room(room)
-        send(username + ' has left the room.', room=room)
+        send(username + ' has left the room.', to=room)
 
-The ``send()`` and ``emit()`` functions accept an optional ``room`` argument
+The ``send()`` and ``emit()`` functions accept an optional ``to`` argument
 that cause the message to be sent to all the clients that are in the given
 room.
 
@@ -332,11 +332,11 @@ All clients are assigned a room when they connect, named with the session ID
 of the connection, which can be obtained from ``request.sid``. A given client
 can join any rooms, which can be given any names. When a client disconnects it
 is removed from all the rooms it was in. The context-free ``socketio.send()``
-and ``socketio.emit()`` functions also accept a ``room`` argument to broadcast
+and ``socketio.emit()`` functions also accept a ``to`` argument to broadcast
 to all clients in a room.
 
 Since all clients are assigned a personal room, to address a message to a
-single client, the session ID of the client can be used as the room argument.
+single client, the session ID of the client can be used as the ``to`` argument.
 
 Connection Events
 -----------------
