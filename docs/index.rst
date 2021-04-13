@@ -80,7 +80,7 @@ Engine.IO protocols.
 +------------------------------+-----------------------------+-----------------------------+------------------------+-------------------------+-------------------------+
 | 1.x and 2.x                  | 3, 4                        | 3                           | 4.x                    | 4.x                     | 3.x                     |
 +------------------------------+-----------------------------+-----------------------------+------------------------+-------------------------+-------------------------+
-| 3.x                          | 5                           | 4                           | 5.x                    | 5.x                     | 4.x                     |
+| 3.x and 4.x                  | 5                           | 4                           | 5.x                    | 5.x                     | 4.x                     |
 +------------------------------+-----------------------------+-----------------------------+------------------------+-------------------------+-------------------------+
 
 Initialization
@@ -120,7 +120,7 @@ production servers, but this functionality has been discontinued in favor of the
 The application must serve a page to the client that loads the Socket.IO
 library and establishes a connection::
 
-    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
     <script type="text/javascript" charset="utf-8">
         var socket = io();
         socket.on('connect', function() {
