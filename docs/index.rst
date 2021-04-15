@@ -678,7 +678,7 @@ servers::
             proxy_pass http://127.0.0.1:5000;
         }
 
-        locaton /static {
+        location /static {
             alias <path-to-your-application>/static;
             expires 30d;
         }
