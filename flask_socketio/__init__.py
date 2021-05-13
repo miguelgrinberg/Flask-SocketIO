@@ -21,7 +21,7 @@ from flask.sessions import SessionMixin
 import socketio
 from socketio.exceptions import ConnectionRefusedError  # noqa: F401
 from werkzeug.debug import DebuggedApplication
-from werkzeug.serving import run_with_reloader
+from werkzeug._reloader import run_with_reloader
 
 from .namespace import Namespace
 from .test_client import SocketIOTestClient
