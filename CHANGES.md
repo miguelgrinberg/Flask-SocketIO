@@ -1,5 +1,15 @@
 # Flask-SocketIO change log
 
+**Release 5.0.2** - 2021-05-14
+
+- Silence deprecation warning from Werkzeug 2.x [#1549](https://github.com/miguelgrinberg/flask-socketio/issues/1549) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/6563634e4c7836479ff5d38d20f4339e6bcf92ab))
+- Updated server options in documentation ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/6bcd1dc29d1dde4f61e582fc62f4bb752008615e))
+- Updated socketio javascript client versions in documentation ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/c527c90cbe2b6f141ca94ec75964af5d0e304ab7))
+- Fix typo in documentation [#1524](https://github.com/miguelgrinberg/flask-socketio/issues/1524) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/2f1c322e687a8f7f080a081f042efdc6c8532123)) (thanks **lennertcl**!)
+- Change room documentation from room= to to= [#1519](https://github.com/miguelgrinberg/flask-socketio/issues/1519) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/b33cab093c85d4888093a9c2992eb8a815695b4d)) (thanks **David McInnis**!)
+- Fixed a type in the Kafka URL in the documentation [#1476](https://github.com/miguelgrinberg/flask-socketio/issues/1476) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/a222638186f57980a08d2d4e98624dd27c1e2bd3)) (thanks **VVakko**!)
+- Fixed typos in documentation [#1447](https://github.com/miguelgrinberg/flask-socketio/issues/1447) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/3f7ef81fee05be6b674521bd5850676bb2021897))
+
 **Release 5.0.1** - 2020-12-19
 
 - Fix handling of  argument [#1441](https://github.com/miguelgrinberg/flask-socketio/issues/1441) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/4ec274831551a3141a5838d9fd4c5e983f637a3a))
