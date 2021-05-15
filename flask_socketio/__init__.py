@@ -584,8 +584,7 @@ class SocketIO(object):
         if self.server.eio.async_mode == 'threading':
             from werkzeug._internal import _log
             _log('warning', 'WebSocket transport not available. Install '
-                            'eventlet or gevent and gevent-websocket for '
-                            'improved performance.')
+                            'simple-websocket for improved performance.')
             app.run(host=host, port=port, threaded=True,
                     use_reloader=use_reloader, **kwargs)
         elif self.server.eio.async_mode == 'eventlet':

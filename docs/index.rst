@@ -37,9 +37,9 @@ this package relies on can be selected among three choices:
   comes with WebSocket functionality. The use of gevent is also a performant
   option, but slightly lower than eventlet.
 - The Flask development server based on Werkzeug can be used as well, with the
-  caveat that it lacks the performance of the other two options, so it should
-  only be used to simplify the development workflow. This option only supports
-  the long-polling transport.
+  caveat that this web server is intended only for development use, so it
+  should only be used to simplify the development workflow and not for
+  production.
 
 The extension automatically detects which asynchronous framework to use based
 on what is installed. Preference is given to eventlet, followed by gevent.
@@ -569,15 +569,16 @@ described.
 Embedded Server
 ~~~~~~~~~~~~~~~
 
-The simplest deployment strategy is to have eventlet or gevent installed, and
-start the web server by calling ``socketio.run(app)`` as shown in examples
-above. This will run the application on the eventlet or gevent web servers,
-whichever is installed.
+The simplest deployment strategy is to start the web server by calling
+``socketio.run(app)`` as shown in examples above. This will look through the
+packages that are installed for the best available web server start the
+application on it. The current web server choices that are evaluated are
+``eventlet``, ``gevent`` and the Flask development server.
 
-Note that ``socketio.run(app)`` runs a production ready server when eventlet
-or gevent are installed. If neither of these are installed, then the
-application runs on Flask's development web server, which is not appropriate
-for production use.
+If eventlet or gevent are available, ``socketio.run(app)`` starts a
+production-ready server using one of these frameworks. If neither of these are
+installed, then the Flask development web server is used, and in this case the
+server is not intended to be used in a production deployment.
 
 Unfortunately this option is not available when using gevent with uWSGI. See
 the uWSGI section below for information on this option.
@@ -603,12 +604,25 @@ modified command is::
 
     gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 module:app
 
+A third option with Gunicorn is to use the threaded worker, along with the
+`simple-websocket <https://github.com/miguelgrinberg/simple-websocket`_
+package for WebSocket support. This is a particularly good solution for
+applications that are CPU heavy or are otherwise incompatible with eventlet
+and gevent use of green threads. The command to start a threaded web server
+is::
+
+    gunicorn -w 1 --threads 100 module:app
+
 In all these commands, ``module`` is the Python module or package that defines
 the application instance, and ``app`` is the application instance itself.
 
 Due to the limited load balancing algorithm used by gunicorn, it is not possible
 to use more than one worker process when using this web server. For that reason,
 all the examples above include the ``-w 1`` option.
+
+The workaround to use multiple worker processes with gunicorn is to launch
+several single-worker instances and put them behind a more capable load
+balancer such as `nginx <https://www.nginx.com/>`_.
 
 uWSGI Web Server
 ~~~~~~~~~~~~~~~~
@@ -695,7 +709,7 @@ servers::
 
 While the above examples can work as an initial configuration, be aware that a
 production install of nginx will need a more complete configuration covering
-other deployment aspects such as serving static file assets and SSL support.
+other deployment aspects such as SSL support.
 
 Using Multiple Workers
 ~~~~~~~~~~~~~~~~~~~~~~
