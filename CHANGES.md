@@ -1,5 +1,11 @@
 # Flask-SocketIO change log
 
+**Release 5.0.3** - 2021-05-15
+
+- Document the use of simple-websocket with the development web server ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/6a2463cc21e56dfac27f63832d2510a3e1467634))
+- Show transport in example apps ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/044e9c066c53c865abb1eee0e81c90a0c7022b7e))
+- Added Open Collective funding option ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/ab99680cefba577b06b19227480511ad6508a1d4))
+
 **Release 5.0.2** - 2021-05-14
 
 - Silence deprecation warning from Werkzeug 2.x [#1549](https://github.com/miguelgrinberg/flask-socketio/issues/1549) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/6563634e4c7836479ff5d38d20f4339e6bcf92ab))
