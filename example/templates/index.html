@@ -35,6 +35,7 @@
             var start_time;
             window.setInterval(function() {
                 start_time = (new Date).getTime();
+                $('#transport').text(socket.io.engine.transport.name);
                 socket.emit('my_ping');
             }, 1000);
 
@@ -87,8 +88,11 @@
 </head>
 <body>
     <h1>Flask-SocketIO Test</h1>
-    <p>Async mode is: <b>{{ async_mode }}</b></p>
-    <p>Average ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
+    <p>
+      Async mode is: <b>{{ async_mode }}</b><br>
+      Current transport is: <b><span id="transport"></span></b><br>
+      Average ping/pong latency: <b><span id="ping-pong"></span>ms</b>
+    </p>
     <h2>Send:</h2>
     <form id="emit" method="POST" action='#'>
         <input type="text" name="emit_data" id="emit_data" placeholder="Message">
