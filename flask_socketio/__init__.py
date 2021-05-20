@@ -660,7 +660,7 @@ class SocketIO(object):
                     self.wsgi_server.serve_forever()
 
                 run_with_reloader(run_server, extra_files=extra_files, 
-                                  exclude_patterns=exclude_patterns
+                                  exclude_patterns=exclude_patterns,
                                   reloader_type=reloader_type)
             else:
                 self.wsgi_server.serve_forever()
