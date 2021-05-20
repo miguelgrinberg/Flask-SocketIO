@@ -529,6 +529,11 @@ class SocketIO(object):
                              to disable it.
         :param extra_files: A list of additional files that the Flask
                             reloader should watch. Defaults to ``None``
+        :param exclude_patterns: A list of patterns (matched by fnmatch)
+                                 the Flask reloader should exclude.
+                                 Defaults to ``None``
+        :param reloader_type: The reloader Flask should use when
+                              reloading is enabled. Detauls to ``auto``
         :param log_output: If ``True``, the server logs all incoming
                            connections. If ``False`` logging is disabled.
                            Defaults to ``True`` in debug mode, ``False``
@@ -554,6 +559,8 @@ class SocketIO(object):
         log_output = kwargs.pop('log_output', debug)
         use_reloader = kwargs.pop('use_reloader', debug)
         extra_files = kwargs.pop('extra_files', None)
+        exclude_patterns = kwargs.pop('exclude_patterns', None)
+        reloader_type = kwargs.pop('reloader_type', 'auto')
 
         app.debug = debug
         if app.debug and self.server.eio.async_mode != 'threading':
@@ -616,7 +623,9 @@ class SocketIO(object):
                                      log_output=log_output, **kwargs)
 
             if use_reloader:
-                run_with_reloader(run_server, extra_files=extra_files)
+                run_with_reloader(run_server, extra_files=extra_files, 
+                                  exclude_patterns=exclude_patterns,
+                                  reloader_type=reloader_type)
             else:
                 run_server()
         elif self.server.eio.async_mode == 'gevent':
@@ -650,7 +659,9 @@ class SocketIO(object):
                 def run_server():
                     self.wsgi_server.serve_forever()
 
-                run_with_reloader(run_server, extra_files=extra_files)
+                run_with_reloader(run_server, extra_files=extra_files, 
+                                  exclude_patterns=exclude_patterns
+                                  reloader_type=reloader_type)
             else:
                 self.wsgi_server.serve_forever()
 
