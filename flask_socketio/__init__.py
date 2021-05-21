@@ -623,7 +623,7 @@ class SocketIO(object):
                                      log_output=log_output, **kwargs)
 
             if use_reloader:
-                run_with_reloader(run_server, extra_files=extra_files, 
+                run_with_reloader(run_server, extra_files=extra_files,
                                   exclude_patterns=exclude_patterns,
                                   reloader_type=reloader_type)
             else:
@@ -659,7 +659,7 @@ class SocketIO(object):
                 def run_server():
                     self.wsgi_server.serve_forever()
 
-                run_with_reloader(run_server, extra_files=extra_files, 
+                run_with_reloader(run_server, extra_files=extra_files,
                                   exclude_patterns=exclude_patterns,
                                   reloader_type=reloader_type)
             else:
