@@ -582,9 +582,12 @@ class SocketIO(object):
                 self.sockio_mw.wsgi_app, evalex=True)
 
         if self.server.eio.async_mode == 'threading':
-            from werkzeug._internal import _log
-            _log('warning', 'WebSocket transport not available. Install '
-                            'simple-websocket for improved performance.')
+            try:
+                import simple_websocket
+            except ImportError:
+                from werkzeug._internal import _log
+                _log('warning', 'WebSocket transport not available. Install '
+                                'simple-websocket for improved performance.')
             app.run(host=host, port=port, threaded=True,
                     use_reloader=use_reloader, **kwargs)
         elif self.server.eio.async_mode == 'eventlet':
