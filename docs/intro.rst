@@ -36,12 +36,11 @@ For WebSocket support in gevent, uWSGI is preferred, followed by
 gevent-websocket. If neither eventlet nor gevent are installed, then the Flask
 development server is used.
 
-If using multiple processes, a message queue service is used by the processes
-to coordinate operations such as broadcasting. The supported queues are
-`Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_,
-`Kafka <http://kafka.apache.org/>`_, and any
-other message queues supported by the
-`Kombu <http://kombu.readthedocs.org/en/latest/>`_ package.
+If using multiple processes, a message queue service must be configured to
+allow the servers to coordinate operations such as broadcasting. The supported
+queues are `Redis <http://redis.io/>`_, `RabbitMQ <https://www.rabbitmq.com/>`_,
+`Kafka <http://kafka.apache.org/>`_, and any other message queues supported by
+the `Kombu <http://kombu.readthedocs.org/en/latest/>`_ package.
 
 On the client-side, the official Socket.IO Javascript client library can be
 used to establish a connection to the server. There are also official clients
@@ -49,7 +48,8 @@ written in Swift, Java and C++. Unofficial clients may also work, as long as
 they implement the
 `Socket.IO protocol <https://github.com/socketio/socket.io-protocol>`_.
 The `python-socketio <https://github.com/miguelgrinberg/python-socketio>`_
-package includes a Python client.
+package (which provides the Socket.IO server implementation used by
+Flask-SocketIO) includes a Python client.
 
 Version compatibility
 ---------------------

@@ -9,7 +9,7 @@ Flask-SocketIO
 **Flask-SocketIO** gives Flask applications access to low latency
 bi-directional communications between the clients and the server. The
 client-side application can use any of the `SocketIO <http://socket.io>`_
-official clients libraries in Javascript, C++, Java and Swift, or any
+client libraries in Javascript, Python, C++, Java and Swift, or any other
 compatible client to establish a permanent connection to the server.
 
 .. toctree::
