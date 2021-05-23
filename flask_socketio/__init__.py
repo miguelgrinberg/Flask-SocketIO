@@ -708,7 +708,7 @@ class SocketIO(object):
         return self.server.sleep(seconds)
 
     def test_client(self, app, namespace=None, query_string=None,
-                    headers=None, flask_test_client=None):
+                    headers=None, auth=None, flask_test_client=None):
         """The Socket.IO test client is useful for testing a Flask-SocketIO
         server. It works in a similar way to the Flask Test Client, but
         adapted to the Socket.IO server.
@@ -719,6 +719,7 @@ class SocketIO(object):
                           namespace.
         :param query_string: A string with custom query string arguments.
         :param headers: A dictionary with custom HTTP headers.
+        :param auth: Optional authentication data, given as a dictionary.
         :param flask_test_client: The instance of the Flask test client
                                   currently in use. Passing the Flask test
                                   client is optional, but is necessary if you
@@ -728,6 +729,7 @@ class SocketIO(object):
         """
         return SocketIOTestClient(app, self, namespace=namespace,
                                   query_string=query_string, headers=headers,
+                                  auth=auth,
                                   flask_test_client=flask_test_client)
 
     def _handle_event(self, handler, message, namespace, sid, *args):
@@ -756,7 +758,11 @@ class SocketIO(object):
             flask.request.event = {'message': message, 'args': args}
             try:
                 if message == 'connect':
-                    ret = handler()
+                    auth = args[1] if len(args) > 1 else None
+                    try:
+                        ret = handler(auth)
+                    except TypeError:
+                        ret = handler()
                 else:
                     ret = handler(*args)
             except:

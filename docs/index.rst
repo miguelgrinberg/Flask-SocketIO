@@ -164,8 +164,8 @@ Custom named events can also support multiple arguments::
         print('received args: ' + arg1 + arg2 + arg3)
 
 When the name of the event is a valid Python identifier that does not collide
-with other defined symbols, the ``@socketio.event`` provides a more compact
-syntax that takes the event name from the decorated function::
+with other defined symbols, the ``@socketio.event`` decorator provides a more
+compact syntax that takes the event name from the decorated function::
 
     @socketio.event
     def my_custom_event(arg1, arg2, arg3):
@@ -345,12 +345,18 @@ Flask-SocketIO also dispatches connection and disconnection events. The
 following example shows how to register handlers for them::
 
     @socketio.on('connect')
-    def test_connect():
+    def test_connect(auth):
         emit('my response', {'data': 'Connected'})
 
     @socketio.on('disconnect')
     def test_disconnect():
         print('Client disconnected')
+
+The ``auth`` argument in the connection handler is optional. The client can
+use it to pass authentication data such as tokens in dictionary format. If the
+client does not provide authentication details, then this argument is set to
+``None``. If the server defines a connection event handler without this
+argument, then any authentication data passed by the cient is discarded.
 
 The connection event handler can return ``False`` to reject the connection, or
 it can also raise `ConectionRefusedError`. This is so that the client can be
@@ -516,6 +522,13 @@ authentication process before the SocketIO connection is established. The
 user's identity can then be recorded in the user session or in a cookie, and
 later when the SocketIO connection is established that information will be
 accessible to SocketIO event handlers.
+
+Recent revisions of the Socket.IO protocol include the ability to pass a
+dictionary with authentication information during the connection. This is an
+ideal place for the client to include a token or other authentication details.
+If the client uses this capability, the server will provide this dictionary as
+an argument to the ``connect`` event handler, as shown above.
+
 
 Using Flask-Login with Flask-SocketIO
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

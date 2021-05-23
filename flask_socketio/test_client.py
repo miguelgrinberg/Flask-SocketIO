@@ -16,6 +16,7 @@ class SocketIOTestClient(object):
                       connects to the server on the global namespace.
     :param query_string: A string with custom query string arguments.
     :param headers: A dictionary with custom HTTP headers.
+    :param auth: Optional authentication data, given as a dictionary.
     :param flask_test_client: The instance of the Flask test client
                               currently in use. Passing the Flask test
                               client is optional, but is necessary if you
@@ -27,7 +28,7 @@ class SocketIOTestClient(object):
     acks = {}
 
     def __init__(self, app, socketio, namespace=None, query_string=None,
-                 headers=None, flask_test_client=None):
+                 headers=None, auth=None, flask_test_client=None):
         def _mock_send_packet(eio_sid, pkt):
             # make sure the packet can be encoded and decoded
             epkt = pkt.encode()
@@ -76,7 +77,7 @@ class SocketIOTestClient(object):
                                'configuration.')
         socketio.server.manager.initialize()
         self.connect(namespace=namespace, query_string=query_string,
-                     headers=headers)
+                     headers=headers, auth=auth)
 
     def is_connected(self, namespace=None):
         """Check if a namespace is connected.
@@ -86,7 +87,8 @@ class SocketIOTestClient(object):
         """
         return self.connected.get(namespace or '/', False)
 
-    def connect(self, namespace=None, query_string=None, headers=None):
+    def connect(self, namespace=None, query_string=None, headers=None,
+                auth=None):
         """Connect the client.
 
         :param namespace: The namespace for the client. If not provided, the
@@ -94,6 +96,7 @@ class SocketIOTestClient(object):
                           namespace.
         :param query_string: A string with custom query string arguments.
         :param headers: A dictionary with custom HTTP headers.
+        :param auth: Optional authentication data, given as a dictionary.
 
         Note that it is usually not necessary to explicitly call this method,
         since a connection is automatically established when an instance of
@@ -112,7 +115,7 @@ class SocketIOTestClient(object):
             # inject cookies from Flask
             self.flask_test_client.cookie_jar.inject_wsgi(environ)
         self.socketio.server._handle_eio_connect(self.eio_sid, environ)
-        pkt = packet.Packet(packet.CONNECT, namespace=namespace)
+        pkt = packet.Packet(packet.CONNECT, auth, namespace=namespace)
         with self.app.app_context():
             self.socketio.server._handle_eio_message(self.eio_sid,
                                                      pkt.encode())

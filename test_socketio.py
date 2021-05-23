@@ -16,7 +16,9 @@ disconnected = None
 
 
 @socketio.on('connect')
-def on_connect():
+def on_connect(auth):
+    if auth != {'foo': 'bar'}:  # pragma: no cover
+        return False
     if request.args.get('fail'):
         return False
     send('connected')
@@ -278,8 +280,8 @@ class TestSocketIO(unittest.TestCase):
         pass
 
     def test_connect(self):
-        client = socketio.test_client(app)
-        client2 = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
+        client2 = socketio.test_client(app, auth={'foo': 'bar'})
         self.assertTrue(client.is_connected())
         self.assertTrue(client2.is_connected())
         self.assertNotEqual(client.eio_sid, client2.eio_sid)
@@ -297,7 +299,8 @@ class TestSocketIO(unittest.TestCase):
     def test_connect_query_string_and_headers(self):
         client = socketio.test_client(
             app, query_string='?foo=bar&foo=baz',
-            headers={'Authorization': 'Bearer foobar'})
+            headers={'Authorization': 'Bearer foobar'},
+            auth={'foo': 'bar'})
         received = client.get_received()
         self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected')
@@ -329,13 +332,14 @@ class TestSocketIO(unittest.TestCase):
         client.disconnect(namespace='/test')
 
     def test_connect_rejected(self):
-        client = socketio.test_client(app, query_string='fail=1')
+        client = socketio.test_client(app, query_string='fail=1',
+                                      auth={'foo': 'bar'})
         self.assertFalse(client.is_connected())
 
     def test_disconnect(self):
         global disconnected
         disconnected = None
-        client = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
         client.disconnect()
         self.assertEqual(disconnected, '/')
 
@@ -347,7 +351,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(disconnected, '/test')
 
     def test_send(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
         client.send('echo this message back')
         received = client.get_received()
@@ -355,8 +359,8 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[0]['args'], 'echo this message back')
 
     def test_send_json(self):
-        client1 = socketio.test_client(app)
-        client2 = socketio.test_client(app)
+        client1 = socketio.test_client(app, auth={'foo': 'bar'})
+        client2 = socketio.test_client(app, auth={'foo': 'bar'})
         client1.get_received()
         client2.get_received()
         client1.send({'a': 'b'}, json=True)
@@ -384,7 +388,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[0]['args']['a'], 'b')
 
     def test_emit(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
         client.emit('my custom event', {'a': 'b'})
         received = client.get_received()
@@ -394,7 +398,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[0]['args'][0]['a'], 'b')
 
     def test_emit_binary(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
         client.emit('my custom event', {u'a': b'\x01\x02\x03'})
         received = client.get_received()
@@ -404,7 +408,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[0]['args'][0]['a'], b'\x01\x02\x03')
 
     def test_request_event_data(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
         global request_event_data
         request_event_data = None
@@ -427,8 +431,8 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[0]['args'][0]['a'], 'b')
 
     def test_broadcast(self):
-        client1 = socketio.test_client(app)
-        client2 = socketio.test_client(app)
+        client1 = socketio.test_client(app, auth={'foo': 'bar'})
+        client2 = socketio.test_client(app, auth={'foo': 'bar'})
         client3 = socketio.test_client(app, namespace='/test')
         client2.get_received()
         client3.get_received('/test')
@@ -443,7 +447,7 @@ class TestSocketIO(unittest.TestCase):
     def test_broadcast_namespace(self):
         client1 = socketio.test_client(app, namespace='/test')
         client2 = socketio.test_client(app, namespace='/test')
-        client3 = socketio.test_client(app)
+        client3 = socketio.test_client(app, auth={'foo': 'bar'})
         client2.get_received('/test')
         client3.get_received()
         client1.emit('my custom broadcast namespace event', {'a': 'b'},
@@ -458,7 +462,8 @@ class TestSocketIO(unittest.TestCase):
     def test_session(self):
         flask_client = app.test_client()
         flask_client.get('/session')
-        client = socketio.test_client(app, flask_test_client=flask_client)
+        client = socketio.test_client(app, flask_test_client=flask_client,
+                                      auth={'foo': 'bar'})
         client.get_received()
         client.send('echo this message back')
         self.assertEqual(
@@ -470,8 +475,8 @@ class TestSocketIO(unittest.TestCase):
             {'a': 'b', 'foo': 'bar'})
 
     def test_room(self):
-        client1 = socketio.test_client(app)
-        client2 = socketio.test_client(app)
+        client1 = socketio.test_client(app, auth={'foo': 'bar'})
+        client2 = socketio.test_client(app, auth={'foo': 'bar'})
         client3 = socketio.test_client(app, namespace='/test')
         client1.get_received()
         client2.get_received()
@@ -516,7 +521,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(len(received), 0)
 
     def test_error_handling(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
         global error_testing
         error_testing = False
@@ -540,9 +545,9 @@ class TestSocketIO(unittest.TestCase):
         self.assertTrue(error_testing_default)
 
     def test_ack(self):
-        client1 = socketio.test_client(app)
-        client2 = socketio.test_client(app)
-        client3 = socketio.test_client(app)
+        client1 = socketio.test_client(app, auth={'foo': 'bar'})
+        client2 = socketio.test_client(app, auth={'foo': 'bar'})
+        client3 = socketio.test_client(app, auth={'foo': 'bar'})
         ack = client1.send('echo this message back', callback=True)
         self.assertEqual(ack, 'echo this message back')
         ack = client1.send('test noackargs', callback=True)
@@ -556,9 +561,9 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(ack3, {'a': 'b'})
 
     def test_noack(self):
-        client1 = socketio.test_client(app)
-        client2 = socketio.test_client(app)
-        client3 = socketio.test_client(app)
+        client1 = socketio.test_client(app, auth={'foo': 'bar'})
+        client2 = socketio.test_client(app, auth={'foo': 'bar'})
+        client3 = socketio.test_client(app, auth={'foo': 'bar'})
         no_ack_dict = {'noackargs': True}
         noack = client1.send("test noackargs", callback=False)
         self.assertIsNone(noack)
@@ -568,7 +573,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertIsNone(noack3)
 
     def test_error_handling_ack(self):
-        client1 = socketio.test_client(app)
+        client1 = socketio.test_client(app, auth={'foo': 'bar'})
         client2 = socketio.test_client(app, namespace='/test')
         client3 = socketio.test_client(app, namespace='/unused_namespace')
         errorack = client1.emit("error testing", "", callback=True)
@@ -582,7 +587,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(errorack_default, 'error/default')
 
     def test_on_event(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
         global request_event_data
         request_event_data = None
@@ -684,13 +689,13 @@ class TestSocketIO(unittest.TestCase):
         self.assertFalse(socketio.server.eio.allow_upgrades)
         self.assertEqual(socketio.server.eio.cookie, 'foo')
 
-        client = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
         received = client.get_received()
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]['args'], {'connected': 'foo'})
 
     def test_encode_decode(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
         data = {'foo': 'bar', 'invalid': socketio}
         self.assertRaises(TypeError, client.emit, 'my custom event', data,
@@ -704,7 +709,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[0]['args'][0], {'foo': 'bar'})
 
     def test_encode_decode_2(self):
-        client = socketio.test_client(app)
+        client = socketio.test_client(app, auth={'foo': 'bar'})
         self.assertRaises(TypeError, client.emit, 'bad response')
         self.assertRaises(TypeError, client.emit, 'bad callback',
                           callback=True)
