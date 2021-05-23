@@ -515,7 +515,7 @@ class SocketIO(object):
         """
         self.server.close_room(room, namespace)
 
-    def run(self, app, host=None, port=None, **kwargs):
+    def run(self, app, host=None, port=None, **kwargs):  # pragma: no cover
         """Run the SocketIO web server.
 
         :param app: The Flask application instance.
@@ -527,8 +527,12 @@ class SocketIO(object):
                       start in normal mode.
         :param use_reloader: ``True`` to enable the Flask reloader, ``False``
                              to disable it.
+        :param reloader_options: A dictionary with options that are passed to
+                                 the Flask reloader, such as ``extra_files``,
+                                 ``reloader_type``, etc.
         :param extra_files: A list of additional files that the Flask
-                            reloader should watch. Defaults to ``None``
+                            reloader should watch. Defaults to ``None``.
+                            Deprecated, use ``reloader_options`` instead.
         :param log_output: If ``True``, the server logs all incoming
                            connections. If ``False`` logging is disabled.
                            Defaults to ``True`` in debug mode, ``False``
@@ -554,6 +558,9 @@ class SocketIO(object):
         log_output = kwargs.pop('log_output', debug)
         use_reloader = kwargs.pop('use_reloader', debug)
         extra_files = kwargs.pop('extra_files', None)
+        reloader_options = kwargs.pop('reloader_options', {})
+        if extra_files:
+            reloader_options['extra_files'] = extra_files
 
         app.debug = debug
         if app.debug and self.server.eio.async_mode != 'threading':
@@ -583,13 +590,13 @@ class SocketIO(object):
 
         if self.server.eio.async_mode == 'threading':
             try:
-                import simple_websocket
+                import simple_websocket  # noqa: F401
             except ImportError:
                 from werkzeug._internal import _log
                 _log('warning', 'WebSocket transport not available. Install '
                                 'simple-websocket for improved performance.')
             app.run(host=host, port=port, threaded=True,
-                    use_reloader=use_reloader, **kwargs)
+                    use_reloader=use_reloader, **reloader_options, **kwargs)
         elif self.server.eio.async_mode == 'eventlet':
             def run_server():
                 import eventlet
@@ -619,7 +626,7 @@ class SocketIO(object):
                                      log_output=log_output, **kwargs)
 
             if use_reloader:
-                run_with_reloader(run_server, extra_files=extra_files)
+                run_with_reloader(run_server, **reloader_options)
             else:
                 run_server()
         elif self.server.eio.async_mode == 'gevent':
@@ -653,7 +660,7 @@ class SocketIO(object):
                 def run_server():
                     self.wsgi_server.serve_forever()
 
-                run_with_reloader(run_server, extra_files=extra_files)
+                run_with_reloader(run_server, **reloader_options)
             else:
                 self.wsgi_server.serve_forever()
 
