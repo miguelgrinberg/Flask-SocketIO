@@ -1,5 +1,14 @@
 # Flask-SocketIO change log
 
+**Release 5.1.0** - 2021-05-28
+
+- Add reloader_options argument to socketio.run[#1556](https://github.com/miguelgrinberg/flask-socketio/issues/1556) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/f9036ebd6fa8301aecbbbafd79087523e83d18a1))
+- Pass auth data from client in connect event handler [#1555](https://github.com/miguelgrinberg/flask-socketio/issues/1555) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/43dc6e57e9a243065a0d1f1d51fe8257ab51d7c2))
+- Do not show simple-websocket install prompt if it is already installed ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/03a52c8df48c6d1340107c57d7a99d1357df9ac3))
+- Fix namespace bug in example [#1543](https://github.com/miguelgrinberg/flask-socketio/issues/1543) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/acc57aff7f5e6b322adfe7600b5177c74e7b54ef))
+- Added index to documentation [#724](https://github.com/miguelgrinberg/flask-socketio/issues/724) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/f839a4cbe24644500efad287cce24c38a058a36c))
+- Fixed typo in documentation [#1551](https://github.com/miguelgrinberg/flask-socketio/issues/1551) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/22a7ea42ed771100c347d52762e38e719b373a0f)) (thanks **Mayank Anuragi**!)
+
 **Release 5.0.3** - 2021-05-15
 
 - Document the use of simple-websocket with the development web server ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/6a2463cc21e56dfac27f63832d2510a3e1467634))
