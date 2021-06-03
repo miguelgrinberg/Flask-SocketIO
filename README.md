@@ -5,6 +5,16 @@ Flask-SocketIO
 
 Socket.IO integration for Flask applications.
 
+Sponsors
+--------
+
+The following organizations are funding this project:
+
+![Socket.IO](https://images.opencollective.com/socketio/050e5eb/logo/64.png)<br>[Socket.IO](https://socket.io)  | [Add your company here!](https://github.com/sponsors/miguelgrinberg)|
+-|-
+
+Many individual sponsors also support this project through small ongoing contributions. Why not [join them](https://github.com/sponsors/miguelgrinberg)?
+
 Installation
 ------------
 
