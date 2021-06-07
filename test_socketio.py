@@ -1,9 +1,5 @@
 import json
 import unittest
-import coverage
-
-cov = coverage.coverage(branch=True)
-cov.start()
 
 from flask import Flask, session, request, json as flask_json
 from flask_socketio import SocketIO, send, emit, join_room, leave_room, \
@@ -270,8 +266,7 @@ class TestSocketIO(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cov.stop()
-        cov.report(include='flask_socketio/*', show_missing=True)
+        pass
 
     def setUp(self):
         pass

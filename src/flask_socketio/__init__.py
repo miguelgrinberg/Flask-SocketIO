@@ -26,8 +26,6 @@ from werkzeug._reloader import run_with_reloader
 from .namespace import Namespace
 from .test_client import SocketIOTestClient
 
-__version__ = '5.1.1dev'
-
 
 class _SocketIOMiddleware(socketio.WSGIApp):
     """This WSGI middleware simply exposes the Flask application in the WSGI
