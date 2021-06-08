@@ -44,7 +44,7 @@ modified command is::
     gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 module:app
 
 A third option with Gunicorn is to use the threaded worker, along with the
-`simple-websocket <https://github.com/miguelgrinberg/simple-websocket`_
+`simple-websocket <https://github.com/miguelgrinberg/simple-websocket>`_
 package for WebSocket support. This is a particularly good solution for
 applications that are CPU heavy or are otherwise incompatible with eventlet
 and gevent use of green threads. The command to start a threaded web server
