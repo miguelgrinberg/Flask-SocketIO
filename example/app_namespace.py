@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 from threading import Lock
 from flask import Flask, render_template, session, request
 from flask_socketio import SocketIO, Namespace, emit, join_room, leave_room, \
