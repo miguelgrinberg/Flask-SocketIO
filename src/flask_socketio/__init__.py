@@ -607,15 +607,20 @@ class SocketIO(object):
                 eventlet_socket = eventlet.listen(addresses[0][4],
                                                   addresses[0][0])
 
-                # If provided an SSL argument, use an SSL socket
-                ssl_args = ['keyfile', 'certfile', 'server_side', 'cert_reqs',
-                            'ssl_version', 'ca_certs',
-                            'do_handshake_on_connect', 'suppress_ragged_eofs',
-                            'ciphers']
-                ssl_params = {k: kwargs[k] for k in kwargs if k in ssl_args}
-                if len(ssl_params) > 0:
-                    for k in ssl_params:
-                        kwargs.pop(k)
+                # If provided a non-default SSL argument, use an SSL socket
+                ssl_args = {'keyfile': None, 'certfile': None, 
+                            'server_side': False, 'cert_reqs': None,
+                            'ssl_version': None, 'ca_certs': None,
+                            'do_handshake_on_connect': True, 
+                            'suppress_ragged_eofs': True, 'ciphers': None}
+                ssl_params = {k: kwargs[k] for k in kwargs 
+                                if k in ssl_args.keys()}
+                non_default_ssl_params = {k: kwargs[k] for k in kwargs 
+                                if k in ssl_args.keys() and 
+                                kwargs[k] != ssl_args[k]}
+                for k in ssl_params:
+                    kwargs.pop(k)
+                if len(non_default_ssl_params) > 0:
                     ssl_params['server_side'] = True  # Listening requires true
                     eventlet_socket = eventlet.wrap_ssl(eventlet_socket,
                                                         **ssl_params)
