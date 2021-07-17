@@ -612,7 +612,8 @@ class SocketIO(object):
                             'ssl_version', 'ca_certs',
                             'do_handshake_on_connect', 'suppress_ragged_eofs',
                             'ciphers']
-                ssl_params = {k: kwargs[k] for k in kwargs if k in ssl_args}
+                ssl_params = {k: kwargs[k] for k in kwargs
+                              if k in ssl_args and kwargs[k] is not None}
                 if len(ssl_params) > 0:
                     for k in ssl_params:
                         kwargs.pop(k)
