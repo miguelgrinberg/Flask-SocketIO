@@ -614,9 +614,9 @@ class SocketIO(object):
                             'ciphers']
                 ssl_params = {k: kwargs[k] for k in kwargs
                               if k in ssl_args and kwargs[k] is not None}
+                for k in ssl_args:
+                    kwargs.pop(k, None)
                 if len(ssl_params) > 0:
-                    for k in ssl_params:
-                        kwargs.pop(k)
                     ssl_params['server_side'] = True  # Listening requires true
                     eventlet_socket = eventlet.wrap_ssl(eventlet_socket,
                                                         **ssl_params)
