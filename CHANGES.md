@@ -1,5 +1,12 @@
 # Flask-SocketIO change log
 
+**Release 5.1.1** - 2021-08-02
+
+- Only use SSL socket if at least one SSL kwarg is not None [#1639](https://github.com/miguelgrinberg/flask-socketio/issues/1639) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/57e525f6b9ac46c83004f8070ef55c943097a293)) (thanks **JT Raber**!)
+- Remove unused SSL arguments from eventlet server options [#1639](https://github.com/miguelgrinberg/flask-socketio/issues/1639) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/4b5e5202b51b672677841c12296451fe11d9cc52))
+- Remove executable permissions from files that lack shebang lines [#1621](https://github.com/miguelgrinberg/flask-socketio/issues/1621) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/ee2c4e9b50b159fd258497cd52bbe27342dc4089)) (thanks **Ben Beasley**!)
+- Improved project structure ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/df04df439535ad5eb7ce910ae1e8204aed3cabfc))
+
 **Release 5.1.0** - 2021-05-28
 
 - Add reloader_options argument to socketio.run[#1556](https://github.com/miguelgrinberg/flask-socketio/issues/1556) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/f9036ebd6fa8301aecbbbafd79087523e83d18a1))
