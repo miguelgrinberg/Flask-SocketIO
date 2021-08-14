@@ -536,6 +536,10 @@ class SocketIO(object):
                            Defaults to ``True`` in debug mode, ``False``
                            in normal mode. Unused when the threading async
                            mode is used.
+        :param backlog: Maximum number of queued connections, for eventlet
+                        or gevent only.
+        :param reuse_addr: Set SO_REUSEADDR socket option, for eventlet only.
+        :param reuse_port: Set SO_REUSEPORT socket option, for eventlet only.
         :param kwargs: Additional web server options. The web server options
                        are specific to the server used in each of the supported
                        async modes. Note that options provided here will
@@ -557,6 +561,9 @@ class SocketIO(object):
         use_reloader = kwargs.pop('use_reloader', debug)
         extra_files = kwargs.pop('extra_files', None)
         reloader_options = kwargs.pop('reloader_options', {})
+        reuse_addr = kwargs.pop('reuse_addr', None)
+        reuse_port = kwargs.pop('reuse_port', None)
+        backlog = kwargs.pop('reuse_port', None)
         if extra_files:
             reloader_options['extra_files'] = extra_files
 
@@ -605,7 +612,10 @@ class SocketIO(object):
                     raise RuntimeError(
                         'Could not resolve host to a valid address')
                 eventlet_socket = eventlet.listen(addresses[0][4],
-                                                  addresses[0][0])
+                                                  addresses[0][0],
+                                                  backlog=backlog,
+                                                  reuse_addr=reuse_addr,
+                                                  reuse_port=reuse_port)
 
                 # If provided an SSL argument, use an SSL socket
                 ssl_args = ['keyfile', 'certfile', 'server_side', 'cert_reqs',
@@ -645,7 +655,7 @@ class SocketIO(object):
             if websocket:
                 self.wsgi_server = pywsgi.WSGIServer(
                     (host, port), app, handler_class=WebSocketHandler,
-                    log=log, **kwargs)
+                    backlog=backlog, log=log, **kwargs)
             else:
                 self.wsgi_server = pywsgi.WSGIServer((host, port), app,
                                                      log=log, **kwargs)
