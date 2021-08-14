@@ -910,7 +910,7 @@ def join_room(room, sid=None, namespace=None):
             username = session['username']
             room = data['room']
             join_room(room)
-            send(username + ' has entered the room.', room=room)
+            send(username + ' has entered the room.', to=room)
 
     :param room: The name of the room to join.
     :param sid: The session id of the client. If not provided, the client is
@@ -935,7 +935,7 @@ def leave_room(room, sid=None, namespace=None):
             username = session['username']
             room = data['room']
             leave_room(room)
-            send(username + ' has left the room.', room=room)
+            send(username + ' has left the room.', to=room)
 
     :param room: The name of the room to leave.
     :param sid: The session id of the client. If not provided, the client is
