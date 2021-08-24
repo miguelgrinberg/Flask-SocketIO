@@ -116,9 +116,7 @@ class SocketIOTestClient(object):
             self.flask_test_client.cookie_jar.inject_wsgi(environ)
         self.socketio.server._handle_eio_connect(self.eio_sid, environ)
         pkt = packet.Packet(packet.CONNECT, auth, namespace=namespace)
-        with self.app.app_context():
-            self.socketio.server._handle_eio_message(self.eio_sid,
-                                                     pkt.encode())
+        self.socketio.server._handle_eio_message(self.eio_sid, pkt.encode())
         sid = self.socketio.server.manager.sid_from_eio_sid(self.eio_sid,
                                                             namespace)
         if sid:
@@ -133,9 +131,7 @@ class SocketIOTestClient(object):
         if not self.is_connected(namespace):
             raise RuntimeError('not connected')
         pkt = packet.Packet(packet.DISCONNECT, namespace=namespace)
-        with self.app.app_context():
-            self.socketio.server._handle_eio_message(self.eio_sid,
-                                                     pkt.encode())
+        self.socketio.server._handle_eio_message(self.eio_sid, pkt.encode())
         del self.connected[namespace or '/']
 
     def emit(self, event, *args, **kwargs):
@@ -163,15 +159,12 @@ class SocketIOTestClient(object):
             id = self.callback_counter
         pkt = packet.Packet(packet.EVENT, data=[event] + list(args),
                             namespace=namespace, id=id)
-        with self.app.app_context():
-            encoded_pkt = pkt.encode()
-            if isinstance(encoded_pkt, list):
-                for epkt in encoded_pkt:
-                    self.socketio.server._handle_eio_message(self.eio_sid,
-                                                             epkt)
-            else:
-                self.socketio.server._handle_eio_message(self.eio_sid,
-                                                         encoded_pkt)
+        encoded_pkt = pkt.encode()
+        if isinstance(encoded_pkt, list):
+            for epkt in encoded_pkt:
+                self.socketio.server._handle_eio_message(self.eio_sid, epkt)
+        else:
+            self.socketio.server._handle_eio_message(self.eio_sid, encoded_pkt)
         ack = self.acks.pop(self.eio_sid, None)
         if ack is not None:
             return ack['args'][0] if len(ack['args']) == 1 \
