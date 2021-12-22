@@ -90,7 +90,7 @@ class MyNamespace(Namespace):
         print('Client disconnected', request.sid)
 
 
-socketio.on_namespace(MyNamespace('/'))
+socketio.on_namespace(MyNamespace('/test'))
 
 
 if __name__ == '__main__':
