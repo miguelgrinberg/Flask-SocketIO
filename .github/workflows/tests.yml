@@ -22,14 +22,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python: ['3.6', '3.7', '3.8', '3.9', 'pypy3']
+        python: ['3.7', '3.8', '3.9', '3.10', 'pypy-3.8']
         exclude:
           # pypy3 currently fails to run on Windows
           - os: windows-latest
-            python: pypy3
-          # the loop fails to close in the Mac version of 3.9
-          - os: macos-latest
-            python: '3.9'
+            python: pypy-3.8
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
