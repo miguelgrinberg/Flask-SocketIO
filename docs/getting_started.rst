@@ -174,7 +174,7 @@ SocketIO supports acknowledgment callbacks that confirm that a message was
 received by the client::
 
     def ack():
-        print 'message was received!'
+        print('message was received!')
 
     @socketio.on('my event')
     def handle_my_custom_event(json):
