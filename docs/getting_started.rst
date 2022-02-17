@@ -277,7 +277,7 @@ client does not provide authentication details, then this argument is set to
 argument, then any authentication data passed by the cient is discarded.
 
 The connection event handler can return ``False`` to reject the connection, or
-it can also raise `ConectionRefusedError`. This is so that the client can be
+it can also raise `ConnectionRefusedError`. This is so that the client can be
 authenticated at this point. When using the exception, any arguments passed to
 the exception are returned to the client in the error packet. Examples::
 
