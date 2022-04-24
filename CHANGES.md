@@ -1,5 +1,14 @@
 # Flask-SocketIO change log
 
+**Release 5.1.2** - 2022-04-24
+
+- No need to push a new app context in the test client [#1669](https://github.com/miguelgrinberg/flask-socketio/issues/1669) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/bd6a0e2acbaff83822d35025bdbf8984d02fb88b))
+- Remove 3.6 and pypy-3.6 builds, add 3.10 and pypy-3.8 ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/004d34482f42f168b087d966bc414c5b1c7e9da0))
+- Improve documentation on `start_background_task()` function ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/a10ea5cf65007061d7b3fd87b530c382007adebb))
+- changed `room` argument to `to` in documentation examples [#1665](https://github.com/miguelgrinberg/flask-socketio/issues/1665) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/086196a88781f58ca6e13f476c1cdf8129e1e15c)) (thanks **David McInnis**!)
+- Fix documentation typo [#1793](https://github.com/miguelgrinberg/flask-socketio/issues/1793) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/732d223b053ac66b1be7a41abf9824c7e1e895ff)) (thanks **Gabe Rust**!)
+- Fix example code in documentation [#1787](https://github.com/miguelgrinberg/flask-socketio/issues/1787) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/da37fce56379f37b41102f4ccaf2b315b27b4459)) (thanks **Louis-Justin TALLOT**!)
+
 **Release 5.1.1** - 2021-08-02
 
 - Only use SSL socket if at least one SSL kwarg is not None [#1639](https://github.com/miguelgrinberg/flask-socketio/issues/1639) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/57e525f6b9ac46c83004f8070ef55c943097a293)) (thanks **JT Raber**!)
