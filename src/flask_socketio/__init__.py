@@ -434,7 +434,7 @@ class SocketIO(object):
                          only be used when addressing an individual client.
         """
         namespace = kwargs.pop('namespace', '/')
-        to = kwargs.pop('to', kwargs.pop('room', None))
+        to = kwargs.pop('to', None) or kwargs.pop('room', None)
         include_self = kwargs.pop('include_self', True)
         skip_sid = kwargs.pop('skip_sid', None)
         if not include_self and not skip_sid:
@@ -827,7 +827,7 @@ def emit(event, *args, **kwargs):
         namespace = flask.request.namespace
     callback = kwargs.get('callback')
     broadcast = kwargs.get('broadcast')
-    to = kwargs.pop('to', kwargs.pop('room', None))
+    to = kwargs.pop('to', None) or kwargs.pop('room', None)
     if to is None and not broadcast:
         to = flask.request.sid
     include_self = kwargs.get('include_self', True)
@@ -885,7 +885,7 @@ def send(message, **kwargs):
         namespace = flask.request.namespace
     callback = kwargs.get('callback')
     broadcast = kwargs.get('broadcast')
-    to = kwargs.pop('to', kwargs.pop('room', None))
+    to = kwargs.pop('to', None) or kwargs.pop('room', None)
     if to is None and not broadcast:
         to = flask.request.sid
     include_self = kwargs.get('include_self', True)
