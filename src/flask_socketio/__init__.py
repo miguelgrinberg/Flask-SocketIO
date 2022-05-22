@@ -536,6 +536,10 @@ class SocketIO(object):
                            Defaults to ``True`` in debug mode, ``False``
                            in normal mode. Unused when the threading async
                            mode is used.
+        :param allow_unsafe_werkzeug: Set to ``True`` to allow the use of the
+                                      Werkzeug web server in a production
+                                      setting. Default is ``False``. Set to
+                                      ``True`` at your own risk.
         :param kwargs: Additional web server options. The web server options
                        are specific to the server used in each of the supported
                        async modes. Note that options provided here will
@@ -593,6 +597,20 @@ class SocketIO(object):
                 from werkzeug._internal import _log
                 _log('warning', 'WebSocket transport not available. Install '
                                 'simple-websocket for improved performance.')
+            if not sys.stdin or not sys.stdin.isatty():  # pragma: no cover
+                allow_unsafe_werkzeug = kwargs.pop('allow_unsafe_werkzeug',
+                                                   False)
+                if not allow_unsafe_werkzeug:
+                    raise RuntimeError('The Werkzeug web server is not '
+                                       'designed to run in production. Pass '
+                                       'allow_unsafe_werkzeug=True to the '
+                                       'run() method to disable this error.')
+                else:
+                    from werkzeug._internal import _log
+                    _log('warning', ('Werkzeug appears to be used in a '
+                                     'production deployment. Consider '
+                                     'switching to a production web server '
+                                     'instead.'))
             app.run(host=host, port=port, threaded=True,
                     use_reloader=use_reloader, **reloader_options, **kwargs)
         elif self.server.eio.async_mode == 'eventlet':
