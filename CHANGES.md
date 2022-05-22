@@ -1,5 +1,10 @@
 # Flask-SocketIO change log
 
+**Release 5.2.0** - 2022-05-22
+
+- Better handling of `message_queue` connection argument [#1130](https://github.com/miguelgrinberg/flask-socketio/issues/1130) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/2afebb95be724ad62431ec91040f6d365a8fc969))
+- More robust handling of `to` and `room` arguments of `emit` and `send` [#1771](https://github.com/miguelgrinberg/flask-socketio/issues/1771) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/f7ca69af129e6575f82142f27fbf9054522e969d))
+
 **Release 5.1.2** - 2022-04-24
 
 - No need to push a new app context in the test client [#1669](https://github.com/miguelgrinberg/flask-socketio/issues/1669) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/bd6a0e2acbaff83822d35025bdbf8984d02fb88b))
