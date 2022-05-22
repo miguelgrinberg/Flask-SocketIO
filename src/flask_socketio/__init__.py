@@ -197,8 +197,8 @@ class SocketIO(object):
         self.manage_session = self.server_options.pop('manage_session',
                                                       self.manage_session)
 
-        if 'client_manager' not in self.server_options:
-            url = self.server_options.pop('message_queue', None)
+        if 'client_manager' not in kwargs:
+            url = self.server_options.get('message_queue', None)
             channel = self.server_options.pop('channel', 'flask-socketio')
             write_only = app is None
             if url:

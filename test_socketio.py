@@ -345,6 +345,25 @@ class TestSocketIO(unittest.TestCase):
         client.disconnect('/test')
         self.assertEqual(disconnected, '/test')
 
+    def test_message_queue_options(self):
+        app = Flask(__name__)
+        socketio = SocketIO(app, message_queue='redis://')
+        self.assertFalse(socketio.server_options['client_manager'].write_only)
+
+        app = Flask(__name__)
+        socketio = SocketIO(app)
+        socketio.init_app(app, message_queue='redis://')
+        self.assertFalse(socketio.server_options['client_manager'].write_only)
+
+        app = Flask(__name__)
+        socketio = SocketIO(message_queue='redis://')
+        self.assertTrue(socketio.server_options['client_manager'].write_only)
+
+        app = Flask(__name__)
+        socketio = SocketIO()
+        socketio.init_app(None, message_queue='redis://')
+        self.assertTrue(socketio.server_options['client_manager'].write_only)
+
     def test_send(self):
         client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
