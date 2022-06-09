@@ -150,6 +150,35 @@ While the above examples can work as an initial configuration, be aware that a
 production install of nginx will need a more complete configuration covering
 other deployment aspects such as SSL support.
 
+Using Apache as a WebSocket Reverse Proxy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is also possible to use Apache as a front-end reverse proxy that passes requests
+to the application. The mods `proxy`, `proxy_http` and `proxy_wstunnel` are 
+need to be installed and enabled for this. You can also optionally enable the 
+`alias` mod for static assets. Below is a basic example of a Virtual Host 
+configuration::
+
+    <VirtualHost *:80>
+        ServerName example.com
+        
+        RewriteEngine on
+        RewriteCond ${HTTP:Upgrade} websocket [NC]
+        RewriteCond ${HTTP:Connection} upgrade [NC]
+        RewriteRule .* "wss:/127.0.0.1:5000/$1" [P,L]
+        
+        ProxyPass / https://127.0.0.1:5000/
+        ProxyPassReverse / https://127.0.0.1:5000/
+        ProxyRequests off
+        
+        Alias /static <path-to-your-application>/static
+        <Directory <path-to-your-application>/static>
+            AllowOverride All
+            Require all granted
+            Options FollowSymLinks
+        </Directory>
+    </VirtualHost>
+
 Using Multiple Workers
 ~~~~~~~~~~~~~~~~~~~~~~
 
