@@ -205,8 +205,6 @@ class SocketIOTestClient(object):
                           namespace is assumed if this argument is not
                           provided.
         """
-        if not self.is_connected(namespace):
-            raise RuntimeError('not connected')
         namespace = namespace or '/'
         r = [pkt for pkt in self.queue[self.eio_sid]
              if pkt['namespace'] == namespace]
