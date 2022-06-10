@@ -26,10 +26,12 @@ class SocketIOTestClient(object):
     """
     queue = {}
     acks = {}
+    connected = {}
 
     def __init__(self, app, socketio, namespace=None, query_string=None,
                  headers=None, auth=None, flask_test_client=None):
         def _mock_send_packet(eio_sid, pkt):
+            print(self.eio_sid, pkt.data, pkt.packet_type)
             # make sure the packet can be encoded and decoded
             epkt = pkt.encode()
             if not isinstance(epkt, list):
@@ -57,7 +59,7 @@ class SocketIOTestClient(object):
                 self.acks[eio_sid] = {'args': pkt.data,
                                       'namespace': pkt.namespace or '/'}
             elif pkt.packet_type in [packet.DISCONNECT, packet.CONNECT_ERROR]:
-                self.connected[pkt.namespace or '/'] = False
+                self.connected[eio_sid][pkt.namespace or '/'] = False
 
         self.app = app
         self.flask_test_client = flask_test_client
@@ -66,7 +68,7 @@ class SocketIOTestClient(object):
         self.queue[self.eio_sid] = []
         self.callback_counter = 0
         self.socketio = socketio
-        self.connected = {}
+        self.connected[self.eio_sid] = {}
         socketio.server._send_packet = _mock_send_packet
         socketio.server.environ[self.eio_sid] = {}
         socketio.server.async_handlers = False      # easier to test when
@@ -85,7 +87,7 @@ class SocketIOTestClient(object):
         :param namespace: The namespace to check. The global namespace is
                          assumed if this argument is not provided.
         """
-        return self.connected.get(namespace or '/', False)
+        return self.connected[self.eio_sid].get(namespace or '/', False)
 
     def connect(self, namespace=None, query_string=None, headers=None,
                 auth=None):
@@ -120,7 +122,7 @@ class SocketIOTestClient(object):
         sid = self.socketio.server.manager.sid_from_eio_sid(self.eio_sid,
                                                             namespace)
         if sid:
-            self.connected[namespace] = True
+            self.connected[self.eio_sid][namespace] = True
 
     def disconnect(self, namespace=None):
         """Disconnect the client.
@@ -132,7 +134,7 @@ class SocketIOTestClient(object):
             raise RuntimeError('not connected')
         pkt = packet.Packet(packet.DISCONNECT, namespace=namespace)
         self.socketio.server._handle_eio_message(self.eio_sid, pkt.encode())
-        del self.connected[namespace or '/']
+        del self.connected[self.eio_sid][namespace or '/']
 
     def emit(self, event, *args, **kwargs):
         """Emit an event to the server.
