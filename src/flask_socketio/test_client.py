@@ -31,7 +31,6 @@ class SocketIOTestClient(object):
     def __init__(self, app, socketio, namespace=None, query_string=None,
                  headers=None, auth=None, flask_test_client=None):
         def _mock_send_packet(eio_sid, pkt):
-            print(self.eio_sid, pkt.data, pkt.packet_type)
             # make sure the packet can be encoded and decoded
             epkt = pkt.encode()
             if not isinstance(epkt, list):
