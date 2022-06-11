@@ -24,8 +24,7 @@ class SocketIOTestClient(object):
                               cookies set in HTTP routes accessible from
                               Socket.IO events.
     """
-    queue = {}
-    acks = {}
+    clients = {}
 
     def __init__(self, app, socketio, namespace=None, query_string=None,
                  headers=None, auth=None, flask_test_client=None):
@@ -38,35 +37,37 @@ class SocketIOTestClient(object):
                 pkt = packet.Packet(encoded_packet=epkt[0])
                 for att in epkt[1:]:
                     pkt.add_attachment(att)
+            client = self.clients.get(eio_sid)
+            if not client:
+                return
             if pkt.packet_type == packet.EVENT or \
                     pkt.packet_type == packet.BINARY_EVENT:
-                if eio_sid not in self.queue:
-                    self.queue[eio_sid] = []
                 if pkt.data[0] == 'message' or pkt.data[0] == 'json':
-                    self.queue[eio_sid].append({
+                    client.queue.append({
                         'name': pkt.data[0],
                         'args': pkt.data[1],
                         'namespace': pkt.namespace or '/'})
                 else:
-                    self.queue[eio_sid].append({
+                    client.queue.append({
                         'name': pkt.data[0],
                         'args': pkt.data[1:],
                         'namespace': pkt.namespace or '/'})
             elif pkt.packet_type == packet.ACK or \
                     pkt.packet_type == packet.BINARY_ACK:
-                self.acks[eio_sid] = {'args': pkt.data,
-                                      'namespace': pkt.namespace or '/'}
+                client.acks = {'args': pkt.data,
+                               'namespace': pkt.namespace or '/'}
             elif pkt.packet_type in [packet.DISCONNECT, packet.CONNECT_ERROR]:
-                self.connected[pkt.namespace or '/'] = False
+                client.connected[pkt.namespace or '/'] = False
 
         self.app = app
         self.flask_test_client = flask_test_client
         self.eio_sid = uuid.uuid4().hex
-        self.acks[self.eio_sid] = None
-        self.queue[self.eio_sid] = []
+        self.clients[self.eio_sid] = self
         self.callback_counter = 0
         self.socketio = socketio
         self.connected = {}
+        self.queue = []
+        self.acks = None
         socketio.server._send_packet = _mock_send_packet
         socketio.server.environ[self.eio_sid] = {}
         socketio.server.async_handlers = False      # easier to test when
@@ -165,8 +166,9 @@ class SocketIOTestClient(object):
                 self.socketio.server._handle_eio_message(self.eio_sid, epkt)
         else:
             self.socketio.server._handle_eio_message(self.eio_sid, encoded_pkt)
-        ack = self.acks.pop(self.eio_sid, None)
-        if ack is not None:
+        if self.acks is not None:
+            ack = self.acks
+            self.acks = None
             return ack['args'][0] if len(ack['args']) == 1 \
                 else ack['args']
 
@@ -206,8 +208,6 @@ class SocketIOTestClient(object):
         if not self.is_connected(namespace):
             raise RuntimeError('not connected')
         namespace = namespace or '/'
-        r = [pkt for pkt in self.queue[self.eio_sid]
-             if pkt['namespace'] == namespace]
-        self.queue[self.eio_sid] = [
-            pkt for pkt in self.queue[self.eio_sid] if pkt not in r]
+        r = [pkt for pkt in self.queue if pkt['namespace'] == namespace]
+        self.queue = [pkt for pkt in self.queue if pkt not in r]
         return r

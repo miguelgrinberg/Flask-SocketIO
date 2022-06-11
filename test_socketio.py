@@ -21,6 +21,7 @@ def on_connect(auth):
     send(json.dumps(request.args.to_dict(flat=False)))
     send(json.dumps({h: request.headers[h] for h in request.headers.keys()
                      if h not in ['Host', 'Content-Type', 'Content-Length']}))
+    emit('dummy', to='nobody')
 
 
 @socketio.on('disconnect')
@@ -666,11 +667,18 @@ class TestSocketIO(unittest.TestCase):
 
     def test_server_disconnected(self):
         client = socketio.test_client(app, namespace='/ns')
+        client2 = socketio.test_client(app, namespace='/ns')
         client.get_received('/ns')
+        client2.get_received('/ns')
         client.emit('exit', {}, namespace='/ns')
         self.assertFalse(client.is_connected('/ns'))
+        self.assertTrue(client2.is_connected('/ns'))
         with self.assertRaises(RuntimeError):
             client.emit('hello', {}, namespace='/ns')
+        client2.emit('exit', {}, namespace='/ns')
+        self.assertFalse(client2.is_connected('/ns'))
+        with self.assertRaises(RuntimeError):
+            client2.emit('hello', {}, namespace='/ns')
 
     def test_emit_class_based(self):
         client = socketio.test_client(app, namespace='/ns')
