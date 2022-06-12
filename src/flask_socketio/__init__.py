@@ -416,9 +416,9 @@ class SocketIO(object):
         :param args: A dictionary with the JSON data to send as payload.
         :param namespace: The namespace under which the message is to be sent.
                           Defaults to the global namespace.
-        :param to: Send the message to all the users in the given room. If
-                   this parameter is not included, the event is sent to all
-                   connected users.
+        :param to: Send the message to all the users in the given room, or to
+                   the user with the given session ID. If this parameter is not
+                   included, the event is sent to all connected users.
         :param include_self: ``True`` to include the sender when broadcasting
                              or addressing a room, or ``False`` to send to
                              everyone but the sender.
@@ -460,6 +460,41 @@ class SocketIO(object):
         self.server.emit(event, *args, namespace=namespace, to=to,
                          skip_sid=skip_sid, callback=callback, **kwargs)
 
+    def call(self, event, *args, **kwargs):  # pragma: no cover
+        """Emit a SocketIO event and wait for the response.
+
+        This method issues an emit with a callback and waits for the callback
+        to be invoked by the client before returning. If the callback isn’t
+        invoked before the timeout, then a TimeoutError exception is raised. If
+        the Socket.IO connection drops during the wait, this method still waits
+        until the specified timeout. Example::
+
+            def get_status(client, data):
+                status = call('status', {'data': data}, to=client)
+
+        :param event: The name of the user event to emit.
+        :param args: A dictionary with the JSON data to send as payload.
+        :param namespace: The namespace under which the message is to be sent.
+                          Defaults to the global namespace.
+        :param to: The session ID of the recipient client.
+        :param timeout: The waiting timeout. If the timeout is reached before
+                        the client acknowledges the event, then a
+                        ``TimeoutError`` exception is raised. The default is 60
+                        seconds.
+        :param ignore_queue: Only used when a message queue is configured. If
+                             set to ``True``, the event is emitted to the
+                             client directly, without going through the queue.
+                             This is more efficient, but only works when a
+                             single server process is used, or when there is a
+                             single addressee. It is recommended to always
+                             leave this parameter with its default value of
+                             ``False``.
+        """
+        namespace = kwargs.pop('namespace', '/')
+        to = kwargs.pop('to', None) or kwargs.pop('room', None)
+        return self.server.call(event, *args, namespace=namespace, to=to,
+                                **kwargs)
+
     def send(self, data, json=False, namespace=None, to=None,
              callback=None, include_self=True, skip_sid=None, **kwargs):
         """Send a server-generated SocketIO message.
@@ -475,9 +510,9 @@ class SocketIO(object):
                      otherwise.
         :param namespace: The namespace under which the message is to be sent.
                           Defaults to the global namespace.
-        :param to: Send the message only to the users in the given room. If
-                   this parameter is not included, the message is sent to all
-                   connected users.
+        :param to: Send the message to all the users in the given room, or to
+                   the user with the given session ID. If this parameter is not
+                   included, the event is sent to all connected users.
         :param include_self: ``True`` to include the sender when broadcasting
                              or addressing a room, or ``False`` to send to
                              everyone but the sender.
@@ -820,9 +855,10 @@ def emit(event, *args, **kwargs):
                      acknowledgement.
     :param broadcast: ``True`` to send the message to all clients, or ``False``
                       to only reply to the sender of the originating event.
-    :param to: Send the message to all the users in the given room. If this
-               argument is not set and ``broadcast`` is ``False``, then the
-               message is sent only to the originating user.
+    :param to: Send the message to all the users in the given room, or to the
+               user with the given session ID. If this argument is not set and
+               ``broadcast`` is ``False``, then the message is sent only to the
+               originating user.
     :param include_self: ``True`` to include the sender when broadcasting or
                          addressing a room, or ``False`` to send to everyone
                          but the sender.
@@ -858,6 +894,53 @@ def emit(event, *args, **kwargs):
                          callback=callback, ignore_queue=ignore_queue)
 
 
+def call(event, *args, **kwargs):  # pragma: no cover
+    """Emit a SocketIO event and wait for the response.
+
+    This function issues an emit with a callback and waits for the callback to
+    be invoked by the client before returning. If the callback isn’t invoked
+    before the timeout, then a TimeoutError exception is raised. If the
+    Socket.IO connection drops during the wait, this method still waits until
+    the specified timeout. Example::
+
+        def get_status(client, data):
+            status = call('status', {'data': data}, to=client)
+
+    :param event: The name of the user event to emit.
+    :param args: A dictionary with the JSON data to send as payload.
+    :param namespace: The namespace under which the message is to be sent.
+                      Defaults to the namespace used by the originating event.
+                      A ``'/'`` can be used to explicitly specify the global
+                      namespace.
+    :param to: The session ID of the recipient client. If this argument is not
+               given, the event is sent to the originating client.
+    :param timeout: The waiting timeout. If the timeout is reached before the
+                    client acknowledges the event, then a ``TimeoutError``
+                    exception is raised. The default is 60 seconds.
+    :param ignore_queue: Only used when a message queue is configured. If
+                         set to ``True``, the event is emitted to the
+                         client directly, without going through the queue.
+                         This is more efficient, but only works when a
+                         single server process is used, or when there is a
+                         single addressee. It is recommended to always leave
+                         this parameter with its default value of ``False``.
+    """
+    if 'namespace' in kwargs:
+        namespace = kwargs['namespace']
+    else:
+        namespace = flask.request.namespace
+    to = kwargs.pop('to', None) or kwargs.pop('room', None)
+    if to is None:
+        to = flask.request.sid
+    timeout = kwargs.get('timeout', 60)
+    ignore_queue = kwargs.get('ignore_queue', False)
+
+    socketio = flask.current_app.extensions['socketio']
+    return socketio.call(event, *args, namespace=namespace, to=to,
+                         include_self=False, skip_sid=None,
+                         ignore_queue=ignore_queue, timeout=timeout)
+
+
 def send(message, **kwargs):
     """Send a SocketIO message.
 
@@ -877,9 +960,10 @@ def send(message, **kwargs):
     :param broadcast: ``True`` to send the message to all connected clients, or
                       ``False`` to only reply to the sender of the originating
                       event.
-    :param to: Send the message to all the users in the given room. If this
-               argument is not set and ``broadcast`` is ``False``, then the
-               message is sent only to the originating user.
+    :param to: Send the message to all the users in the given room, or to the
+               user with the given session ID. If this argument is not set and
+               ``broadcast`` is ``False``, then the message is sent only to the
+               originating user.
     :param include_self: ``True`` to include the sender when broadcasting or
                          addressing a room, or ``False`` to send to everyone
                          but the sender.
