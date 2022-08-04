@@ -274,7 +274,7 @@ The ``auth`` argument in the connection handler is optional. The client can
 use it to pass authentication data such as tokens in dictionary format. If the
 client does not provide authentication details, then this argument is set to
 ``None``. If the server defines a connection event handler without this
-argument, then any authentication data passed by the cient is discarded.
+argument, then any authentication data passed by the client is discarded.
 
 The connection event handler can return ``False`` to reject the connection, or
 it can also raise `ConnectionRefusedError`. This is so that the client can be
