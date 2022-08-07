@@ -48,7 +48,12 @@ def on_disconnect_test():
 def message(message):
     send(message)
     if message == 'test session':
-        session['a'] = 'b'
+        if not socketio.manage_session and 'a' in session:
+            raise RuntimeError('session is being stored')
+        if 'a' not in session:
+            session['a'] = 'b'
+        else:
+            session['a'] = 'c'
     if message not in "test noackargs":
         return message
 
@@ -474,7 +479,7 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(received[0]['args'][0]['a'], 'b')
         self.assertEqual(len(client3.get_received()), 0)
 
-    def test_session(self):
+    def test_managed_session(self):
         flask_client = app.test_client()
         flask_client.get('/session')
         client = socketio.test_client(app, flask_test_client=flask_client,
@@ -488,6 +493,21 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(
             socketio.server.environ[client.eio_sid]['saved_session'],
             {'a': 'b', 'foo': 'bar'})
+        client.send('test session')
+        self.assertEqual(
+            socketio.server.environ[client.eio_sid]['saved_session'],
+            {'a': 'c', 'foo': 'bar'})
+
+    def test_unmanaged_session(self):
+        socketio.manage_session = False
+        flask_client = app.test_client()
+        flask_client.get('/session')
+        client = socketio.test_client(app, flask_test_client=flask_client,
+                                      auth={'foo': 'bar'})
+        client.get_received()
+        client.send('test session')
+        client.send('test session')
+        socketio.manage_session = True
 
     def test_room(self):
         client1 = socketio.test_client(app, auth={'foo': 'bar'})

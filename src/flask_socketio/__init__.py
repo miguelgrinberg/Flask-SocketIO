@@ -16,7 +16,7 @@ if gevent_socketio_found:
     sys.exit(1)
 
 import flask
-from flask import _request_ctx_stack, has_request_context, json as flask_json
+from flask import has_request_context, json as flask_json
 from flask.sessions import SessionMixin
 import socketio
 from socketio.exceptions import ConnectionRefusedError  # noqa: F401
@@ -797,6 +797,14 @@ class SocketIO(object):
                 if 'saved_session' not in environ:
                     environ['saved_session'] = _ManagedSession(flask.session)
                 session_obj = environ['saved_session']
+                if hasattr(flask, 'globals') and \
+                        hasattr(flask.globals, 'request_ctx'):
+                    # update session for Flask >= 2.2
+                    ctx = flask.globals.request_ctx._get_current_object()
+                else:  # pragma: no cover
+                    # update session for Flask < 2.2
+                    ctx = flask._request_ctx_stack.top
+                ctx.session = session_obj
             else:
                 # let Flask handle the user session
                 # for cookie based sessions, this effectively freezes the
@@ -804,7 +812,6 @@ class SocketIO(object):
                 # for server-side sessions, this allows HTTP and Socket.IO to
                 # share the session, with both having read/write access to it
                 session_obj = flask.session._get_current_object()
-            _request_ctx_stack.top.session = session_obj
             flask.request.sid = sid
             flask.request.namespace = namespace
             flask.request.event = {'message': message, 'args': args}
