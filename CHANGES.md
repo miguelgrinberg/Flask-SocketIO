@@ -1,5 +1,13 @@
 # Flask-SocketIO change log
 
+**Release 5.3.0** - 2022-08-23
+
+- Add `call()` function to emit to the client and wait for the callback response [#1830](https://github.com/miguelgrinberg/flask-socketio/issues/1830) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/94a28590e211784e9365ac21185fd617bd1a0a9f))
+- Manage each test client's connection state independently [#1829](https://github.com/miguelgrinberg/flask-socketio/issues/1829) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/196c50f1085557af59c89bcf9b927144786d99e1))
+- Support new Flask 2.2 session structure [#1856](https://github.com/miguelgrinberg/flask-socketio/issues/1856) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/6f270eef955e28289285c03138187511bc148547))
+- Do not allow Werkzeug to be used in production by default [#1814](https://github.com/miguelgrinberg/flask-socketio/issues/1814) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/e35a0f4a69c343412cdfb879e7545707f933934a))
+- Fix documentation typo [#1857](https://github.com/miguelgrinberg/flask-socketio/issues/1857) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/33436dc2c7e9b8c003186be66031d49bf40de564)) (thanks **Vincent Kuhlmann**!)
+
 **Release 5.2.0** - 2022-05-22
 
 - Better handling of `message_queue` connection argument [#1130](https://github.com/miguelgrinberg/flask-socketio/issues/1130) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/2afebb95be724ad62431ec91040f6d365a8fc969))
