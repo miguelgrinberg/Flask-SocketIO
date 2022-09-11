@@ -1,5 +1,9 @@
 # Flask-SocketIO change log
 
+**Release 5.3.1** - 2022-09-11
+
+- Always pop `allow_unsafe_werkzeug` option from kwargs [#1877](https://github.com/miguelgrinberg/flask-socketio/issues/1877) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/9923502960da2c543c43bcc498d6acc2fc80179c)) (thanks **zakx**!)
+
 **Release 5.3.0** - 2022-08-23
 
 - Add `call()` function to emit to the client and wait for the callback response [#1830](https://github.com/miguelgrinberg/flask-socketio/issues/1830) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/94a28590e211784e9365ac21185fd617bd1a0a9f))
