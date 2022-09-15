@@ -248,7 +248,7 @@ class SocketIO(object):
             self.server.register_namespace(namespace_handler)
 
         if app is not None:
-            # here we attach the SocketIO middlware to the SocketIO object so
+            # here we attach the SocketIO middleware to the SocketIO object so
             # it can be referenced later if debug middleware needs to be
             # inserted
             self.sockio_mw = _SocketIOMiddleware(self.server, app,
@@ -744,7 +744,7 @@ class SocketIO(object):
         :param kwargs: keyword arguments to pass to the function.
 
         This function returns an object that represents the background task,
-        on which the ``join()`` methond can be invoked to wait for the task to
+        on which the ``join()`` method can be invoked to wait for the task to
         complete.
         """
         return self.server.start_background_task(target, *args, **kwargs)
