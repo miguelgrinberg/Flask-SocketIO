@@ -457,8 +457,14 @@ class SocketIO(object):
                 # we only use it if the emit was issued from a Socket.IO
                 # populated request context (i.e. request.sid is defined)
                 callback = _callback_wrapper
-        self.server.emit(event, *args, namespace=namespace, to=to,
-                         skip_sid=skip_sid, callback=callback, **kwargs)
+
+        if isinstance(to, list):
+            for sid in to:
+                self.server.emit(event, *args, namespace=namespace, to=sid,
+                                skip_sid=skip_sid, callback=callback, **kwargs)
+        else:
+            self.server.emit(event, *args, namespace=namespace, to=to,
+                            skip_sid=skip_sid, callback=callback, **kwargs)
 
     def call(self, event, *args, **kwargs):  # pragma: no cover
         """Emit a SocketIO event and wait for the response.
