@@ -443,13 +443,15 @@ class SocketIO(object):
         if callback:
             # wrap the callback so that it sets app app and request contexts
             sid = None
+            original_callback = callback
+            original_namespace = namespace
             if has_request_context():
                 sid = getattr(flask.request, 'sid', None)
-            original_callback = callback
+                original_namespace = getattr(flask.request, 'namespace', None)
 
             def _callback_wrapper(*args):
-                return self._handle_event(original_callback, None, namespace,
-                                          sid, *args)
+                return self._handle_event(original_callback, None,
+                                          original_namespace, sid, *args)
 
             if sid:
                 # the callback wrapper above will install a request context
