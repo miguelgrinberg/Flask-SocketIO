@@ -1,5 +1,10 @@
 # Flask-SocketIO change log
 
+**Release 5.3.2** - 2022-11-20
+
+- Deliver callbacks from different namespaces [#1909](https://github.com/miguelgrinberg/flask-socketio/issues/1909) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/94240a4af3cef03354810bef0a35b848c2e16a28))
+- Fix documentation typos [#1881](https://github.com/miguelgrinberg/flask-socketio/issues/1881) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/94692d365ce328986d7b802d6177decf8ba86ac6)) (thanks **Tim Gates**!)
+
 **Release 5.3.1** - 2022-09-11
 
 - Always pop `allow_unsafe_werkzeug` option from kwargs [#1877](https://github.com/miguelgrinberg/flask-socketio/issues/1877) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/9923502960da2c543c43bcc498d6acc2fc80179c)) (thanks **zakx**!)
