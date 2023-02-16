@@ -12,5 +12,5 @@ MarkupSafe==2.1.1
 python-engineio
 python-socketio
 six==1.11.0
-Werkzeug==2.2.1
+Werkzeug==2.2.3
 zipp==3.8.1
