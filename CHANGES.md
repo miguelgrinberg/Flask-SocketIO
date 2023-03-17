@@ -1,5 +1,9 @@
 # Flask-SocketIO change log
 
+**Release 5.3.3** - 2023-03-17
+
+- Invalid arguments passed in `call()` function [#1953](https://github.com/miguelgrinberg/flask-socketio/issues/1953) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/d2cf0491e5cbadfa0bab626c77d745dbb647236f))
+
 **Release 5.3.2** - 2022-11-20
 
 - Deliver callbacks from different namespaces [#1909](https://github.com/miguelgrinberg/flask-socketio/issues/1909) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/94240a4af3cef03354810bef0a35b848c2e16a28))
