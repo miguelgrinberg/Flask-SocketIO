@@ -946,7 +946,6 @@ def call(event, *args, **kwargs):  # pragma: no cover
 
     socketio = flask.current_app.extensions['socketio']
     return socketio.call(event, *args, namespace=namespace, to=to,
-                         include_self=False, skip_sid=None,
                          ignore_queue=ignore_queue, timeout=timeout)
 
 
