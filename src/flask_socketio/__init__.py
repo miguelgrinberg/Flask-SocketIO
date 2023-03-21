@@ -826,6 +826,8 @@ class SocketIO(object):
                         ret = handler()
                 else:
                     ret = handler(*args)
+            except ConnectionRefusedError:
+                raise  # let this error bubble up to python-socketio
             except:
                 err_handler = self.exception_handlers.get(
                     namespace, self.default_exception_handler)

@@ -3,7 +3,7 @@ import unittest
 
 from flask import Flask, session, request, json as flask_json
 from flask_socketio import SocketIO, send, emit, join_room, leave_room, \
-    Namespace, disconnect
+    Namespace, disconnect, ConnectionRefusedError
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
@@ -16,7 +16,7 @@ def on_connect(auth):
     if auth != {'foo': 'bar'}:  # pragma: no cover
         return False
     if request.args.get('fail'):
-        return False
+        raise ConnectionRefusedError('failed!')
     send('connected')
     send(json.dumps(request.args.to_dict(flat=False)))
     send(json.dumps({h: request.headers[h] for h in request.headers.keys()
