@@ -95,8 +95,8 @@ proxies HTTP and WebSocket requests::
             proxy_pass http://127.0.0.1:5000;
         }
 
-        location /static {
-            alias <path-to-your-application>/static;
+        location /static/ {
+            alias <path-to-your-application>/static/;
             expires 30d;
         }
 
@@ -131,8 +131,8 @@ servers::
             proxy_pass http://127.0.0.1:5000;
         }
 
-        location /static {
-            alias <path-to-your-application>/static;
+        location /static/ {
+            alias <path-to-your-application>/static/;
             expires 30d;
         }
 
