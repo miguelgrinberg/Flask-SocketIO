@@ -1,9 +1,20 @@
 import json
 import unittest
 
-from flask import Flask, session, request, json as flask_json
-from flask_socketio import SocketIO, send, emit, join_room, leave_room, \
-    Namespace, disconnect, ConnectionRefusedError
+from flask import Flask
+from flask import json as flask_json
+from flask import request, session
+
+from flask_socketio import (
+    ConnectionRefusedError,
+    Namespace,
+    SocketIO,
+    disconnect,
+    emit,
+    join_room,
+    leave_room,
+    send,
+)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
@@ -19,8 +30,15 @@ def on_connect(auth):
         raise ConnectionRefusedError('failed!')
     send('connected')
     send(json.dumps(request.args.to_dict(flat=False)))
-    send(json.dumps({h: request.headers[h] for h in request.headers.keys()
-                     if h not in ['Host', 'Content-Type', 'Content-Length']}))
+    send(
+        json.dumps(
+            {
+                h: request.headers[h]
+                for h in request.headers.keys()
+                if h not in ['Host', 'Content-Type', 'Content-Length']
+            }
+        )
+    )
     emit('dummy', to='nobody')
 
 
@@ -34,8 +52,15 @@ def on_disconnect():
 def connect():
     send('connected-test')
     send(json.dumps(request.args.to_dict(flat=False)))
-    send(json.dumps({h: request.headers[h] for h in request.headers.keys()
-                     if h not in ['Host', 'Content-Type', 'Content-Length']}))
+    send(
+        json.dumps(
+            {
+                h: request.headers[h]
+                for h in request.headers.keys()
+                if h not in ['Host', 'Content-Type', 'Content-Length']
+            }
+        )
+    )
 
 
 @socketio.on('disconnect', namespace='/test')
@@ -108,8 +133,11 @@ def on_custom_event_test2(data):
     emit('my custom namespace response', data, namespace='/test')
 
 
-socketio.on_event('yet another custom namespace event', on_custom_event_test2,
-                  namespace='/test')
+socketio.on_event(
+    'yet another custom namespace event',
+    on_custom_event_test2,
+    namespace='/test',
+)
 
 
 @socketio.on('my custom broadcast event')
@@ -119,8 +147,9 @@ def on_custom_event_broadcast(data):
 
 @socketio.on('my custom broadcast namespace event', namespace='/test')
 def on_custom_event_broadcast_test(data):
-    emit('my custom namespace response', data, namespace='/test',
-         broadcast=True)
+    emit(
+        'my custom namespace response', data, namespace='/test', broadcast=True
+    )
 
 
 @socketio.on('join room')
@@ -222,9 +251,15 @@ class MyNamespace(Namespace):
     def on_connect(self):
         send('connected-ns')
         send(json.dumps(request.args.to_dict(flat=False)))
-        send(json.dumps(
-            {h: request.headers[h] for h in request.headers.keys()
-             if h not in ['Host', 'Content-Type', 'Content-Length']}))
+        send(
+            json.dumps(
+                {
+                    h: request.headers[h]
+                    for h in request.headers.keys()
+                    if h not in ['Host', 'Content-Type', 'Content-Length']
+                }
+            )
+        )
 
     def on_disconnect(self):
         global disconnected
@@ -299,15 +334,18 @@ class TestSocketIO(unittest.TestCase):
 
     def test_connect_query_string_and_headers(self):
         client = socketio.test_client(
-            app, query_string='?foo=bar&foo=baz',
+            app,
+            query_string='?foo=bar&foo=baz',
             headers={'Authorization': 'Bearer foobar'},
-            auth={'foo': 'bar'})
+            auth={'foo': 'bar'},
+        )
         received = client.get_received()
         self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected')
         self.assertEqual(received[1]['args'], '{"foo": ["bar", "baz"]}')
-        self.assertEqual(received[2]['args'],
-                         '{"Authorization": "Bearer foobar"}')
+        self.assertEqual(
+            received[2]['args'], '{"Authorization": "Bearer foobar"}'
+        )
         client.disconnect()
 
     def test_connect_namespace(self):
@@ -323,8 +361,11 @@ class TestSocketIO(unittest.TestCase):
 
     def test_connect_namespace_query_string_and_headers(self):
         client = socketio.test_client(
-            app, namespace='/test', query_string='foo=bar',
-            headers={'My-Custom-Header': 'Value'})
+            app,
+            namespace='/test',
+            query_string='foo=bar',
+            headers={'My-Custom-Header': 'Value'},
+        )
         received = client.get_received('/test')
         self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected-test')
@@ -333,8 +374,9 @@ class TestSocketIO(unittest.TestCase):
         client.disconnect(namespace='/test')
 
     def test_connect_rejected(self):
-        client = socketio.test_client(app, query_string='fail=1',
-                                      auth={'foo': 'bar'})
+        client = socketio.test_client(
+            app, query_string='fail=1', auth={'foo': 'bar'}
+        )
         self.assertFalse(client.is_connected())
 
     def test_disconnect(self):
@@ -436,8 +478,10 @@ class TestSocketIO(unittest.TestCase):
         expected_data = {'message': 'other custom event', 'args': ('foo',)}
         self.assertEqual(request_event_data, expected_data)
         client.emit('and another custom event', 'bar')
-        expected_data = {'message': 'and another custom event',
-                         'args': ('bar',)}
+        expected_data = {
+            'message': 'and another custom event',
+            'args': ('bar',),
+        }
         self.assertEqual(request_event_data, expected_data)
 
     def test_emit_namespace(self):
@@ -470,8 +514,11 @@ class TestSocketIO(unittest.TestCase):
         client3 = socketio.test_client(app, auth={'foo': 'bar'})
         client2.get_received('/test')
         client3.get_received()
-        client1.emit('my custom broadcast namespace event', {'a': 'b'},
-                     namespace='/test')
+        client1.emit(
+            'my custom broadcast namespace event',
+            {'a': 'b'},
+            namespace='/test',
+        )
         received = client2.get_received('/test')
         self.assertEqual(len(received), 1)
         self.assertEqual(len(received[0]['args']), 1)
@@ -482,28 +529,33 @@ class TestSocketIO(unittest.TestCase):
     def test_managed_session(self):
         flask_client = app.test_client()
         flask_client.get('/session')
-        client = socketio.test_client(app, flask_test_client=flask_client,
-                                      auth={'foo': 'bar'})
+        client = socketio.test_client(
+            app, flask_test_client=flask_client, auth={'foo': 'bar'}
+        )
         client.get_received()
         client.send('echo this message back')
         self.assertEqual(
             socketio.server.environ[client.eio_sid]['saved_session'],
-            {'foo': 'bar'})
+            {'foo': 'bar'},
+        )
         client.send('test session')
         self.assertEqual(
             socketio.server.environ[client.eio_sid]['saved_session'],
-            {'a': 'b', 'foo': 'bar'})
+            {'a': 'b', 'foo': 'bar'},
+        )
         client.send('test session')
         self.assertEqual(
             socketio.server.environ[client.eio_sid]['saved_session'],
-            {'a': 'c', 'foo': 'bar'})
+            {'a': 'c', 'foo': 'bar'},
+        )
 
     def test_unmanaged_session(self):
         socketio.manage_session = False
         flask_client = app.test_client()
         flask_client.get('/session')
-        client = socketio.test_client(app, flask_test_client=flask_client,
-                                      auth={'foo': 'bar'})
+        client = socketio.test_client(
+            app, flask_test_client=flask_client, auth={'foo': 'bar'}
+        )
         client.get_received()
         client.send('test session')
         client.send('test session')
@@ -543,15 +595,17 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(len(received), 0)
         received = client3.get_received('/test')
         self.assertEqual(len(received), 0)
-        client3.emit('my room namespace event', {'room': 'one'},
-                     namespace='/test')
+        client3.emit(
+            'my room namespace event', {'room': 'one'}, namespace='/test'
+        )
         received = client3.get_received('/test')
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]['name'], 'message')
         self.assertEqual(received[0]['args'], 'room message')
         socketio.close_room('one', namespace='/test')
-        client3.emit('my room namespace event', {'room': 'one'},
-                     namespace='/test')
+        client3.emit(
+            'my room namespace event', {'room': 'one'}, namespace='/test'
+        )
         received = client3.get_received('/test')
         self.assertEqual(len(received), 0)
 
@@ -613,12 +667,13 @@ class TestSocketIO(unittest.TestCase):
         client3 = socketio.test_client(app, namespace='/unused_namespace')
         errorack = client1.emit("error testing", "", callback=True)
         self.assertEqual(errorack, 'error')
-        errorack_namespace = client2.emit("error testing", "",
-                                          namespace='/test', callback=True)
+        errorack_namespace = client2.emit(
+            "error testing", "", namespace='/test', callback=True
+        )
         self.assertEqual(errorack_namespace, 'error/test')
-        errorack_default = client3.emit("error testing", "",
-                                        namespace='/unused_namespace',
-                                        callback=True)
+        errorack_default = client3.emit(
+            "error testing", "", namespace='/unused_namespace', callback=True
+        )
         self.assertEqual(errorack_default, 'error/default')
 
     def test_on_event(self):
@@ -627,14 +682,17 @@ class TestSocketIO(unittest.TestCase):
         global request_event_data
         request_event_data = None
         client.emit('yet another custom event', 'foo')
-        expected_data = {'message': 'yet another custom event',
-                         'args': ('foo',)}
+        expected_data = {
+            'message': 'yet another custom event',
+            'args': ('foo',),
+        }
         self.assertEqual(request_event_data, expected_data)
 
         client = socketio.test_client(app, namespace='/test')
         client.get_received('/test')
-        client.emit('yet another custom namespace event', {'a': 'b'},
-                    namespace='/test')
+        client.emit(
+            'yet another custom namespace event', {'a': 'b'}, namespace='/test'
+        )
         received = client.get_received('/test')
         self.assertEqual(len(received), 1)
         self.assertEqual(len(received[0]['args']), 1)
@@ -652,14 +710,18 @@ class TestSocketIO(unittest.TestCase):
 
     def test_connect_class_based_query_string_and_headers(self):
         client = socketio.test_client(
-            app, namespace='/ns', query_string='foo=bar',
-            headers={'Authorization': 'Basic foobar'})
+            app,
+            namespace='/ns',
+            query_string='foo=bar',
+            headers={'Authorization': 'Basic foobar'},
+        )
         received = client.get_received('/ns')
         self.assertEqual(len(received), 3)
         self.assertEqual(received[0]['args'], 'connected-ns')
         self.assertEqual(received[1]['args'], '{"foo": ["bar"]}')
-        self.assertEqual(received[2]['args'],
-                         '{"Authorization": "Basic foobar"}')
+        self.assertEqual(
+            received[2]['args'], '{"Authorization": "Basic foobar"}'
+        )
         client.disconnect('/ns')
 
     def test_disconnect_class_based(self):
@@ -740,8 +802,9 @@ class TestSocketIO(unittest.TestCase):
         client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
         data = {'foo': 'bar', 'invalid': socketio}
-        self.assertRaises(TypeError, client.emit, 'my custom event', data,
-                          callback=True)
+        self.assertRaises(
+            TypeError, client.emit, 'my custom event', data, callback=True
+        )
         data = {'foo': 'bar'}
         ack = client.emit('my custom event', data, callback=True)
         data['foo'] = 'baz'
@@ -753,8 +816,9 @@ class TestSocketIO(unittest.TestCase):
     def test_encode_decode_2(self):
         client = socketio.test_client(app, auth={'foo': 'bar'})
         self.assertRaises(TypeError, client.emit, 'bad response')
-        self.assertRaises(TypeError, client.emit, 'bad callback',
-                          callback=True)
+        self.assertRaises(
+            TypeError, client.emit, 'bad callback', callback=True
+        )
         client.get_received()
         ack = client.emit('changing response', callback=True)
         received = client.get_received()

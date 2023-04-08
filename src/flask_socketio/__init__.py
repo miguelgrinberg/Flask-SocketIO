@@ -1,6 +1,6 @@
-from functools import wraps
 import os
 import sys
+from functools import wraps
 
 # make sure gevent-socketio is not installed, as it conflicts with
 # python-socketio
@@ -10,18 +10,21 @@ try:
 except ImportError:
     gevent_socketio_found = False
 if gevent_socketio_found:
-    print('The gevent-socketio package is incompatible with this version of '
-          'the Flask-SocketIO extension. Please uninstall it, and then '
-          'install the latest version of python-socketio in its place.')
+    print(
+        'The gevent-socketio package is incompatible with this version of '
+        'the Flask-SocketIO extension. Please uninstall it, and then '
+        'install the latest version of python-socketio in its place.'
+    )
     sys.exit(1)
 
 import flask
-from flask import has_request_context, json as flask_json
-from flask.sessions import SessionMixin
 import socketio
+from flask import has_request_context
+from flask import json as flask_json
+from flask.sessions import SessionMixin
 from socketio.exceptions import ConnectionRefusedError  # noqa: F401
-from werkzeug.debug import DebuggedApplication
 from werkzeug._reloader import run_with_reloader
+from werkzeug.debug import DebuggedApplication
 
 from .namespace import Namespace
 from .test_client import SocketIOTestClient
@@ -31,23 +34,26 @@ class _SocketIOMiddleware(socketio.WSGIApp):
     """This WSGI middleware simply exposes the Flask application in the WSGI
     environment before executing the request.
     """
+
     def __init__(self, socketio_app, flask_app, socketio_path='socket.io'):
         self.flask_app = flask_app
-        super(_SocketIOMiddleware, self).__init__(socketio_app,
-                                                  flask_app.wsgi_app,
-                                                  socketio_path=socketio_path)
+        super(_SocketIOMiddleware, self).__init__(
+            socketio_app, flask_app.wsgi_app, socketio_path=socketio_path
+        )
 
     def __call__(self, environ, start_response):
         environ = environ.copy()
         environ['flask.app'] = self.flask_app
-        return super(_SocketIOMiddleware, self).__call__(environ,
-                                                         start_response)
+        return super(_SocketIOMiddleware, self).__call__(
+            environ, start_response
+        )
 
 
 class _ManagedSession(dict, SessionMixin):
     """This class is used for user sessions that are managed by
     Flask-SocketIO. It is simple dict, expanded with the Flask session
     attributes."""
+
     pass
 
 
@@ -194,8 +200,9 @@ class SocketIO(object):
                 app.extensions = {}  # pragma: no cover
             app.extensions['socketio'] = self
         self.server_options.update(kwargs)
-        self.manage_session = self.server_options.pop('manage_session',
-                                                      self.manage_session)
+        self.manage_session = self.server_options.pop(
+            'manage_session', self.manage_session
+        )
 
         if 'client_manager' not in kwargs:
             url = self.server_options.get('message_queue', None)
@@ -210,12 +217,15 @@ class SocketIO(object):
                     queue_class = socketio.ZmqManager
                 else:
                     queue_class = socketio.KombuManager
-                queue = queue_class(url, channel=channel,
-                                    write_only=write_only)
+                queue = queue_class(
+                    url, channel=channel, write_only=write_only
+                )
                 self.server_options['client_manager'] = queue
 
-        if 'json' in self.server_options and \
-                self.server_options['json'] == flask_json:
+        if (
+            'json' in self.server_options
+            and self.server_options['json'] == flask_json
+        ):
             # flask's json module is tricky to use because its output
             # changes when it is invoked inside or outside the app context
             # so here to prevent any ambiguities we replace it with wrappers
@@ -233,8 +243,11 @@ class SocketIO(object):
 
             self.server_options['json'] = FlaskSafeJSON
 
-        resource = self.server_options.pop('path', None) or \
-            self.server_options.pop('resource', None) or 'socket.io'
+        resource = (
+            self.server_options.pop('path', None)
+            or self.server_options.pop('resource', None)
+            or 'socket.io'
+        )
         if resource.startswith('/'):
             resource = resource[1:]
         if os.environ.get('FLASK_RUN_FROM_CLI'):
@@ -251,8 +264,9 @@ class SocketIO(object):
             # here we attach the SocketIO middleware to the SocketIO object so
             # it can be referenced later if debug middleware needs to be
             # inserted
-            self.sockio_mw = _SocketIOMiddleware(self.server, app,
-                                                 socketio_path=resource)
+            self.sockio_mw = _SocketIOMiddleware(
+                self.server, app, socketio_path=resource
+            )
             app.wsgi_app = self.sockio_mw
 
     def on(self, message, namespace=None):
@@ -279,14 +293,16 @@ class SocketIO(object):
         def decorator(handler):
             @wraps(handler)
             def _handler(sid, *args):
-                return self._handle_event(handler, message, namespace, sid,
-                                          *args)
+                return self._handle_event(
+                    handler, message, namespace, sid, *args
+                )
 
             if self.server:
                 self.server.on(message, _handler, namespace=namespace)
             else:
                 self.handlers.append((message, _handler, namespace))
             return handler
+
         return decorator
 
     def on_error(self, namespace=None):
@@ -311,6 +327,7 @@ class SocketIO(object):
                 raise ValueError('exception_handler must be callable')
             self.exception_handlers[namespace] = exception_handler
             return exception_handler
+
         return decorator
 
     def on_error_default(self, exception_handler):
@@ -450,8 +467,9 @@ class SocketIO(object):
                 original_namespace = getattr(flask.request, 'namespace', None)
 
             def _callback_wrapper(*args):
-                return self._handle_event(original_callback, None,
-                                          original_namespace, sid, *args)
+                return self._handle_event(
+                    original_callback, None, original_namespace, sid, *args
+                )
 
             if sid:
                 # the callback wrapper above will install a request context
@@ -459,8 +477,15 @@ class SocketIO(object):
                 # we only use it if the emit was issued from a Socket.IO
                 # populated request context (i.e. request.sid is defined)
                 callback = _callback_wrapper
-        self.server.emit(event, *args, namespace=namespace, to=to,
-                         skip_sid=skip_sid, callback=callback, **kwargs)
+        self.server.emit(
+            event,
+            *args,
+            namespace=namespace,
+            to=to,
+            skip_sid=skip_sid,
+            callback=callback,
+            **kwargs
+        )
 
     def call(self, event, *args, **kwargs):  # pragma: no cover
         """Emit a SocketIO event and wait for the response.
@@ -494,11 +519,21 @@ class SocketIO(object):
         """
         namespace = kwargs.pop('namespace', '/')
         to = kwargs.pop('to', None) or kwargs.pop('room', None)
-        return self.server.call(event, *args, namespace=namespace, to=to,
-                                **kwargs)
+        return self.server.call(
+            event, *args, namespace=namespace, to=to, **kwargs
+        )
 
-    def send(self, data, json=False, namespace=None, to=None,
-             callback=None, include_self=True, skip_sid=None, **kwargs):
+    def send(
+        self,
+        data,
+        json=False,
+        namespace=None,
+        to=None,
+        callback=None,
+        include_self=True,
+        skip_sid=None,
+        **kwargs
+    ):
         """Send a server-generated SocketIO message.
 
         This function sends a simple SocketIO message to one or more connected
@@ -531,11 +566,25 @@ class SocketIO(object):
         """
         skip_sid = flask.request.sid if not include_self else skip_sid
         if json:
-            self.emit('json', data, namespace=namespace, to=to,
-                      skip_sid=skip_sid, callback=callback, **kwargs)
+            self.emit(
+                'json',
+                data,
+                namespace=namespace,
+                to=to,
+                skip_sid=skip_sid,
+                callback=callback,
+                **kwargs
+            )
         else:
-            self.emit('message', data, namespace=namespace, to=to,
-                      skip_sid=skip_sid, callback=callback, **kwargs)
+            self.emit(
+                'message',
+                data,
+                namespace=namespace,
+                to=to,
+                skip_sid=skip_sid,
+                callback=callback,
+                **kwargs
+            )
 
     def close_room(self, room, namespace=None):
         """Close a room.
@@ -625,59 +674,93 @@ class SocketIO(object):
             #  Flask-SocketIO WebSocket handler
             #
             self.sockio_mw.wsgi_app = DebuggedApplication(
-                self.sockio_mw.wsgi_app, evalex=True)
+                self.sockio_mw.wsgi_app, evalex=True
+            )
 
         if self.server.eio.async_mode == 'threading':
             try:
                 import simple_websocket  # noqa: F401
             except ImportError:
                 from werkzeug._internal import _log
-                _log('warning', 'WebSocket transport not available. Install '
-                                'simple-websocket for improved performance.')
-            allow_unsafe_werkzeug = kwargs.pop('allow_unsafe_werkzeug',
-                                               False)
+
+                _log(
+                    'warning',
+                    'WebSocket transport not available. Install '
+                    'simple-websocket for improved performance.',
+                )
+            allow_unsafe_werkzeug = kwargs.pop('allow_unsafe_werkzeug', False)
             if not sys.stdin or not sys.stdin.isatty():  # pragma: no cover
                 if not allow_unsafe_werkzeug:
-                    raise RuntimeError('The Werkzeug web server is not '
-                                       'designed to run in production. Pass '
-                                       'allow_unsafe_werkzeug=True to the '
-                                       'run() method to disable this error.')
+                    raise RuntimeError(
+                        'The Werkzeug web server is not '
+                        'designed to run in production. Pass '
+                        'allow_unsafe_werkzeug=True to the '
+                        'run() method to disable this error.'
+                    )
                 else:
                     from werkzeug._internal import _log
-                    _log('warning', ('Werkzeug appears to be used in a '
-                                     'production deployment. Consider '
-                                     'switching to a production web server '
-                                     'instead.'))
-            app.run(host=host, port=port, threaded=True,
-                    use_reloader=use_reloader, **reloader_options, **kwargs)
+
+                    _log(
+                        'warning',
+                        (
+                            'Werkzeug appears to be used in a '
+                            'production deployment. Consider '
+                            'switching to a production web server '
+                            'instead.'
+                        ),
+                    )
+            app.run(
+                host=host,
+                port=port,
+                threaded=True,
+                use_reloader=use_reloader,
+                **reloader_options,
+                **kwargs
+            )
         elif self.server.eio.async_mode == 'eventlet':
+
             def run_server():
                 import eventlet
-                import eventlet.wsgi
                 import eventlet.green
+                import eventlet.wsgi
+
                 addresses = eventlet.green.socket.getaddrinfo(host, port)
                 if not addresses:
                     raise RuntimeError(
-                        'Could not resolve host to a valid address')
-                eventlet_socket = eventlet.listen(addresses[0][4],
-                                                  addresses[0][0])
+                        'Could not resolve host to a valid address'
+                    )
+                eventlet_socket = eventlet.listen(
+                    addresses[0][4], addresses[0][0]
+                )
 
                 # If provided an SSL argument, use an SSL socket
-                ssl_args = ['keyfile', 'certfile', 'server_side', 'cert_reqs',
-                            'ssl_version', 'ca_certs',
-                            'do_handshake_on_connect', 'suppress_ragged_eofs',
-                            'ciphers']
-                ssl_params = {k: kwargs[k] for k in kwargs
-                              if k in ssl_args and kwargs[k] is not None}
+                ssl_args = [
+                    'keyfile',
+                    'certfile',
+                    'server_side',
+                    'cert_reqs',
+                    'ssl_version',
+                    'ca_certs',
+                    'do_handshake_on_connect',
+                    'suppress_ragged_eofs',
+                    'ciphers',
+                ]
+                ssl_params = {
+                    k: kwargs[k]
+                    for k in kwargs
+                    if k in ssl_args and kwargs[k] is not None
+                }
                 for k in ssl_args:
                     kwargs.pop(k, None)
                 if len(ssl_params) > 0:
                     ssl_params['server_side'] = True  # Listening requires true
-                    eventlet_socket = eventlet.wrap_ssl(eventlet_socket,
-                                                        **ssl_params)
+                    eventlet_socket = eventlet.wrap_ssl(
+                        eventlet_socket, **ssl_params
+                    )
 
-                eventlet.wsgi.server(eventlet_socket, app,
-                                     log_output=log_output, **kwargs)
+                eventlet.wsgi.server(
+                    eventlet_socket, app, log_output=log_output, **kwargs
+                )
 
             if use_reloader:
                 run_with_reloader(run_server, **reloader_options)
@@ -685,13 +768,16 @@ class SocketIO(object):
                 run_server()
         elif self.server.eio.async_mode == 'gevent':
             from gevent import pywsgi
+
             try:
                 from geventwebsocket.handler import WebSocketHandler
+
                 websocket = True
             except ImportError:
                 app.logger.warning(
                     'WebSocket transport not available. Install '
-                    'gevent-websocket for improved performance.')
+                    'gevent-websocket for improved performance.'
+                )
                 websocket = False
 
             log = 'default'
@@ -699,15 +785,21 @@ class SocketIO(object):
                 log = None
             if websocket:
                 self.wsgi_server = pywsgi.WSGIServer(
-                    (host, port), app, handler_class=WebSocketHandler,
-                    log=log, **kwargs)
+                    (host, port),
+                    app,
+                    handler_class=WebSocketHandler,
+                    log=log,
+                    **kwargs
+                )
             else:
-                self.wsgi_server = pywsgi.WSGIServer((host, port), app,
-                                                     log=log, **kwargs)
+                self.wsgi_server = pywsgi.WSGIServer(
+                    (host, port), app, log=log, **kwargs
+                )
 
             if use_reloader:
                 # monkey patching is required by the reloader
                 from gevent import monkey
+
                 monkey.patch_thread()
                 monkey.patch_time()
 
@@ -761,8 +853,15 @@ class SocketIO(object):
         """
         return self.server.sleep(seconds)
 
-    def test_client(self, app, namespace=None, query_string=None,
-                    headers=None, auth=None, flask_test_client=None):
+    def test_client(
+        self,
+        app,
+        namespace=None,
+        query_string=None,
+        headers=None,
+        auth=None,
+        flask_test_client=None,
+    ):
         """The Socket.IO test client is useful for testing a Flask-SocketIO
         server. It works in a similar way to the Flask Test Client, but
         adapted to the Socket.IO server.
@@ -781,10 +880,15 @@ class SocketIO(object):
                                   cookies set in HTTP routes accessible from
                                   Socket.IO events.
         """
-        return SocketIOTestClient(app, self, namespace=namespace,
-                                  query_string=query_string, headers=headers,
-                                  auth=auth,
-                                  flask_test_client=flask_test_client)
+        return SocketIOTestClient(
+            app,
+            self,
+            namespace=namespace,
+            query_string=query_string,
+            headers=headers,
+            auth=auth,
+            flask_test_client=flask_test_client,
+        )
 
     def _handle_event(self, handler, message, namespace, sid, *args):
         environ = self.server.get_environ(sid, namespace=namespace)
@@ -799,8 +903,9 @@ class SocketIO(object):
                 if 'saved_session' not in environ:
                     environ['saved_session'] = _ManagedSession(flask.session)
                 session_obj = environ['saved_session']
-                if hasattr(flask, 'globals') and \
-                        hasattr(flask.globals, 'request_ctx'):
+                if hasattr(flask, 'globals') and hasattr(
+                    flask.globals, 'request_ctx'
+                ):
                     # update session for Flask >= 2.2
                     ctx = flask.globals.request_ctx._get_current_object()
                 else:  # pragma: no cover
@@ -830,15 +935,18 @@ class SocketIO(object):
                 raise  # let this error bubble up to python-socketio
             except:
                 err_handler = self.exception_handlers.get(
-                    namespace, self.default_exception_handler)
+                    namespace, self.default_exception_handler
+                )
                 if err_handler is None:
                     raise
                 type, value, traceback = sys.exc_info()
                 return err_handler(value)
             if not self.manage_session:
                 # when Flask is managing the user session, it needs to save it
-                if not hasattr(session_obj, 'modified') or \
-                        session_obj.modified:
+                if (
+                    not hasattr(session_obj, 'modified')
+                    or session_obj.modified
+                ):
                     resp = app.response_class()
                     app.session_interface.save_session(app, session_obj, resp)
             return ret
@@ -900,9 +1008,16 @@ def emit(event, *args, **kwargs):
     ignore_queue = kwargs.get('ignore_queue', False)
 
     socketio = flask.current_app.extensions['socketio']
-    return socketio.emit(event, *args, namespace=namespace, to=to,
-                         include_self=include_self, skip_sid=skip_sid,
-                         callback=callback, ignore_queue=ignore_queue)
+    return socketio.emit(
+        event,
+        *args,
+        namespace=namespace,
+        to=to,
+        include_self=include_self,
+        skip_sid=skip_sid,
+        callback=callback,
+        ignore_queue=ignore_queue
+    )
 
 
 def call(event, *args, **kwargs):  # pragma: no cover
@@ -947,8 +1062,14 @@ def call(event, *args, **kwargs):  # pragma: no cover
     ignore_queue = kwargs.get('ignore_queue', False)
 
     socketio = flask.current_app.extensions['socketio']
-    return socketio.call(event, *args, namespace=namespace, to=to,
-                         ignore_queue=ignore_queue, timeout=timeout)
+    return socketio.call(
+        event,
+        *args,
+        namespace=namespace,
+        to=to,
+        ignore_queue=ignore_queue,
+        timeout=timeout
+    )
 
 
 def send(message, **kwargs):
@@ -1005,9 +1126,16 @@ def send(message, **kwargs):
     ignore_queue = kwargs.get('ignore_queue', False)
 
     socketio = flask.current_app.extensions['socketio']
-    return socketio.send(message, json=json, namespace=namespace, to=to,
-                         include_self=include_self, skip_sid=skip_sid,
-                         callback=callback, ignore_queue=ignore_queue)
+    return socketio.send(
+        message,
+        json=json,
+        namespace=namespace,
+        to=to,
+        include_self=include_self,
+        skip_sid=skip_sid,
+        callback=callback,
+        ignore_queue=ignore_queue,
+    )
 
 
 def join_room(room, sid=None, namespace=None):

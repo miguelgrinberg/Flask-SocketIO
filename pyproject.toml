@@ -3,4 +3,15 @@ requires = [
     "setuptools>=42",
     "wheel"
 ]
+
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 79
+skip-string-normalization = true
+skip-magic-trailing-comma = true
+
+[tool.isort]
+profile = "black"
+length_sort_sections = ["future", "stdlib"]
+balanced_wrapping = false
