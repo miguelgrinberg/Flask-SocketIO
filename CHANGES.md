@@ -1,5 +1,11 @@
 # Flask-SocketIO change log
 
+**Release 5.3.4** - 2023-05-03
+
+- Fixed cookie handling in Test Client for Flask >= 2.3 [#1982](https://github.com/miguelgrinberg/flask-socketio/issues/1982) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/70203246bcbc23715350ca5505527b31bf0693c1))
+- Correctly handle ConnectionRefusedError in connect handler [#1959](https://github.com/miguelgrinberg/flask-socketio/issues/1959) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/64a18263cd3b864a5bb5b25bb5901350b8c1264d))
+- More secure nginx configuration examples [#1966](https://github.com/miguelgrinberg/flask-socketio/issues/1966) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/9b861ceaa91bbe168376cf5cdac6c2917e448946)) (thanks **Lorenzo Leonardini**!)
+
 **Release 5.3.3** - 2023-03-17
 
 - Invalid arguments passed in `call()` function [#1953](https://github.com/miguelgrinberg/flask-socketio/issues/1953) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/d2cf0491e5cbadfa0bab626c77d745dbb647236f))
