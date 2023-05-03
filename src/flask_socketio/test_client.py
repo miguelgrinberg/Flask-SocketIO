@@ -114,7 +114,12 @@ class SocketIOTestClient(object):
         environ['flask.app'] = self.app
         if self.flask_test_client:
             # inject cookies from Flask
-            self.flask_test_client.cookie_jar.inject_wsgi(environ)
+            if hasattr(self.flask_test_client, '_add_cookies_to_wsgi'):
+                # flask >= 2.3
+                self.flask_test_client._add_cookies_to_wsgi(environ)
+            else:  # pragma: no cover
+                # flask < 2.3
+                self.flask_test_client.cookie_jar.inject_wsgi(environ)
         self.socketio.server._handle_eio_connect(self.eio_sid, environ)
         pkt = packet.Packet(packet.CONNECT, auth, namespace=namespace)
         self.socketio.server._handle_eio_message(self.eio_sid, pkt.encode())
