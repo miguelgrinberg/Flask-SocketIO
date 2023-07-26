@@ -627,6 +627,7 @@ class SocketIO(object):
             self.sockio_mw.wsgi_app = DebuggedApplication(
                 self.sockio_mw.wsgi_app, evalex=True)
 
+        allow_unsafe_werkzeug = kwargs.pop('allow_unsafe_werkzeug', False)
         if self.server.eio.async_mode == 'threading':
             try:
                 import simple_websocket  # noqa: F401
@@ -634,8 +635,6 @@ class SocketIO(object):
                 from werkzeug._internal import _log
                 _log('warning', 'WebSocket transport not available. Install '
                                 'simple-websocket for improved performance.')
-            allow_unsafe_werkzeug = kwargs.pop('allow_unsafe_werkzeug',
-                                               False)
             if not sys.stdin or not sys.stdin.isatty():  # pragma: no cover
                 if not allow_unsafe_werkzeug:
                     raise RuntimeError('The Werkzeug web server is not '
