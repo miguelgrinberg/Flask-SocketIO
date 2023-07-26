@@ -1,5 +1,9 @@
 # Flask-SocketIO change log
 
+**Release 5.3.5** - 2023-07-26
+
+- Prevent `allow_unsafe_werkzeug` option from being passed to web servers [#2001](https://github.com/miguelgrinberg/flask-socketio/issues/2001) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/d6c6b8c336f533a9bac50cf3d7dbcc51669209b2))
+
 **Release 5.3.4** - 2023-05-03
 
 - Fixed cookie handling in Test Client for Flask >= 2.3 [#1982](https://github.com/miguelgrinberg/flask-socketio/issues/1982) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/70203246bcbc23715350ca5505527b31bf0693c1))
