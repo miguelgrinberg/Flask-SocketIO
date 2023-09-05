@@ -59,6 +59,23 @@ class SocketIOTestClient(object):
             elif pkt.packet_type in [packet.DISCONNECT, packet.CONNECT_ERROR]:
                 client.connected[pkt.namespace or '/'] = False
 
+        _current_packet = None
+
+        def _mock_send_eio_packet(eio_sid, eio_pkt):
+            nonlocal _current_packet
+            if _current_packet is not None:
+                _current_packet.add_attachment(eio_pkt.data)
+                if _current_packet.attachment_count == \
+                        len(_current_packet.attachments):
+                    _mock_send_packet(eio_sid, _current_packet)
+                    _current_packet = None
+            else:
+                pkt = packet.Packet(encoded_packet=eio_pkt.data)
+                if pkt.attachment_count == 0:
+                    _mock_send_packet(eio_sid, pkt)
+                else:
+                    _current_packet = pkt
+
         self.app = app
         self.flask_test_client = flask_test_client
         self.eio_sid = uuid.uuid4().hex
@@ -69,6 +86,7 @@ class SocketIOTestClient(object):
         self.queue = []
         self.acks = None
         socketio.server._send_packet = _mock_send_packet
+        socketio.server._send_eio_packet = _mock_send_eio_packet
         socketio.server.environ[self.eio_sid] = {}
         socketio.server.async_handlers = False      # easier to test when
         socketio.server.eio.async_handlers = False  # events are sync
