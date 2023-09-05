@@ -1,5 +1,9 @@
 # Flask-SocketIO change log
 
+**Release 5.3.6** - 2023-09-05
+
+- Fixes in the test client to support recent changes in Socket.IO dependencies [#2006](https://github.com/miguelgrinberg/flask-socketio/issues/2006) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/08411f99014d3680f1e2591b1e9ff1c5bfd0a5f5))
+
 **Release 5.3.5** - 2023-07-26
 
 - Prevent `allow_unsafe_werkzeug` option from being passed to web servers [#2001](https://github.com/miguelgrinberg/flask-socketio/issues/2001) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/d6c6b8c336f533a9bac50cf3d7dbcc51669209b2))
