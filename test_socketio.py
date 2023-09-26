@@ -44,6 +44,14 @@ def on_disconnect_test():
     disconnected = '/test'
 
 
+@socketio.on('connect', namespace='/bgtest')
+def on_bgtest_connect():
+    def background_task():
+        socketio.emit('bgtest', namespace='/bgtest')
+
+    socketio.start_background_task(background_task)
+
+
 @socketio.event
 def message(message):
     send(message)
@@ -761,6 +769,13 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]['args'][0], {'foo': 'bar'})
         self.assertEqual(ack, {'foo': 'baz'})
+
+    def test_background_task(self):
+        client = socketio.test_client(app, namespace='/bgtest')
+        self.assertTrue(client.is_connected(namespace='/bgtest'))
+        received = client.get_received('/bgtest')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(received[0]['name'], 'bgtest')
 
 
 if __name__ == '__main__':
