@@ -1,4 +1,5 @@
 import json
+import time
 import unittest
 
 from flask import Flask, session, request, json as flask_json
@@ -773,6 +774,7 @@ class TestSocketIO(unittest.TestCase):
     def test_background_task(self):
         client = socketio.test_client(app, namespace='/bgtest')
         self.assertTrue(client.is_connected(namespace='/bgtest'))
+        time.sleep(0.1)
         received = client.get_received('/bgtest')
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]['name'], 'bgtest')
