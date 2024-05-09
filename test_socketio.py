@@ -182,6 +182,11 @@ def on_changing_response():
     return data
 
 
+@socketio.on('wildcard', namespace='*')
+def wildcard(data):
+    emit('my custom response', data)
+
+
 @socketio.on_error()
 def error_handler(value):
     if isinstance(value, AssertionError):
@@ -415,6 +420,16 @@ class TestSocketIO(unittest.TestCase):
         received = client.get_received('/test')
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]['args']['a'], 'b')
+
+    def test_send_catch_all_namespace(self):
+        client = socketio.test_client(app, namespace='/test')
+        client.get_received('/test')
+        client.emit('wildcard', {'a': 'b'}, namespace='/test')
+        received = client.get_received('/test')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my custom response')
+        self.assertEqual(received[0]['args'][0]['a'], 'b')
 
     def test_emit(self):
         client = socketio.test_client(app, auth={'foo': 'bar'})
