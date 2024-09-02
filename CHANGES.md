@@ -1,5 +1,12 @@
 # Flask-SocketIO change log
 
+**Release 5.3.7** - 2024-09-02
+
+- Prevent crash when client sends empty event ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/03512f2aecc27a3800d8d22031d6a663245d83d0))
+- Handle events with catch-all namespace [#2061](https://github.com/miguelgrinberg/flask-socketio/issues/2061) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/f4ebcc798df28a0b9c91eb0b53ec3754a3ecdb3e))
+- Add unit test for background tasks ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/84562cf876343150bb1c0b2431caf75b280e82cc))
+- Drop Python 3.7, add Python 3.12, upgrade to pypy 3.10 ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/279bba4e373cc38aa7b7697ff47685235a48c477))
+
 **Release 5.3.6** - 2023-09-05
 
 - Fixes in the test client to support recent changes in Socket.IO dependencies [#2006](https://github.com/miguelgrinberg/flask-socketio/issues/2006) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/08411f99014d3680f1e2591b1e9ff1c5bfd0a5f5))
