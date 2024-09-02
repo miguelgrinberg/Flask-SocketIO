@@ -17,7 +17,7 @@ class Namespace(_Namespace):
         method can be overridden if special dispatching rules are needed, or if
         having a single method that catches all events is desired.
         """
-        handler_name = 'on_' + event
+        handler_name = 'on_' + (event or '')
         if not hasattr(self, handler_name):
             # there is no handler for this event, so we ignore it
             return
