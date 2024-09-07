@@ -1,5 +1,6 @@
 from functools import wraps
 import os
+import socket
 import sys
 
 # make sure gevent-socketio is not installed, as it conflicts with
@@ -660,7 +661,7 @@ class SocketIO(object):
                 import eventlet
                 import eventlet.wsgi
                 import eventlet.green
-                addresses = eventlet.green.socket.getaddrinfo(host, port)
+                addresses = eventlet.green.socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)
                 if not addresses:
                     raise RuntimeError(
                         'Could not resolve host to a valid address')
