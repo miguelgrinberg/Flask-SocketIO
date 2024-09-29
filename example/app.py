@@ -11,7 +11,7 @@ async_mode = None
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app, async_mode=async_mode)
+socketio = SocketIO(app, async_mode=async_mode, logger=True, engineio_logger=True)
 thread = None
 thread_lock = Lock()
 
@@ -79,6 +79,13 @@ def my_room_event(message):
     emit('my_response',
          {'data': message['data'], 'count': session['receive_count']},
          to=message['room'])
+
+
+@socketio.on('*')
+def catch_all(event, data):
+    session['receive_count'] = session.get('receive_count', 0) + 1
+    emit('my_response',
+         {'data': [event, data], 'count': session['receive_count']})
 
 
 @socketio.event

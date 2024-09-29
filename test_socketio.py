@@ -108,6 +108,11 @@ def get_request_event2(data):
 socketio.on_event('yet another custom event', get_request_event2)
 
 
+@socketio.on('*')
+def catch_all(event, data):
+    emit('my custom response', (event, data))
+
+
 @socketio.on('my custom namespace event', namespace='/test')
 def on_custom_event_test(data):
     emit('my custom namespace response', data, namespace='/test')
@@ -421,16 +426,6 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(len(received), 1)
         self.assertEqual(received[0]['args']['a'], 'b')
 
-    def test_send_catch_all_namespace(self):
-        client = socketio.test_client(app, namespace='/test')
-        client.get_received('/test')
-        client.emit('wildcard', {'a': 'b'}, namespace='/test')
-        received = client.get_received('/test')
-        self.assertEqual(len(received), 1)
-        self.assertEqual(len(received[0]['args']), 1)
-        self.assertEqual(received[0]['name'], 'my custom response')
-        self.assertEqual(received[0]['args'][0]['a'], 'b')
-
     def test_emit(self):
         client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
@@ -450,6 +445,27 @@ class TestSocketIO(unittest.TestCase):
         self.assertEqual(len(received[0]['args']), 1)
         self.assertEqual(received[0]['name'], 'my custom response')
         self.assertEqual(received[0]['args'][0]['a'], b'\x01\x02\x03')
+
+    def test_emit_catch_all_event(self):
+        client = socketio.test_client(app, auth={'foo': 'bar'})
+        client.get_received()
+        client.emit('random event', {'foo': 'bar'})
+        received = client.get_received()
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 2)
+        self.assertEqual(received[0]['name'], 'my custom response')
+        self.assertEqual(received[0]['args'][0], 'random event')
+        self.assertEqual(received[0]['args'][1], {'foo': 'bar'})
+
+    def test_send_catch_all_namespace(self):
+        client = socketio.test_client(app, namespace='/test')
+        client.get_received('/test')
+        client.emit('wildcard', {'a': 'b'}, namespace='/test')
+        received = client.get_received('/test')
+        self.assertEqual(len(received), 1)
+        self.assertEqual(len(received[0]['args']), 1)
+        self.assertEqual(received[0]['name'], 'my custom response')
+        self.assertEqual(received[0]['args'][0]['a'], 'b')
 
     def test_request_event_data(self):
         client = socketio.test_client(app, auth={'foo': 'bar'})
