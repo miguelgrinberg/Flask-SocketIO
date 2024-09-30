@@ -1,5 +1,9 @@
 # Flask-SocketIO change log
 
+**Release 5.4.0** - 2024-09-30
+
+- Support catch-all events with `socketio.on('*')` [#2095](https://github.com/miguelgrinberg/flask-socketio/issues/2095) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/45990f6721004d97fbac5b02edcd119c515155d6))
+
 **Release 5.3.7** - 2024-09-02
 
 - Prevent crash when client sends empty event ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/03512f2aecc27a3800d8d22031d6a663245d83d0))
