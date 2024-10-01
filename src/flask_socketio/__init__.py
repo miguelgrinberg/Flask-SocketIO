@@ -290,7 +290,6 @@ class SocketIO(object):
                     real_msg = sid
                     sid = args[0]
                     args = [real_msg] + list(args[1:])
-                print(f'{real_msg=} {real_ns=} {sid=} {args=}')
                 return self._handle_event(handler, message, real_ns, sid,
                                           *args)
 
