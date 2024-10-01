@@ -1,5 +1,9 @@
 # Flask-SocketIO change log
 
+**Release 5.4.1** - 2024-10-01
+
+- Removed a debugging statement ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/6841bd5c6ab29d12003ebca8171a7a9c8c2ffbf3))
+
 **Release 5.4.0** - 2024-09-30
 
 - Support catch-all events with `socketio.on('*')` [#2095](https://github.com/miguelgrinberg/flask-socketio/issues/2095) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/45990f6721004d97fbac5b02edcd119c515155d6))
