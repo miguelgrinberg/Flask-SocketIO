@@ -12,7 +12,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 dependencies = [
     "Flask >= 0.9",
     "python-socketio >= 5.0.2",
