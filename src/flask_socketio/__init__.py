@@ -33,14 +33,14 @@ class _SocketIOMiddleware(socketio.WSGIApp):
     """
     def __init__(self, socketio_app, flask_app, socketio_path='socket.io'):
         self.flask_app = flask_app
-        super(_SocketIOMiddleware, self).__init__(socketio_app,
+        super().__init__(socketio_app,
                                                   flask_app.wsgi_app,
                                                   socketio_path=socketio_path)
 
     def __call__(self, environ, start_response):
         environ = environ.copy()
         environ['flask.app'] = self.flask_app
-        return super(_SocketIOMiddleware, self).__call__(environ,
+        return super().__call__(environ,
                                                          start_response)
 
 
@@ -51,7 +51,7 @@ class _ManagedSession(dict, SessionMixin):
     pass
 
 
-class SocketIO(object):
+class SocketIO:
     """Create a Flask-SocketIO server.
 
     :param app: The flask application instance. If the application instance
@@ -204,7 +204,7 @@ class SocketIO(object):
             if url:
                 if url.startswith(('redis://', "rediss://")):
                     queue_class = socketio.RedisManager
-                elif url.startswith(('kafka://')):
+                elif url.startswith('kafka://'):
                     queue_class = socketio.KafkaManager
                 elif url.startswith('zmq'):
                     queue_class = socketio.ZmqManager
@@ -220,7 +220,7 @@ class SocketIO(object):
             # changes when it is invoked inside or outside the app context
             # so here to prevent any ambiguities we replace it with wrappers
             # that ensure that the app context is always present
-            class FlaskSafeJSON(object):
+            class FlaskSafeJSON:
                 @staticmethod
                 def dumps(*args, **kwargs):
                     with app.app_context():

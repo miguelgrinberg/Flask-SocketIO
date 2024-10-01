@@ -12,7 +12,7 @@ Session(app)
 socketio = SocketIO(app, manage_session=False)
 
 
-class User(UserMixin, object):
+class User(UserMixin):
     def __init__(self, id=None):
         self.id = id
 
