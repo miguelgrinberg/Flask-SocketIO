@@ -439,7 +439,7 @@ class TestSocketIO(unittest.TestCase):
     def test_emit_binary(self):
         client = socketio.test_client(app, auth={'foo': 'bar'})
         client.get_received()
-        client.emit('my custom event', {u'a': b'\x01\x02\x03'})
+        client.emit('my custom event', {'a': b'\x01\x02\x03'})
         received = client.get_received()
         self.assertEqual(len(received), 1)
         self.assertEqual(len(received[0]['args']), 1)

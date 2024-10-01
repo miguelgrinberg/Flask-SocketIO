@@ -3,7 +3,7 @@ from socketio import Namespace as _Namespace
 
 class Namespace(_Namespace):
     def __init__(self, namespace=None):
-        super(Namespace, self).__init__(namespace)
+        super().__init__(namespace)
         self.socketio = None
 
     def _set_socketio(self, socketio):

@@ -56,7 +56,7 @@
             // These accept data from the user and send it to the server in a
             // variety of ways
             $('form#emit').submit(function(event) {
-                socket.emit('my_event_foo', {data: $('#emit_data').val()});
+                socket.emit('my_event', {data: $('#emit_data').val()});
                 return false;
             });
             $('form#broadcast').submit(function(event) {
