@@ -10,7 +10,7 @@ Embedded Server
 
 The simplest deployment strategy is to start the web server by calling
 ``socketio.run(app)`` as shown in examples above. This will look through the
-packages that are installed for the best available web server start the
+packages that are installed for the best available web server and start the
 application on it. The current web server choices that are evaluated are
 ``eventlet``, ``gevent`` and the Flask development server.
 
