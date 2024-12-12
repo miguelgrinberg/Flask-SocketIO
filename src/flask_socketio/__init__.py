@@ -695,17 +695,15 @@ class SocketIO:
             from gevent import pywsgi
             try:
                 from geventwebsocket.handler import WebSocketHandler
-                websocket = True
+                gevent_websocket = True
             except ImportError:
-                app.logger.warning(
-                    'WebSocket transport not available. Install '
-                    'gevent-websocket for improved performance.')
-                websocket = False
+                # WebSocket support will come from the simple-websocket package
+                gevent_websocket = False
 
             log = 'default'
             if not log_output:
                 log = None
-            if websocket:
+            if gevent_websocket:
                 self.wsgi_server = pywsgi.WSGIServer(
                     (host, port), app, handler_class=WebSocketHandler,
                     log=log, **kwargs)
