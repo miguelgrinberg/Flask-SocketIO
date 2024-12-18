@@ -267,8 +267,8 @@ following example shows how to register handlers for them::
         emit('my response', {'data': 'Connected'})
 
     @socketio.on('disconnect')
-    def test_disconnect():
-        print('Client disconnected')
+    def test_disconnect(reason):
+        print('Client disconnected, reason:', reason)
 
 The ``auth`` argument in the connection handler is optional. The client can
 use it to pass authentication data such as tokens in dictionary format. If the
@@ -288,6 +288,10 @@ the exception are returned to the client in the error packet. Examples::
         if not self.authenticate(request.args):
             raise ConnectionRefusedError('unauthorized!')
 
+The disconnection event handler receives a ``reason`` argument that indicates
+the cause of the disconnection. The :attr:`flask_socketio.SocketIO.reason`
+member includes constants for all the possible reasons.
+
 Note that connection and disconnection events are sent individually on each
 namespace used.
 
@@ -305,7 +309,7 @@ create class-based namespaces::
         def on_connect(self):
             pass
 
-        def on_disconnect(self):
+        def on_disconnect(self, reason):
             pass
 
         def on_my_event(self, data):

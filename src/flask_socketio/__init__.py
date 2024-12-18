@@ -165,6 +165,7 @@ class SocketIO:
                             fatal errors are logged even when
                             ``engineio_logger`` is ``False``.
     """
+    reason = socketio.Server.reason
 
     def __init__(self, app=None, **kwargs):
         self.server = None

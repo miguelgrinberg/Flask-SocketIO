@@ -118,8 +118,8 @@ def connect():
 
 
 @socketio.on('disconnect')
-def test_disconnect():
-    print('Client disconnected', request.sid)
+def test_disconnect(reason):
+    print('Client disconnected', request.sid, reason)
 
 
 if __name__ == '__main__':

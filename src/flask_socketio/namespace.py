@@ -22,8 +22,16 @@ class Namespace(_Namespace):
             # there is no handler for this event, so we ignore it
             return
         handler = getattr(self, handler_name)
-        return self.socketio._handle_event(handler, event, self.namespace,
-                                           *args)
+        try:
+            return self.socketio._handle_event(handler, event, self.namespace,
+                                               *args)
+        except TypeError:
+            if event == 'disconnect':
+                # legacy disconnect events do not have the reason argument
+                return self.socketio._handle_event(
+                    handler, event, self.namespace, *args[:-1])
+            else:
+                raise
 
     def emit(self, event, data=None, room=None, include_self=True,
              namespace=None, callback=None):

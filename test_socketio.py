@@ -26,7 +26,7 @@ def on_connect(auth):
 
 
 @socketio.on('disconnect')
-def on_disconnect():
+def on_disconnect(reason):
     global disconnected
     disconnected = '/'
 
