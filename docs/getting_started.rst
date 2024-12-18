@@ -17,15 +17,16 @@ application::
     if __name__ == '__main__':
         socketio.run(app)
 
-The ``init_app()`` style of initialization is also supported. To start the
-web server simply execute your script. Note the way the web server is started.
-The ``socketio.run()`` function encapsulates the start up of the web server and
-replaces the ``app.run()`` standard Flask development server start up. When the
-application is in debug mode the Werkzeug development server is still used and
-configured properly inside ``socketio.run()``. In production mode the eventlet
-web server is used if available, else the gevent web server is used. If
-eventlet and gevent are not installed, the Werkzeug development web server is
-used.
+The ``init_app()`` style of initialization is also supported. ``init_app()``
+works for a bare SocketIO, passing arguments to it may cause additional problems.
+To start the web server simply execute your script. Note the way the web server
+is started. The ``socketio.run()`` function encapsulates the start up of the
+web server and replaces the ``app.run()`` standard Flask development server
+start up. When the application is in debug mode the Werkzeug development server
+is still used and configured properly inside ``socketio.run()``. In production
+mode the eventlet web server is used if available, else the gevent web server
+is used. If eventlet and gevent are not installed, the Werkzeug development web
+server is used.
 
 The ``flask run`` command introduced in Flask 0.11 can be used to start a
 Flask-SocketIO development server based on Werkzeug, but this method of starting
