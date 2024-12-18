@@ -1,5 +1,12 @@
 # Flask-SocketIO change log
 
+**Release 5.5.0** - 2024-12-18
+
+- Add a `reason` argument to the disconnect handler ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/01628b745f3e8fd1954d47a358a0d487dda57757))
+- Upgrade the code to more recent Python versions ([commit #1](https://github.com/miguelgrinberg/flask-socketio/commit/6a6734f71ab7c301a8cdc87fa78a515f0333a09b) [commit #2](https://github.com/miguelgrinberg/flask-socketio/commit/c3667e8489c91593d51ff35a2c013cd7bd0eb2c4))
+- Remove misleading warning about use of gevent-websocket in the documentation [#2122](https://github.com/miguelgrinberg/flask-socketio/issues/2122) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/a1d3d61265fd45331ffd1957defa2f767e9c0115))
+- fix typo in deployment documentation [#2119](https://github.com/miguelgrinberg/flask-socketio/issues/2119) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/eeb3c4341185586673f479831153f5ff46f75f61)) (thanks **Maximilien Tirard**!)
+
 **Release 5.4.1** - 2024-10-01
 
 - Removed a debugging statement ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/6841bd5c6ab29d12003ebca8171a7a9c8c2ffbf3))
