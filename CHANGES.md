@@ -1,5 +1,9 @@
 # Flask-SocketIO change log
 
+**Release 5.5.1** - 2025-01-06
+
+- Updated version of python-socketio dependency [#2128](https://github.com/miguelgrinberg/flask-socketio/issues/2128) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/c77c2e83e5c6baf552339884825230066cafd45e)) (thanks **Okke Harsta**!)
+
 **Release 5.5.0** - 2024-12-18
 
 - Add a `reason` argument to the disconnect handler ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/01628b745f3e8fd1954d47a358a0d487dda57757))
