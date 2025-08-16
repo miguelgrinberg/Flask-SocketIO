@@ -128,7 +128,15 @@ class SocketIOTestClient:
             if query_string[0] != '?':
                 query_string = '?' + query_string
             url += query_string
-        environ = EnvironBuilder(url, headers=headers).get_environ()
+
+        environ_base = (
+            None
+            if not self.flask_test_client
+            else self.flask_test_client.environ_base
+        )
+        environ = EnvironBuilder(
+            url, headers=headers, environ_base=environ_base
+        ).get_environ()
         environ['flask.app'] = self.app
         if self.flask_test_client:
             # inject cookies from Flask
