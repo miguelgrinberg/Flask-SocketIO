@@ -1,5 +1,11 @@
 # Flask-SocketIO change log
 
+**Release 5.6.0** - 2025-12-25
+
+- Use Flask test client's own `environ` dict if it is available [#2142](https://github.com/miguelgrinberg/flask-socketio/issues/2142) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/ccb9a758c634b668efedfe848880522f7a02fb3d))
+- Add Python 3.13, 3.14 and pypy-3.11 to CI builds, drop 3.8 and 3.9 ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/1ad79405d3afa14b2f04b15f1fe8270ed0168132))
+- Documentation: Added an example using the `init_app()` method [#2110](https://github.com/miguelgrinberg/flask-socketio/issues/2110) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/78dda9b64b275f9962d7a40de0db411b6aafac07))
+
 **Release 5.5.1** - 2025-01-06
 
 - Updated version of python-socketio dependency [#2128](https://github.com/miguelgrinberg/flask-socketio/issues/2128) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/c77c2e83e5c6baf552339884825230066cafd45e)) (thanks **Okke Harsta**!)
