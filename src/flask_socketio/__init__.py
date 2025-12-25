@@ -278,7 +278,6 @@ class SocketIO:
         def decorator(handler):
             @wraps(handler)
             def _handler(sid, *args):
-                nonlocal namespace
                 real_ns = namespace
                 if namespace == '*':
                     real_ns = sid
