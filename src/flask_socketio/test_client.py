@@ -2,7 +2,7 @@ import uuid
 
 from socketio import packet
 from socketio.pubsub_manager import PubSubManager
-from werkzeug.test import EnvironBuilder
+from flask.testing import EnvironBuilder
 
 
 class SocketIOTestClient:
@@ -128,8 +128,16 @@ class SocketIOTestClient:
             if query_string[0] != '?':
                 query_string = '?' + query_string
             url += query_string
-        environ = EnvironBuilder(url, headers=headers).get_environ()
+        if self.flask_test_client:
+            # let Flask's test client build an environ dictionary
+            req = self.flask_test_client._request_from_builder_args(
+                args=(), kwargs={'path': url, 'headers': headers})
+            environ = req.environ
+        else:
+            environ = EnvironBuilder(
+                self.app, path=url, headers=headers).get_environ()
         environ['flask.app'] = self.app
+
         if self.flask_test_client:
             # inject cookies from Flask
             if hasattr(self.flask_test_client, '_add_cookies_to_wsgi'):

@@ -12,9 +12,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 dependencies = [
-    "Flask >= 0.9",
+    "Flask >= 2.1.0",
     "python-socketio >= 5.12.0",
 ]
 
@@ -29,6 +29,12 @@ Homepage = "https://github.com/miguelgrinberg/flask-socketio"
 [project.optional-dependencies]
 docs = [
     "sphinx",
+]
+dev = [
+    "tox",
+    "pytest",
+    "pytest-cov",
+    "redis",
 ]
 
 [tool.setuptools]
