@@ -808,19 +808,19 @@ class SocketIO:
                 if hasattr(flask, 'globals') and \
                         hasattr(flask.globals, 'app_ctx'):
                     if hasattr(flask.globals.app_ctx, 'session'):
-                        # update session for flask >= 3.2
+                        # get context for flask >= 3.2
                         ctx = flask.globals.app_ctx._get_current_object()
                     else:
-                        # update session for Flask >= 2.2 < 3.2
+                        # get context for Flask >= 2.2, < 3.2
                         ctx = flask.globals.request_ctx._get_current_object()
                 else:  # pragma: no cover
-                    # update session for Flask < 2.2
+                    # get context for Flask < 2.2
                     ctx = flask._request_ctx_stack.top
-                try:
-                    # this works in Flask >= 3.1.3
+                if hasattr(ctx, '_session'):
+                    # update session for Flask >= 3.1.3
                     ctx._session = session_obj
-                except AttributeError:
-                    # this works in Flask < 3.1.3
+                else:
+                    # update session for Flask < 3.1.3
                     ctx.session = session_obj
             else:
                 # let Flask handle the user session
