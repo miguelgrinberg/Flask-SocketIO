@@ -806,13 +806,22 @@ class SocketIO:
                     environ['saved_session'] = _ManagedSession(flask.session)
                 session_obj = environ['saved_session']
                 if hasattr(flask, 'globals') and \
-                        hasattr(flask.globals, 'request_ctx'):
-                    # update session for Flask >= 2.2
-                    ctx = flask.globals.request_ctx._get_current_object()
+                        hasattr(flask.globals, 'app_ctx'):
+                    if hasattr(flask.globals.app_ctx, 'session'):
+                        # update session for flask >= 3.2
+                        ctx = flask.globals.app_ctx._get_current_object()
+                    else:
+                        # update session for Flask >= 2.2 < 3.2
+                        ctx = flask.globals.request_ctx._get_current_object()
                 else:  # pragma: no cover
                     # update session for Flask < 2.2
                     ctx = flask._request_ctx_stack.top
-                ctx.session = session_obj
+                try:
+                    # this works in Flask >= 3.1.3
+                    ctx._session = session_obj
+                except AttributeError:
+                    # this works in Flask < 3.1.3
+                    ctx.session = session_obj
             else:
                 # let Flask handle the user session
                 # for cookie based sessions, this effectively freezes the
