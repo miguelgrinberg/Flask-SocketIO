@@ -50,7 +50,9 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m pip install --upgrade pip wheel
       - run: pip install tox tox-gh-actions
-      - run: FLASK_VERSION="${{ matrix.flask }}" tox
+      - run: tox
+        env:
+          FLASK_VERSION: ${{ matrix.flask }}
   coverage:
     name: coverage
     runs-on: ubuntu-latest
