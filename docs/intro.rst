@@ -11,30 +11,28 @@ You can install this package in the usual way using ``pip``::
 Requirements
 ------------
 
-Flask-SocketIO is compatible with Python 3.6+. The asynchronous services that
+Flask-SocketIO is compatible with Python 3.8+. The asynchronous services that
 this package relies on can be selected among three choices:
 
-- `eventlet <http://eventlet.net/>`_ is the best performant option, with
-  support for long-polling and WebSocket transports.
+- The ``threading`` package from the Python standard library is the easier and
+  most compatible solution, with full support of long-polling and WebSocket
+  transports. The Flask development web server can be used during development,
+  and Gunicorn in multi-threaded mode can be used in production deployments.
 - `gevent <http://www.gevent.org/>`_ is supported in a number of different
-  configurations. The long-polling transport is fully supported with the
-  gevent package, but unlike eventlet, gevent does not have native WebSocket
-  support. To add support for WebSocket there are currently two options.
-  Installing the `gevent-websocket <https://pypi.python.org/pypi/gevent-websocket/>`_
-  package adds WebSocket support to gevent or one can use the `uWSGI
-  <https://uwsgi-docs.readthedocs.io/en/latest/>`_ web server, which
-  comes with WebSocket functionality. The use of gevent is also a performant
-  option, but slightly lower than eventlet.
-- The Flask development server based on Werkzeug can be used as well, with the
-  caveat that this web server is intended only for development use, so it
-  should only be used to simplify the development workflow and not for
-  production.
+  configurations, also with support for the long-polling and WebSocket
+  transports. The Flask development web server, gevent's own web server,
+  Gunicorn (with the gevent worker) and uWSGI (in gevent mode) are all
+  supported when using ``gevent``.
+- `eventlet <http://eventlet.net/>`_ used to be a good option with support for
+  long-polling and WebSocket transports, but it is not actively maintained
+  anymore, so ``gevent`` should be preferred. The Flask development web server,
+  eventlet's own web server and Gunicorn (with the eventlet worker) are all
+  supported when using ``eventlet``.
 
 The extension automatically detects which asynchronous framework to use based
-on what is installed. Preference is given to eventlet, followed by gevent.
-For WebSocket support in gevent, uWSGI is preferred, followed by
-gevent-websocket. If neither eventlet nor gevent are installed, then the Flask
-development server is used.
+on what is installed. Preference is given to eventlet, followed by gevent. If
+neither eventlet nor gevent are installed, Python's ``threading`` package is
+used.
 
 If using multiple processes, a message queue service must be configured to
 allow the servers to coordinate operations such as broadcasting. The supported

@@ -34,6 +34,7 @@ Homepage = "https://github.com/miguelgrinberg/flask-socketio"
 [project.optional-dependencies]
 docs = [
     "sphinx",
+    "furo",
 ]
 dev = [
     "flask-login",
