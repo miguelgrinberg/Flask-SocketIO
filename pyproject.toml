@@ -14,8 +14,13 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
+    "blinker",
+    "click",
+    "flask",
     "Flask >= 2.1.0",
+    "jinja2",
     "python-socketio >= 5.12.0",
+    "werkzeug",
 ]
 
 [project.readme]
@@ -31,10 +36,12 @@ docs = [
     "sphinx",
 ]
 dev = [
-    "tox",
+    "flask-login",
+    "flask-session",
     "pytest",
     "pytest-cov",
     "redis",
+    "tox",
 ]
 
 [tool.setuptools]

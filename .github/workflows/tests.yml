@@ -21,8 +21,28 @@ jobs:
     name: tests
     strategy:
       matrix:
+        flask: ['<2.2', '<3.0', '<3.1', '<3.2', '']
         os: [ubuntu-latest, macos-latest, windows-latest]
         python: ['3.10', '3.11', '3.12', '3.13', '3.14', 'pypy-3.11']
+        exclude:
+          - flask: '<2.2'
+            python: '3.14'
+          - flask: '<2.2'
+            os: macos-latest
+          - flask: '<3.0'
+            os: macos-latest
+          - flask: '<3.1'
+            os: macos-latest
+          - flask: '<3.2'
+            os: macos-latest
+          - flask: '<2.2'
+            os: windows-latest
+          - flask: '<3.0'
+            os: windows-latest
+          - flask: '<3.1'
+            os: windows-latest
+          - flask: '<3.2'
+            os: windows-latest
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
@@ -33,6 +53,8 @@ jobs:
       - run: python -m pip install --upgrade pip wheel
       - run: pip install tox tox-gh-actions
       - run: tox
+        env:
+          FLASK_VERSION: ${{ matrix.flask }}
   coverage:
     name: coverage
     runs-on: ubuntu-latest
