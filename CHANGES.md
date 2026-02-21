@@ -1,5 +1,11 @@
 # Flask-SocketIO change log
 
+**Release 5.6.1** - 2026-02-21
+
+- Session fixes for Flask >= 3.1.3 [#2153](https://github.com/miguelgrinberg/flask-socketio/issues/2153) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/956f8f2847c53d5156620b395912b7c916e15a1b))
+- Update `SocketIO` constructor documentation [#2151](https://github.com/miguelgrinberg/flask-socketio/issues/2151) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/1f547c4f2f8d1fab8206aa208aaf639eb4c788d4))
+- Switch to the Furo documentation template ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/ece8afc31b283c64541f050cee9cabdea95a9fba))
+
 **Release 5.6.0** - 2025-12-25
 
 - Use Flask test client's own `environ` dict if it is available [#2142](https://github.com/miguelgrinberg/flask-socketio/issues/2142) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/ccb9a758c634b668efedfe848880522f7a02fb3d))
