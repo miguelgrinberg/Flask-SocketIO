@@ -61,7 +61,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m pip install --upgrade pip wheel
       - run: pip install tox
-      - run: tox
+      - run: tox -epy
         env:
           FLASK_VERSION: ${{ matrix.flask }}
   coverage:
@@ -76,7 +76,7 @@ jobs:
           python-version: 3.14
       - run: python -m pip install --upgrade pip wheel
       - run: pip install tox
-      - run: tox
+      - run: tox -epy
       - uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
         with:
           files: ./coverage.xml
