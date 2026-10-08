@@ -37,3 +37,5 @@ nosetests.xml
 .direnv
 .envrc
 requirements*.txt
+coverage.xml
+_build.log
