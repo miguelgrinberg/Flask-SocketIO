@@ -23,13 +23,19 @@ class Namespace(_Namespace):
             return
         handler = getattr(self, handler_name)
         try:
-            return self.socketio._handle_event(handler, event, self.namespace,
-                                               *args)
-        except TypeError:
-            if event == 'disconnect':
-                # legacy disconnect events do not have the reason argument
-                return self.socketio._handle_event(
-                    handler, event, self.namespace, *args[:-1])
+            try:
+                return self.socketio._handle_event(handler, event,
+                                                   self.namespace, *args)
+            except TypeError:
+                if event == 'disconnect':
+                    # legacy disconnect events do not have the reason argument
+                    return self.socketio._handle_event(
+                        handler, event, self.namespace, *args[:-1])
+                else:
+                    raise
+        except Exception as exc:
+            if hasattr(self, 'error'):
+                return self.error(exc)
             else:
                 raise
 

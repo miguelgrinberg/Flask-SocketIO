@@ -384,6 +384,17 @@ debugging outside the event handler::
         print(request.event["message"]) # "my error event"
         print(request.event["args"])    # (data,)
 
+When using class-based namespaces, an error handler for the namespace can be
+added as a method named ``error()``::
+
+    class MyCustomNamespace(Namespace):
+        # ...
+
+        def error(self, error):
+            print(f'Error {error} on event {request.event}'
+
+    socketio.on_namespace(MyCustomNamespace('/test'))
+
 Debugging and Troubleshooting
 -----------------------------
 

@@ -274,6 +274,12 @@ class MyNamespace(Namespace):
         request_event_data = request.event
         emit('my custom response', data)
 
+    def on_fail_on_purpose(self, data):
+        return 1 / 0
+
+    def error(self, error):
+        return 'error-handled'
+
 
 socketio.on_namespace(MyNamespace('/ns'))
 
@@ -758,6 +764,13 @@ class TestSocketIO(unittest.TestCase):
         client.emit('other_custom_event', 'foo', namespace='/ns')
         expected_data = {'message': 'other_custom_event', 'args': ('foo',)}
         self.assertEqual(request_event_data, expected_data)
+
+    def test_error_handling_class_based(self):
+        client = socketio.test_client(app, namespace='/ns')
+        client.get_received('/ns')
+        ack = client.emit('fail_on_purpose', 'foo', namespace='/ns',
+                          callback=True)
+        self.assertEqual(ack, 'error-handled')
 
     def test_delayed_init(self):
         app = Flask(__name__)
