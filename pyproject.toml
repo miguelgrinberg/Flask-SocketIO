@@ -28,8 +28,12 @@ file = "README.md"
 content-type = "text/markdown"
 
 [project.urls]
-Homepage = "https://github.com/miguelgrinberg/flask-socketio"
-"Bug Tracker" = "https://github.com/miguelgrinberg/flask-socketio/issues"
+Homepage = "https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio"
+Documentation = "https://flask-socketio.readthedocs.io/"
+"Source Code" = "https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio"
+"Issue Tracker" = "https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio/issues"
+Changelog = "https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio/src/branch/main/CHANGES.md"
+Funding = "https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio#sponsor-this-project"
 
 [project.optional-dependencies]
 docs = [
