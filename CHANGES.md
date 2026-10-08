@@ -1,5 +1,11 @@
 # Flask-SocketIO change log
 
+**Release 5.7.0** - 2026-10-08
+
+- Error handling in class-based namespaces [#10001](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/issues/10001) ([commit](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/commit/d60d285337aae3c293f3dfaef25704d8c9b2489d))
+- Replace bare `except` in `__init__.py` [#2159](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/issues/2159) ([commit](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/commit/9ed6bbdbfadd800d5d5dafc9e395f434604a2b57)) (thanks **Kotesh Kumar Yelamati**!)
+- Better integration with pytest ([commit](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/commit/e918b8b6a4355de50a862f8886a614edc4c4a1e7))
+
 **Release 5.6.1** - 2026-02-21
 
 - Session fixes for Flask >= 3.1.3 [#2153](https://github.com/miguelgrinberg/flask-socketio/issues/2153) ([commit](https://github.com/miguelgrinberg/flask-socketio/commit/956f8f2847c53d5156620b395912b7c916e15a1b))
