@@ -1,5 +1,10 @@
 # Flask-SocketIO change log
 
+**Release 5.7.1** - 2026-11-01
+
+- Update version of `python-socketio` dependency ([commit](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/commit/36ca88e9409c34fe874667911ecdb71cc9c636ce))
+- Add Python 3.15 and PyPy 3.12 to CI ([commit](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/commit/f6a01131c96b933c4021a8de04a6ca6d13af9aba))
+
 **Release 5.7.0** - 2026-10-08
 
 - Error handling in class-based namespaces [#10001](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/issues/10001) ([commit](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/commit/d60d285337aae3c293f3dfaef25704d8c9b2489d))
