@@ -448,6 +448,15 @@ class TestSocketIO:
         assert received[0]['args'][0] == 'random event'
         assert received[0]['args'][1] == {'foo': 'bar'}
 
+        # make sure an event named '*' is handled correctly
+        client.emit('*', {'foo': 'bar'})
+        received = client.get_received()
+        assert len(received) == 1
+        assert len(received[0]['args']) == 2
+        assert received[0]['name'] == 'my custom response'
+        assert received[0]['args'][0] == '*'
+        assert received[0]['args'][1] == {'foo': 'bar'}
+
     def test_send_catch_all_namespace(self):
         client = socketio.test_client(app, namespace='/test')
         client.get_received('/test')

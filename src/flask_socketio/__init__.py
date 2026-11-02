@@ -300,9 +300,12 @@ class SocketIO:
                     args = args[1:]
                 real_msg = message
                 if message == '*':
-                    real_msg = sid
-                    sid = args[0]
-                    args = [real_msg] + list(args[1:])
+                    if not self.server.get_environ(sid, real_ns):
+                        real_msg = sid
+                        sid = args[0]
+                        args = [real_msg] + list(args[1:])
+                    else:
+                        args = [real_msg] + list(args)
                 return self._handle_event(handler, message, real_ns, sid,
                                           *args)
 
