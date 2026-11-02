@@ -1,5 +1,9 @@
 # Flask-SocketIO change log
 
+**Release 5.7.2** - 2026-11-02
+
+- Proper routing of an event called `*` in the catch-all handler ([commit](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/commit/9143c239004b60eb70a8c2dded75491415c2fbb6)) (thanks **Gavin Zhong**!)
+
 **Release 5.7.1** - 2026-11-01
 
 - Update version of `python-socketio` dependency ([commit](https://code.miguelgrinberg.com/miguelgrinberg/flask-socketio.git/commit/36ca88e9409c34fe874667911ecdb71cc9c636ce))
